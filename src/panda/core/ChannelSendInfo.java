@@ -1,0 +1,206 @@
+package panda.core;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.StandardSocketOptions;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import panda.core.datastructures.PacketCache;
+import panda.core.datastructures.Pair;
+import panda.utils.Utils;
+
+
+public class ChannelSendInfo implements IAction
+{
+	private static final Logger LOGGER = Logger.getLogger(ChannelSendInfo.class.getName());
+
+	private final InetAddress multicastIp;
+	private final int multicastPort;
+	private final String multicastGroup;
+	private final InetSocketAddress multicastGroupAddress;
+	private final NetworkInterface networkInterface;
+	private final ArrayDeque<Short> topicIdQueue;
+	private final ArrayDeque<byte[]> messageQueue;
+	private final int cacheSize;
+	private final PacketCache packetCache;
+	private final byte supportsRetransmissions;
+
+	private DatagramChannel channel;
+	private long sequenceNumber;
+	//private boolean skipNext;
+
+	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp)
+	{
+		this.multicastIp = getInetAddress(ip);
+		this.multicastPort = port;
+		this.multicastGroup = multicastGroup;
+		this.multicastGroupAddress = new InetSocketAddress(this.multicastIp, this.multicastPort);
+		this.networkInterface = getNetworkInterface(interfaceIp);
+		this.topicIdQueue = new ArrayDeque<Short>();
+		this.messageQueue = new ArrayDeque<byte[]>();
+		this.cacheSize = cacheSize;
+		this.packetCache = (this.cacheSize > 0 ? new PacketCache(this.cacheSize) : null);
+		this.supportsRetransmissions = ((byte) (this.cacheSize > 0 ? 1 : 0));
+
+		this.channel = null;
+		this.sequenceNumber = 0;
+	}
+
+	private static InetAddress getInetAddress(String address)
+	{
+		try
+		{
+			return InetAddress.getByName(address);
+		}
+		catch (Exception e)
+		{
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+		return null;
+	}
+
+	private static NetworkInterface getNetworkInterface(String interfaceIp)
+	{
+		try
+		{
+			return NetworkInterface.getByInetAddress(InetAddress.getByName(interfaceIp));
+		}
+		catch (Exception e)
+		{
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+		return null;
+	}
+
+	// Called by app thread
+	public boolean addMessageToSendQueue(Short topicId, byte[] bytes)
+	{
+		if (bytes.length <= Utils.MAX_MESSAGE_PAYLOAD_SIZE)
+		{
+			this.topicIdQueue.add(topicId);
+			this.messageQueue.add(bytes);
+			return true;
+		}
+		return false;
+	}
+
+	// Called by selectorThread
+	public boolean hasOutboundDataRemaining()
+	{
+		return this.messageQueue.size() > 0;
+	}
+
+	// Called by selectorThread
+	public byte[] getNextPacket()
+	{
+		if (this.messageQueue.size() == 1)
+		{
+			Short topicId = this.topicIdQueue.remove();
+			byte[] bytes = this.messageQueue.remove();
+
+			byte messageCount = 1;
+			byte[] prependedBytes = new byte[Utils.PACKET_HEADER_SIZE + Utils.MESSAGE_HEADER_SIZE + bytes.length];
+			ByteBuffer buffer = ByteBuffer.wrap(prependedBytes);
+			buffer.put(Utils.PACKET_HEADER_SIZE);
+			buffer.put(this.supportsRetransmissions);
+			buffer.putLong(++this.sequenceNumber);
+			buffer.put(messageCount);
+			buffer.putShort(topicId.shortValue());
+			buffer.putShort((short) bytes.length);
+			buffer.put(bytes);
+			addToPacketQueue(prependedBytes, this.sequenceNumber);
+			return prependedBytes;
+		}
+
+		byte[] packetPayloadBytes = new byte[Utils.MAX_PACKET_PAYLOAD_SIZE];
+		ByteBuffer messageBuffer = ByteBuffer.wrap(packetPayloadBytes);
+		byte messageCount = 0;
+		while (this.messageQueue.size() > 0 && messageCount <= Byte.MAX_VALUE)
+		{
+			Short topicId = this.topicIdQueue.remove();
+			byte[] messageBytes = this.messageQueue.remove();
+			messageBuffer.putShort(topicId.shortValue());
+			messageBuffer.putShort((short) messageBytes.length);
+			messageBuffer.put(messageBytes);
+			messageCount++;
+
+			byte[] nextMessageBytes = this.messageQueue.peek();
+			if (nextMessageBytes != null)
+			{
+				if (messageBuffer.remaining() < nextMessageBytes.length + Utils.MESSAGE_HEADER_SIZE)
+				{
+					break;
+				}
+			}
+		}
+
+		byte[] packetBytes = new byte[Utils.PACKET_HEADER_SIZE + messageBuffer.position()];
+		ByteBuffer packetBuffer = ByteBuffer.wrap(packetBytes);
+		packetBuffer.put(Utils.PACKET_HEADER_SIZE);
+		packetBuffer.put(this.supportsRetransmissions);
+		packetBuffer.putLong(++this.sequenceNumber);
+		packetBuffer.put(messageCount);
+		packetBuffer.put(packetPayloadBytes, 0, messageBuffer.position());
+		addToPacketQueue(packetBytes, this.sequenceNumber);
+		return packetBytes;
+	}
+
+	private void addToPacketQueue(byte[] packetBytes, long sequenceNum)
+	{
+		if (this.packetCache == null)
+			return;
+		this.packetCache.add(packetBytes, sequenceNum);
+	}
+
+	// Called by selectorThread
+	public Pair<List<byte[]>, Long> getCachedPackets(long firstSequenceNumberRequested, int packetCount)
+	{
+		if (this.cacheSize == 0)
+			return null;
+		long lastSequenceNumberRequested = firstSequenceNumberRequested + packetCount - 1L;
+		return this.packetCache.getCachedPackets(firstSequenceNumberRequested, lastSequenceNumberRequested);
+	}
+
+	public String getMulticastGroup()
+	{
+		return this.multicastGroup;
+	}
+
+	public void setChannel(DatagramChannel channel)
+	{
+		this.channel = channel;
+	}
+
+	public void sendToChannel() throws IOException
+	{
+		while (hasOutboundDataRemaining())
+		{
+			byte[] bytes = getNextPacket();
+			/*if (this.sequenceNumber % 5L == 0L)
+			{
+				this.skipNext = true;
+				return;
+			}
+			if (this.skipNext)
+			{
+				this.skipNext = false;
+				return;
+			}*/
+			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, this.networkInterface);
+			this.channel.send(ByteBuffer.wrap(bytes), this.multicastGroupAddress);
+		}
+	}
+
+	@Override
+	public int getAction()
+	{
+		return IAction.SEND_MULTICAST;
+	}
+}
