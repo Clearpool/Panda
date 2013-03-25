@@ -13,7 +13,7 @@ public class SenderTest
 	public static void main(String[] args) throws Exception
 	{
 		final Adapter adapter = new Adapter(1000);
-		final TopicInfo topicInfo1 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Short.valueOf((short)1), "FIVE");
+		final TopicInfo topicInfo1 = new TopicInfo("239.9.9.11", Integer.valueOf(9011), Short.valueOf((short)1), "FIVE");
 
 		int count = 0;
 		while (true)
