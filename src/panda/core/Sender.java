@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import panda.core.containers.TopicInfo;
 import panda.core.datastructures.Pair;
 
-
+//TODO - handle large messages
 public class Sender
 {
 	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());
