@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 import panda.core.containers.Packet;
 
 
-//TODO - LT - track number of requests
-//TODO - ST - install timeout + min packet queu to build before requesting
+//TODO - FEATURE - track number of requests
+//TODO - REQUIREMENT - install timeout + min packet queue to build before requesting + handle gaps while retrans
 public class ChannelReceiveSequencer
 {
 	private static final Logger LOGGER = Logger.getLogger(ChannelReceiveSequencer.class.getName());

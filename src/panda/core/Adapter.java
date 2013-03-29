@@ -8,7 +8,9 @@ import java.util.logging.Logger;
 
 import panda.core.containers.TopicInfo;
 
-
+//Do not subscribe to same group on two diff network cards in same adapter
+//TODO - TEST - can multiple adapters co-exist in same process space?
+//TODO - TEST - unit tests
 public class Adapter
 {
 	private static final Logger LOGGER = Logger.getLogger(Adapter.class.getName());
