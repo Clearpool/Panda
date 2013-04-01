@@ -21,7 +21,7 @@ public class ChannelReceiveInfo
 	private final Map<Short, Set<IDataListener>> topicToListeners;
 	private final Map<String, ChannelReceiveSequencer> sourceInfos;
 
-	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread)
+	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize)
 	{
 		this.multicastIp = multicastIp;
 		this.multicastPort = multicastPort;
@@ -31,7 +31,7 @@ public class ChannelReceiveInfo
 		this.selectorThread = selectorThread;
 		this.topicToListeners = new HashMap<Short, Set<IDataListener>>();
 		this.sourceInfos = new HashMap<String, ChannelReceiveSequencer>();
-		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this);
+		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this, recvBufferSize);
 	}
 
 	//Called by app thread

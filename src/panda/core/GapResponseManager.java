@@ -26,19 +26,6 @@ public class GapResponseManager
 	public GapResponseManager(SocketChannel channel, List<byte[]> packets, long startSequenceNumber)
 	{
 		this.channel = channel;
-		///// CHINMAY 03282013
-		/*SocketChannel c = null;
-		try
-		{
-			 c = SocketChannel.open();			
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		this.channel = c;*/
-		/////
 		this.packets = packets;
 		this.totalPackets = (packets == null ? 0 : packets.size());
 		this.startSequenceNumber = startSequenceNumber;

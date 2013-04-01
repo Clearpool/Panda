@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 
 import panda.utils.Utils;
 
-
 public class GapRequestManager
 {
 	private static final Logger LOGGER = Logger.getLogger(GapRequestManager.class.getName());
@@ -29,8 +28,8 @@ public class GapRequestManager
 	private long responseFirstSequenceNumber;
 	private int responsePacketCount;
 	private int packetsRemainingToDeliver;
-	
-	public boolean doNotConnectToTCP; // CHINMAY 04012013
+
+	private boolean isDisabled;
 
 	public GapRequestManager(SelectorThread selectorThread, String multicastGroup, String sourceIp, ChannelReceiveSequencer sequencer)
 	{
@@ -48,21 +47,20 @@ public class GapRequestManager
 		this.responseFirstSequenceNumber = 0;
 		this.responsePacketCount = 0;
 		this.packetsRemainingToDeliver = 0;
-		
-		this.doNotConnectToTCP = false; // CHINMAY 04012013 
+
+		this.isDisabled = false;
 	}
 
 	public boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
 	{
-		if (this.socketChannel == null) 
+
+		if (this.socketChannel == null)
 		{
-			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort + 1 ); // CHINMAY 03282013
+			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
 			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 			this.request = createGapRequest(firstSequenceNumber, packetCount);
-			return true;
 		}
-		return false;
-		
+		return true;
 	}
 
 	private static SocketChannel getSocketChannel(String remoteHost, int remotePort)
@@ -92,9 +90,8 @@ public class GapRequestManager
 
 		this.firstSequenceNumberRequested = firstSequenceNumber;
 		this.packetCountRequested = packetCount;
-		// CHINMAY 03272013
-		LOGGER.info("Requesting " + this.packetCountRequested + " missed packets from source " + this.sequencer.getKey() + " starting with Seq. Num. " + this.firstSequenceNumberRequested);
-		
+		LOGGER.info("Requesting " + this.packetCountRequested + " missed packets from source " + this.sequencer.getKey() + " starting with Seq. Num. " + this.firstSequenceNumberRequested + " for " + this.multicastGroup);
+
 		return buffer;
 	}
 
@@ -110,8 +107,6 @@ public class GapRequestManager
 		this.readBuffer.put(buffer); // add to the end of whatever is remaining
 										// in bytebuffer
 		this.readBuffer.flip();
-		//this.readBuffer.putChar(3, 'a'); // CHINMAY 03272013
-		//this.readBuffer.clear();
 		try
 		{
 			// Parse Header
@@ -129,9 +124,8 @@ public class GapRequestManager
 
 					this.packetsRemainingToDeliver = this.responsePacketCount;
 
-					// CHINMAY 03272013
-					LOGGER.info("Recd " + this.responsePacketCount + " packets from " + this.sequencer.getKey() + " through retransmission");
-					
+					LOGGER.info("Recd " + this.responsePacketCount + " packets from " + this.sequencer.getKey() + " through retransmission for " + this.multicastGroup);
+
 					// Potentially skip packets if request is not filled
 					if (this.responsePacketCount == 0)
 					{
@@ -216,9 +210,18 @@ public class GapRequestManager
 		this.sequencer.closeRetransmissionManager();
 	}
 	
+	public boolean getIsDisabled()
+	{
+		return this.isDisabled;
+	}
+	
+	public void setIsDisabled(boolean b)
+	{
+		this.isDisabled = b;
+	}
+
 	public String getMulticastGroup()
 	{
 		return this.multicastGroup;
 	}
-	
 }

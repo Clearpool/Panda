@@ -49,8 +49,8 @@ public class Adapter
 		this.sender.send(topicInfo, interfaceIp, bytes);
 	}
 
-	public void subscribe(TopicInfo topicInfo, String interfaceIp, IDataListener listener)
+	public void subscribe(TopicInfo topicInfo, String interfaceIp, IDataListener listener, int recvBufferSize)
 	{
-		this.receiver.subscribe(topicInfo, interfaceIp, listener);
+		this.receiver.subscribe(topicInfo, interfaceIp, listener, recvBufferSize);
 	}
 }

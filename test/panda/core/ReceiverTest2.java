@@ -25,7 +25,7 @@ public class ReceiverTest2
 				payload.get(bytes, 0, bytes.length);
 				System.out.println(new Date() + " Received packet=" + new String(bytes));
 			}
-		});
+		}, 10000000);
 	}
 
 	private static String getLocalIp(String ip)

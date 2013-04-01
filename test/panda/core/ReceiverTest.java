@@ -29,7 +29,7 @@ public class ReceiverTest
 				int stringValue = Integer.parseInt(string);
 				if (stringValue % 1 == 0) System.out.println(new Date() + " Received packet=" + string);
 			}
-		});
+		}, 10000000);
 		adapter.subscribe(topicInfo2, getLocalIp(null), new IDataListener() {
 			@Override
 			public void receivedFmcData(ByteBuffer payload)
@@ -40,7 +40,7 @@ public class ReceiverTest
 				int stringValue = Integer.parseInt(string);
 				if (stringValue % 1 == 0) System.out.println(new Date() + " Received packet=" + string);
 			}
-		});
+		}, 10000000);
 	}
 
 	private static String getLocalIp(String ip)

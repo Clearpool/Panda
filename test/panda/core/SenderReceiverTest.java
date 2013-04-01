@@ -42,7 +42,7 @@ public class SenderReceiverTest
 				if (integer.get() % 1 == 0)
 					System.out.println(new Date() + " Sent packet=" + newInt);
 			}
-		});
+		}, 10000000);
 		adapter.subscribe(topicInfo2, getLocalIp(null), new IDataListener() {
 			@Override
 			public void receivedFmcData(ByteBuffer payload)
@@ -51,7 +51,7 @@ public class SenderReceiverTest
 				payload.get(bytes, 0, bytes.length);
 				System.out.println(new Date() + " Received packet=" + new String(bytes));
 			}
-		});
+		}, 10000000);
 	}
 
 	static String getLocalIp(String ip)

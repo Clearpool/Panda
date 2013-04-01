@@ -73,7 +73,6 @@ public class SelectorThread extends Thread
 			try
 			{
 				// Check for actions
-				//System.out.println("SELECTORTHREAD RUN IN WHILE");
 				synchronized (this.selectorActionQueue)
 				{
 					moveActionQueue(activeSelectorActionQueue);
@@ -243,10 +242,9 @@ public class SelectorThread extends Thread
 			{
 				LOGGER.log(Level.SEVERE, e.getMessage(), e);
 				
-				// CHINMAY 04012013
 				GapRequestManager gapManager = (GapRequestManager)selectedKey.attachment();
-				LOGGER.info("Failed to establish TCP connection for re-transmission. Disabling future re-transmission attempts for " + gapManager.getMulticastGroup() + " on the receiver side.");
-				gapManager.doNotConnectToTCP = true;
+				LOGGER.severe("Failed to establish TCP connection for re-transmission. Disabling future re-transmission attempts for " + gapManager.getMulticastGroup() + " on the receiver side.");
+				gapManager.setIsDisabled(true);
 		        try { ((SocketChannel)selectedKey.channel()).close(); } catch (IOException e1) { LOGGER.log(Level.SEVERE, e1.getMessage(), e1); }
 		        selectedKey.cancel();
 			}
@@ -362,7 +360,7 @@ public class SelectorThread extends Thread
 	}
 
 	// Will be called synchronously
-	public void subscribeToMulticastChannel(String ip, int port, String multicastGroup, String interfaceIp, ChannelReceiveInfo receiverInfo)
+	public void subscribeToMulticastChannel(String ip, int port, String multicastGroup, String interfaceIp, ChannelReceiveInfo receiverInfo, int recvBufferSize)
 	{
 		try
 		{
@@ -371,9 +369,7 @@ public class SelectorThread extends Thread
 			{
 				channel = createDatagramChannel(interfaceIp);
 				channel.bind(new InetSocketAddress(port));
-				System.out.println("RECVBUFFER SIZE = " + channel.getOption(StandardSocketOptions.SO_RCVBUF)); // CHINMAY03272013
-				//channel.setOption(StandardSocketOptions.SO_RCVBUF, Integer.valueOf(500000)); // CHINMAY03272013
-				System.out.println("RECVBUFFER SIZE = " + channel.getOption(StandardSocketOptions.SO_RCVBUF)); // CHINMAY03272013
+				channel.setOption(StandardSocketOptions.SO_RCVBUF, Integer.valueOf(recvBufferSize)); 
 				this.inDatagramChannels.put(multicastGroup, channel);
 				MulticastRegistration registration = new MulticastRegistration(channel, ip, port, receiverInfo);
 				addToActionQueue(registration);

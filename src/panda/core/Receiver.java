@@ -19,16 +19,16 @@ public class Receiver
 		this.channelInfos = new HashMap<String, ChannelReceiveInfo>();
 	}
 
-	public void subscribe(TopicInfo topicInfo, String interfaceIp, IDataListener listener)
+	public void subscribe(TopicInfo topicInfo, String interfaceIp, IDataListener listener, int recvBufferSize)
 	{
-		ChannelReceiveInfo receiveInfo = getChannelReceiverInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), interfaceIp);
+		ChannelReceiveInfo receiveInfo = getChannelReceiverInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), interfaceIp, recvBufferSize);
 		synchronized (receiveInfo)
 		{
 			receiveInfo.registerTopicListener(topicInfo, listener);
 		}
 	}
 
-	private ChannelReceiveInfo getChannelReceiverInfo(String multicastIp, int multicastPort, String multicastGroup, String interfaceIp)
+	private ChannelReceiveInfo getChannelReceiverInfo(String multicastIp, int multicastPort, String multicastGroup, String interfaceIp, int recvBufferSize)
 	{
 		ChannelReceiveInfo receiveInfo = this.channelInfos.get(multicastGroup);
 		if (receiveInfo == null)
@@ -38,7 +38,7 @@ public class Receiver
 				receiveInfo = this.channelInfos.get(multicastGroup);
 				if (receiveInfo == null)
 				{
-					receiveInfo = new ChannelReceiveInfo(multicastIp, multicastPort, multicastGroup, interfaceIp, this.bindPort, this.selectorThread);
+					receiveInfo = new ChannelReceiveInfo(multicastIp, multicastPort, multicastGroup, interfaceIp, this.bindPort, this.selectorThread, recvBufferSize);
 					this.channelInfos.put(multicastGroup, receiveInfo);
 				}
 			}
