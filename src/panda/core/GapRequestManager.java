@@ -53,7 +53,7 @@ public class GapRequestManager
 
 		if (this.socketChannel == null)
 		{
-			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
+			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort + 1 ); // CHINMAY 03282013
 			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 			this.request = createGapRequest(firstSequenceNumber, packetCount);
 		}
@@ -87,6 +87,9 @@ public class GapRequestManager
 
 		this.firstSequenceNumberRequested = firstSequenceNumber;
 		this.packetCountRequested = packetCount;
+		// CHINMAY 03272013
+		LOGGER.info("Requesting " + this.packetCountRequested + " missed packets from source " + this.sequencer.getKey() + " starting with Seq. Num. " + this.firstSequenceNumberRequested);
+		
 		return buffer;
 	}
 
@@ -102,6 +105,8 @@ public class GapRequestManager
 		this.readBuffer.put(buffer); // add to the end of whatever is remaining
 										// in bytebuffer
 		this.readBuffer.flip();
+		//this.readBuffer.putChar(3, 'a'); // CHINMAY 03272013
+		//this.readBuffer.clear();
 		try
 		{
 			// Parse Header
@@ -119,16 +124,19 @@ public class GapRequestManager
 
 					this.packetsRemainingToDeliver = this.responsePacketCount;
 
+					// CHINMAY 03272013
+					LOGGER.info("Recd " + this.responsePacketCount + " packets from " + this.sequencer.getKey() + " through retransmission");
+					
 					// Potentially skip packets if request is not filled
 					if (this.responsePacketCount == 0)
 					{
-						LOGGER.severe("Unable to retrieve missed packets from source=" + this.sequencer.getKey() + ".  Skipping " + this.responsePacketCount + " packets.");
+						LOGGER.severe("Unable to retrieve missed packets from source= " + this.sequencer.getKey() + ". Skipping " + this.packetCountRequested + " packets.");
 						long sequenceNumber = this.firstSequenceNumberRequested + this.packetCountRequested - 1;
 						this.sequencer.skipPacketAndDequeue(sequenceNumber);
 					}
 					else if (this.responsePacketCount != this.packetCountRequested)
 					{
-						LOGGER.severe("Unable to retrieve all missed packets from source=" + this.sequencer.getKey() + ".  Skipping " + (this.responsePacketCount - this.packetCountRequested)
+						LOGGER.severe("Unable to retrieve all missed packets from source=" + this.sequencer.getKey() + ". Skipping " + (this.responsePacketCount - this.packetCountRequested)
 								+ " packets.");
 						this.sequencer.skipPacketAndDequeue(this.responseFirstSequenceNumber - 1);
 					}

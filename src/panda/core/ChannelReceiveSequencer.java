@@ -61,7 +61,9 @@ public class ChannelReceiveSequencer
 			{
 				boolean success = this.handleGap(sequenceNumber, retransmissionPort, messageCount, packetBuffer);
 				if (success) return;
+				LOGGER.info("Failed to handle gap for messages starting seq. " + sequenceNumber + " for a total of " + messageCount + " messages"); // CHINMAY 03272013
 			}
+			// CHINMAY 03272013 - Wrong message will be logged below if Retransmission is supported but fails.
 			LOGGER.severe("Gap detected.  Source=" + this.key + " Expected=" + (this.lastSequenceNumber + 1) + " Received=" + sequenceNumber + ". Retransmission not supported, skipping packets");
 			this.channelReceiveInfo.parseAndDeliverToListeners(messageCount, packetBuffer);
 			skipPacketAndDequeue(sequenceNumber);
@@ -94,6 +96,7 @@ public class ChannelReceiveSequencer
 
 	private boolean handleGap(long sequenceNumber, int retransmissionPort, byte messageCount, ByteBuffer packetBuffer)
 	{
+		LOGGER.info("Handling gap starting message seq. " + sequenceNumber + " for a total of " + messageCount + " messages"); // CHINMAY 03272013
 		byte[] bytes = new byte[packetBuffer.remaining()];
 		packetBuffer.get(bytes);
 		Packet packet = new Packet(sequenceNumber, messageCount, bytes);

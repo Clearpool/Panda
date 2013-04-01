@@ -73,6 +73,7 @@ public class SelectorThread extends Thread
 			try
 			{
 				// Check for actions
+				System.out.println("SELECTORTHREAD RUN IN WHILE");
 				synchronized (this.selectorActionQueue)
 				{
 					moveActionQueue(activeSelectorActionQueue);
@@ -365,6 +366,9 @@ public class SelectorThread extends Thread
 			{
 				channel = createDatagramChannel(interfaceIp);
 				channel.bind(new InetSocketAddress(port));
+				System.out.println("RECVBUFFER SIZE = " + channel.getOption(StandardSocketOptions.SO_RCVBUF)); // CHINMAY03272013
+				//channel.setOption(StandardSocketOptions.SO_RCVBUF, Integer.valueOf(500000)); // CHINMAY03272013
+				System.out.println("RECVBUFFER SIZE = " + channel.getOption(StandardSocketOptions.SO_RCVBUF)); // CHINMAY03272013
 				this.inDatagramChannels.put(multicastGroup, channel);
 				MulticastRegistration registration = new MulticastRegistration(channel, ip, port, receiverInfo);
 				addToActionQueue(registration);
