@@ -11,8 +11,9 @@ import java.util.logging.Logger;
 
 import panda.core.containers.TopicInfo;
 import panda.core.datastructures.Pair;
+import panda.utils.Utils;
 
-//TODO - handle large messages
+//TODO - FEATURE -handle large messages
 public class Sender
 {
 	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());
@@ -43,8 +44,8 @@ public class Sender
 
 	public void send(TopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
 	{
-		if (bytes.length > 1431)
-			throw new Exception("Message length over size=1431 not allowed.");
+		if (bytes.length > Utils.MAX_MESSAGE_PAYLOAD_SIZE)
+			throw new Exception("Message length over size=" + Utils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
 		ChannelSendInfo sendInfo = getChannelSendInfo(topicInfo, interfaceIp);
 		synchronized (sendInfo)
 		{
