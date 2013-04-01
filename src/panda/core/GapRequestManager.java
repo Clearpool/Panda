@@ -29,6 +29,8 @@ public class GapRequestManager
 	private long responseFirstSequenceNumber;
 	private int responsePacketCount;
 	private int packetsRemainingToDeliver;
+	
+	public boolean doNotConnectToTCP; // CHINMAY 04012013
 
 	public GapRequestManager(SelectorThread selectorThread, String multicastGroup, String sourceIp, ChannelReceiveSequencer sequencer)
 	{
@@ -46,18 +48,21 @@ public class GapRequestManager
 		this.responseFirstSequenceNumber = 0;
 		this.responsePacketCount = 0;
 		this.packetsRemainingToDeliver = 0;
+		
+		this.doNotConnectToTCP = false; // CHINMAY 04012013 
 	}
 
 	public boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
 	{
-
-		if (this.socketChannel == null)
+		if (this.socketChannel == null) 
 		{
 			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort + 1 ); // CHINMAY 03282013
 			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 			this.request = createGapRequest(firstSequenceNumber, packetCount);
+			return true;
 		}
-		return true;
+		return false;
+		
 	}
 
 	private static SocketChannel getSocketChannel(String remoteHost, int remotePort)
@@ -210,4 +215,10 @@ public class GapRequestManager
 		this.packetsRemainingToDeliver = 0;
 		this.sequencer.closeRetransmissionManager();
 	}
+	
+	public String getMulticastGroup()
+	{
+		return this.multicastGroup;
+	}
+	
 }

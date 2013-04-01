@@ -73,7 +73,7 @@ public class SelectorThread extends Thread
 			try
 			{
 				// Check for actions
-				System.out.println("SELECTORTHREAD RUN IN WHILE");
+				//System.out.println("SELECTORTHREAD RUN IN WHILE");
 				synchronized (this.selectorActionQueue)
 				{
 					moveActionQueue(activeSelectorActionQueue);
@@ -242,6 +242,11 @@ public class SelectorThread extends Thread
 			catch (Exception e)
 			{
 				LOGGER.log(Level.SEVERE, e.getMessage(), e);
+				
+				// CHINMAY 04012013
+				GapRequestManager gapManager = (GapRequestManager)selectedKey.attachment();
+				LOGGER.info("Failed to establish TCP connection for re-transmission. Disabling future re-transmission attempts for " + gapManager.getMulticastGroup() + " on the receiver side.");
+				gapManager.doNotConnectToTCP = true;
 		        try { ((SocketChannel)selectedKey.channel()).close(); } catch (IOException e1) { LOGGER.log(Level.SEVERE, e1.getMessage(), e1); }
 		        selectedKey.cancel();
 			}

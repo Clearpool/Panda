@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 
 import panda.core.containers.Packet;
 
-
 //TODO - FEATURE - track number of requests
 //TODO - REQUIREMENT - install timeout + min packet queue to build before requesting + handle gaps while retrans
 public class ChannelReceiveSequencer
@@ -60,10 +59,13 @@ public class ChannelReceiveSequencer
 			if (supportsRetranmissions)
 			{
 				boolean success = this.handleGap(sequenceNumber, retransmissionPort, messageCount, packetBuffer);
-				if (success) return;
-				LOGGER.info("Failed to handle gap for messages starting seq. " + sequenceNumber + " for a total of " + messageCount + " messages"); // CHINMAY 03272013
+				if (success)
+					return;
+				LOGGER.info("Failed to handle gap for messages starting seq. " + sequenceNumber + " for a total of " + messageCount + " messages"); // CHINMAY
+																																					// 03272013
 			}
-			// CHINMAY 03272013 - Wrong message will be logged below if Retransmission is supported but fails.
+			// CHINMAY 03272013 - Wrong message will be logged below if
+			// Retransmission is supported but fails.
 			LOGGER.severe("Gap detected.  Source=" + this.key + " Expected=" + (this.lastSequenceNumber + 1) + " Received=" + sequenceNumber + ". Retransmission not supported, skipping packets");
 			this.channelReceiveInfo.parseAndDeliverToListeners(messageCount, packetBuffer);
 			skipPacketAndDequeue(sequenceNumber);
@@ -72,7 +74,8 @@ public class ChannelReceiveSequencer
 
 	private void dequeueQueuedPackets()
 	{
-		if (this.queuedPackets.size() == 0) return;
+		if (this.queuedPackets.size() == 0)
+			return;
 		Packet queuedPacket = this.queuedPackets.peek();
 		while (queuedPacket != null)
 		{
@@ -98,6 +101,7 @@ public class ChannelReceiveSequencer
 	{
 		LOGGER.info("Handling gap starting message seq. " + sequenceNumber + " for a total of " + messageCount + " messages"); // CHINMAY 03272013
 		byte[] bytes = new byte[packetBuffer.remaining()];
+		int packetBufferPosition = packetBuffer.position(); // CHINMAY 04012013 - to restore position() in case of this.retransmissionManager.doNotConnectToTCP == true
 		packetBuffer.get(bytes);
 		Packet packet = new Packet(sequenceNumber, messageCount, bytes);
 		this.queuedPackets.add(packet);
@@ -110,7 +114,14 @@ public class ChannelReceiveSequencer
 			{
 				this.retransmissionManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
 			}
-			return this.retransmissionManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, packetCount);
+			// return
+			// this.retransmissionManager.sendGapRequest(retransmissionPort,
+			// this.lastSequenceNumber + 1, packetCount); // CHINMAY 04012013
+			if (this.retransmissionManager.doNotConnectToTCP == false)
+			{
+				return this.retransmissionManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, packetCount);
+			}
+			packetBuffer.position(packetBufferPosition); // CHINMAY 04012013 - for passing back to parseAndDeliverToListeners()
 		}
 		LOGGER.severe("This should never happen");
 		return false;
