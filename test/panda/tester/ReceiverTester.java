@@ -1,49 +1,104 @@
 package panda.tester;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.util.Date;
-
 import panda.core.Adapter;
 import panda.core.IDataListener;
 import panda.core.containers.TopicInfo;
 
 public class ReceiverTester
 {
-	public ReceiverTester()
-	{
-
-	}
-
-	public void SubscribeToTest(int cacheSize, TopicInfo tInfo) throws Exception
+	public void SubscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws IOException
 	{
 		final Adapter adapter = new Adapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
+
+		final Watchdog wd = new Watchdog(3000, 500);
+		new Thread(wd).start();
+
 		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new IDataListener() {
-			long lastRecdSenderTime = 0;
-			long lastRecdSenderSeq = 0;
-			long packetPerSecCounter = 0;
+			private long senderStartTimeStamp = 0;
+			private long messageSeqNum = 0;
+			private long messageCount = 0;
+			private long messagesTillLastSec = 0;
+
+			private long startedRecvTimeStamp = 0;
+			private long recdThisSecondTimeStamp = 0;
+			private long currentTime = 0;
+			private long endRecvTimeStamp;
+
 			@Override
 			public void receivedFmcData(ByteBuffer payload)
 			{
-				long recdSenderTime = payload.getLong();
-				long recdSenderSeq = payload.getLong();
+				wd.Restart();
+				this.senderStartTimeStamp = payload.getLong();
+				this.messageSeqNum = payload.getLong();
+				++this.messageCount;
 
-				if (recdSenderTime > this.lastRecdSenderTime)
+				if (this.startedRecvTimeStamp == 0)
 				{
-					//if(this.lastRecdSenderTime != 0) System.out.println(" Packets Recd in sender second " + new Date(this.lastRecdSenderTime) + " = " + this.packetPerSecCounter + " and dropped " + (this.lastRecdSenderSeq - this.packetPerSecCounter) + " packets.");
-					this.packetPerSecCounter = 0;
-					this.lastRecdSenderTime = recdSenderTime;
-					this.lastRecdSenderSeq = 0;
+					this.startedRecvTimeStamp = System.currentTimeMillis();
+					this.recdThisSecondTimeStamp = this.startedRecvTimeStamp;
 				}
-				else if (recdSenderSeq != (this.lastRecdSenderSeq + 1))
+
+				if ((this.currentTime = System.currentTimeMillis()) > this.recdThisSecondTimeStamp + 1000)
 				{
-					//System.out.println(new Date() + " Lost packets between " + this.lastRecdSenderSeq + " and " + recdSenderSeq);
+					this.recdThisSecondTimeStamp = this.currentTime;
+					System.out.println("Recd. " + (this.messageCount - this.messagesTillLastSec) + " messages in the last second. Total Messages Recd. " + this.messageCount);
+					this.messagesTillLastSec = this.messageCount;
 				}
-				this.lastRecdSenderSeq = recdSenderSeq;
-				++this.packetPerSecCounter;
-				//System.out.println(new Date() + " Recd Packet Sender time = " + recdSenderTime + " Recd Packet Seq = " + recdSenderSeq);
+
+				if (this.messageSeqNum == numOfMessages)
+				{
+					this.endRecvTimeStamp = System.currentTimeMillis();
+					System.out.println("Recd. " + this.messageCount + " in " + (this.endRecvTimeStamp - this.startedRecvTimeStamp) + " milliseconds");
+				}
 			}
-		}, 10000000);
+		}, netRecvBufferSize);
 	}
+
+}
+
+class Watchdog implements Runnable
+{
+	final long resetTimeMillis;
+	long timeStamp;
+	final int sleepResolution;
+
+	public Watchdog(int resetTimeMillis, int resolutionMillis)
+	{
+		this.resetTimeMillis = resetTimeMillis;
+		this.sleepResolution = resolutionMillis;
+	}
+
+	public void Restart()
+	{
+		this.timeStamp = System.currentTimeMillis();
+	}
+
+	@Override
+	public void run()
+	{
+		this.timeStamp = System.currentTimeMillis();
+
+		while (true)
+		{
+			try
+			{
+				Thread.sleep(500);
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+			if (System.currentTimeMillis() > (this.timeStamp + this.resetTimeMillis))
+			{
+				//System.out.println("Watchdog Killing Process");
+				System.exit(0);
+			}
+		}
+
+	}
+
 }

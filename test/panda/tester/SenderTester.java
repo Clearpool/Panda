@@ -2,45 +2,49 @@ package panda.tester;
 
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.util.Date;
 
 import panda.core.Adapter;
 import panda.core.containers.TopicInfo;
-import panda.utils.Utils;
+
 
 public class SenderTester
 {
-	public SenderTester()
+	private final long senderInitTimeStamp;
+	
+	public SenderTester() throws InterruptedException
 	{
-
+		this.senderInitTimeStamp = System.currentTimeMillis();
+		Thread.sleep(5); // to ensure 2 different senders have different value
 	}
-
+	
 	// 16 <= dataSize <= Utils.MAX_MESSAGE_PAYLOAD_SIZE
-	public void SendToTest(int cacheSize, TopicInfo tInfo, int dataSize, int timeBetweenPacketsNanoSec) throws Exception
+	public void SendSequencedMessages(int cacheSize, TopicInfo tInfo, int dataSize, long numOfMessages) throws Exception
 	{
 		final Adapter adapter = new Adapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
-		long lastSenderSeq = 0;
-		long lastSenderTime = 0;
-		// long bytesSent = 0;
-
-		while (true)
+		long seqNumber = 0;
+		long mssgPerSecCounter = 0;
+		
+		
+		long currentTimeStamp = 0;
+		long startSendTimeStamp = System.currentTimeMillis();
+		long secondCounter = startSendTimeStamp;
+	
+		while(seqNumber < numOfMessages)
 		{
-			long currTimeSecs = (System.currentTimeMillis() / 1000);
-			if (lastSenderTime < 1000 * currTimeSecs)
-			{
-				if(lastSenderTime != 0) System.out.println("Packets sent in the second " + new Date(lastSenderTime) + " = " + lastSenderSeq);
-				lastSenderTime = 1000 * currTimeSecs;
-				lastSenderSeq = 0;
-				// System.out.println(new Date() + " Bytes Sent So Far= " +
-				// bytesSent);
-			}
 			ByteBuffer buffer = ByteBuffer.allocate(dataSize);
-			buffer.putLong(0, lastSenderTime);
-			buffer.putLong(8, ++lastSenderSeq);
-
-			adapter.send(topicInfo, InetAddress.getLocalHost().getHostAddress(), buffer.array());
+			buffer.putLong(0, this.senderInitTimeStamp); // for Sender Identification at app level
+			buffer.putLong(8, ++seqNumber);
 			
+			if((currentTimeStamp = System.currentTimeMillis()) > secondCounter + 1000)
+			{
+				secondCounter = currentTimeStamp;
+				System.out.println("Sent " + (seqNumber - mssgPerSecCounter) + " messages this second");
+				mssgPerSecCounter = seqNumber;
+			}
+			adapter.send(topicInfo, InetAddress.getLocalHost().getHostAddress(), buffer.array());
 		}
+		System.out.println("Sent " + numOfMessages + " messages in " + (System.currentTimeMillis() - startSendTimeStamp) + " milliseconds");
+		
 	}
 }
