@@ -4,7 +4,7 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
-import panda.core.Adapter;
+import panda.core.PandaAdapter;
 import panda.core.containers.TopicInfo;
 import panda.utils.Utils;
 
@@ -18,7 +18,7 @@ public class SenderTester
 	// 16 <= dataSize <= Utils.MAX_MESSAGE_PAYLOAD_SIZE
 	public void SendToTest(int cacheSize, TopicInfo tInfo, int dataSize, int timeBetweenPacketsNanoSec) throws Exception
 	{
-		final Adapter adapter = new Adapter(cacheSize);
+		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
 		long lastSenderSeq = 0;
 		long lastSenderTime = 0;

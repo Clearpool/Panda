@@ -26,7 +26,7 @@ public class ChannelSendInfo implements IAction
 	private final String multicastGroup;
 	private final InetSocketAddress multicastGroupAddress;
 	private final NetworkInterface networkInterface;
-	private final ArrayDeque<Short> topicIdQueue;
+	private final ArrayDeque<Integer> topicIdQueue;
 	private final ArrayDeque<byte[]> messageQueue;
 	private final int cacheSize;
 	private final PacketCache packetCache;
@@ -43,7 +43,7 @@ public class ChannelSendInfo implements IAction
 		this.multicastGroup = multicastGroup;
 		this.multicastGroupAddress = new InetSocketAddress(this.multicastIp, this.multicastPort);
 		this.networkInterface = getNetworkInterface(interfaceIp);
-		this.topicIdQueue = new ArrayDeque<Short>();
+		this.topicIdQueue = new ArrayDeque<Integer>();
 		this.messageQueue = new ArrayDeque<byte[]>();
 		this.cacheSize = cacheSize;
 		this.packetCache = (this.cacheSize > 0 ? new PacketCache(this.cacheSize) : null);
@@ -80,7 +80,7 @@ public class ChannelSendInfo implements IAction
 	}
 
 	// Called by app thread
-	public boolean addMessageToSendQueue(Short topicId, byte[] bytes)
+	public boolean addMessageToSendQueue(Integer topicId, byte[] bytes)
 	{
 		if (bytes.length <= Utils.MAX_MESSAGE_PAYLOAD_SIZE)
 		{
@@ -102,7 +102,7 @@ public class ChannelSendInfo implements IAction
 	{
 		if (this.messageQueue.size() == 1)
 		{
-			Short topicId = this.topicIdQueue.remove();
+			Integer topicId = this.topicIdQueue.remove();
 			byte[] bytes = this.messageQueue.remove();
 
 			byte messageCount = 1;
@@ -112,7 +112,7 @@ public class ChannelSendInfo implements IAction
 			buffer.put(this.supportsRetransmissions);
 			buffer.putLong(++this.sequenceNumber);
 			buffer.put(messageCount);
-			buffer.putShort(topicId.shortValue());
+			buffer.putInt(topicId.intValue());
 			buffer.putShort((short) bytes.length);
 			buffer.put(bytes);
 			addToPacketQueue(prependedBytes, this.sequenceNumber);
@@ -124,9 +124,9 @@ public class ChannelSendInfo implements IAction
 		byte messageCount = 0;
 		while (this.messageQueue.size() > 0 && messageCount <= Byte.MAX_VALUE)
 		{
-			Short topicId = this.topicIdQueue.remove();
+			Integer topicId = this.topicIdQueue.remove();
 			byte[] messageBytes = this.messageQueue.remove();
-			messageBuffer.putShort(topicId.shortValue());
+			messageBuffer.putInt(topicId.intValue());
 			messageBuffer.putShort((short) messageBytes.length);
 			messageBuffer.put(messageBytes);
 			messageCount++;

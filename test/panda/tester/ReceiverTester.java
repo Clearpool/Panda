@@ -4,7 +4,7 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
-import panda.core.Adapter;
+import panda.core.PandaAdapter;
 import panda.core.IDataListener;
 import panda.core.containers.TopicInfo;
 
@@ -17,14 +17,14 @@ public class ReceiverTester
 
 	public void SubscribeToTest(int cacheSize, TopicInfo tInfo) throws Exception
 	{
-		final Adapter adapter = new Adapter(cacheSize);
+		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
 		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new IDataListener() {
 			long lastRecdSenderTime = 0;
 			long lastRecdSenderSeq = 0;
 			long packetPerSecCounter = 0;
 			@Override
-			public void receivedFmcData(ByteBuffer payload)
+			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
 				long recdSenderTime = payload.getLong();
 				long recdSenderSeq = payload.getLong();

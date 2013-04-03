@@ -18,7 +18,7 @@ public class ChannelReceiveInfo
 	private final String localIp;
 	private final int bindPort;
 	private final SelectorThread selectorThread;
-	private final Map<Short, Set<IDataListener>> topicToListeners;
+	private final Map<Integer, Set<IDataListener>> topicToListeners;
 	private final Map<String, ChannelReceiveSequencer> sourceInfos;
 
 	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize)
@@ -29,7 +29,7 @@ public class ChannelReceiveInfo
 		this.localIp = localIp;
 		this.bindPort = bindPort;
 		this.selectorThread = selectorThread;
-		this.topicToListeners = new HashMap<Short, Set<IDataListener>>();
+		this.topicToListeners = new HashMap<Integer, Set<IDataListener>>();
 		this.sourceInfos = new HashMap<String, ChannelReceiveSequencer>();
 		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this, recvBufferSize);
 	}
@@ -92,7 +92,7 @@ public class ChannelReceiveInfo
 		//Parse messages and deliver to listeners
 		for(int i=0; i<messageCount; i++)
 		{
-			Short incomingTopicId = Short.valueOf(packetBuffer.getShort());
+			Integer incomingTopicId = Integer.valueOf(packetBuffer.getInt());
 			short messageLength = packetBuffer.getShort();
 			Set<IDataListener> listeners = this.topicToListeners.get(incomingTopicId);
 			if(listeners != null)
@@ -102,7 +102,7 @@ public class ChannelReceiveInfo
 				ByteBuffer messageBuffer = ByteBuffer.wrap(messageBytes);
 				for(IDataListener listener : listeners)
 				{
-					listener.receivedFmcData(messageBuffer);
+					listener.receivedPandaData(incomingTopicId.intValue(), messageBuffer);
 				}
 			}
 			else

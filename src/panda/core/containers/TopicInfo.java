@@ -4,11 +4,11 @@ public class TopicInfo
 {
 	private final String ip;
 	private final Integer port;
-	private final Short topicId;
+	private final Integer topicId;
 	private final String topic;
 	private final String multicastGroup;
 	
-	public TopicInfo(String ip, Integer port, Short topicId, String topic)
+	public TopicInfo(String ip, Integer port, Integer topicId, String topic)
 	{
 		this.ip = ip;
 		this.port = port;
@@ -27,7 +27,7 @@ public class TopicInfo
 		return this.port;
 	}
 
-	public Short getTopicId()
+	public Integer getTopicId()
 	{
 		return this.topicId;
 	}

@@ -4,5 +4,5 @@ import java.nio.ByteBuffer;
 
 public interface IDataListener
 {
-	public void receivedFmcData(ByteBuffer payload);
+	public void receivedPandaData(int topicId, ByteBuffer payload);
 }

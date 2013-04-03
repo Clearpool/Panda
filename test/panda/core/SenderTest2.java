@@ -15,7 +15,7 @@ public class SenderTest2
 		short topicID = Short.valueOf(args[0]).shortValue();
 		int payloadSize = Integer.valueOf(args[1]).intValue();
 		int intervalNanoSec = Integer.valueOf(args[2]).intValue();
-		final TopicInfo topicInfo = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Short.valueOf(topicID), "TEST_TOPIC");
+		final TopicInfo topicInfo = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf(topicID), "TEST_TOPIC");
 
 		SenderTester st = new SenderTester();
 		st.SendToTest(10000, topicInfo, /*Utils.MAX_MESSAGE_PAYLOAD_SIZE*/payloadSize, intervalNanoSec);
