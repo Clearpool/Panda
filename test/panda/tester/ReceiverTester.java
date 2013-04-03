@@ -3,7 +3,8 @@ package panda.tester;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import panda.core.Adapter;
+import panda.core.PandaAdapter;
+
 import panda.core.IDataListener;
 import panda.core.containers.TopicInfo;
 
@@ -11,7 +12,7 @@ public class ReceiverTester
 {
 	public void SubscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws IOException
 	{
-		final Adapter adapter = new Adapter(cacheSize);
+		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
 
 		final Watchdog wd = new Watchdog(3000, 500);
@@ -29,7 +30,7 @@ public class ReceiverTester
 			private long endRecvTimeStamp;
 
 			@Override
-			public void receivedFmcData(ByteBuffer payload)
+			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
 				wd.Restart();
 				this.senderStartTimeStamp = payload.getLong();

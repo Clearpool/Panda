@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import panda.core.Adapter;
+import panda.core.PandaAdapter;
 import panda.core.IDataListener;
 import panda.core.containers.TopicInfo;
 
@@ -15,13 +15,13 @@ public class SenderReceiverTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		final Adapter adapter = new Adapter(1000);
-		final TopicInfo topicInfo1 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Short.valueOf((short)1), "FIVE");
-		final TopicInfo topicInfo2 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Short.valueOf((short)2), "FOUR");
+		final PandaAdapter adapter = new PandaAdapter(1000);
+		final TopicInfo topicInfo1 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)1), "FIVE");
+		final TopicInfo topicInfo2 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)2), "FOUR");
 		final AtomicInteger integer = new AtomicInteger();
 		adapter.subscribe(topicInfo1, getLocalIp(null), new IDataListener() {
 			@Override
-			public void receivedFmcData(ByteBuffer payload)
+			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
 				byte[] bytes = new byte[payload.remaining()];
 				payload.get(bytes, 0, bytes.length);
@@ -45,7 +45,7 @@ public class SenderReceiverTest
 		}, 10000000);
 		adapter.subscribe(topicInfo2, getLocalIp(null), new IDataListener() {
 			@Override
-			public void receivedFmcData(ByteBuffer payload)
+			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
 				byte[] bytes = new byte[payload.remaining()];
 				payload.get(bytes, 0, bytes.length);

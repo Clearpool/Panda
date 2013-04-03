@@ -11,15 +11,15 @@ import panda.core.containers.TopicInfo;
 //Do not subscribe to same group on two diff network cards in same adapter
 //TODO - TEST - can multiple adapters co-exist in same process space?
 //TODO - TEST - unit tests
-public class Adapter
+public class PandaAdapter
 {
-	private static final Logger LOGGER = Logger.getLogger(Adapter.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(PandaAdapter.class.getName());
 
 	private final SelectorThread selectorThread;
 	private final Receiver receiver;
 	private final Sender sender;
 
-	public Adapter(int cacheSize) throws IOException
+	public PandaAdapter(int cacheSize) throws IOException
 	{
 		this.selectorThread = new SelectorThread();
 		ServerSocketChannel channel = getServerSocketChannel();

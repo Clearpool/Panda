@@ -3,7 +3,7 @@ package panda.tester;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
-import panda.core.Adapter;
+import panda.core.PandaAdapter;
 import panda.core.containers.TopicInfo;
 
 
@@ -20,7 +20,7 @@ public class SenderTester
 	// 16 <= dataSize <= Utils.MAX_MESSAGE_PAYLOAD_SIZE
 	public void SendSequencedMessages(int cacheSize, TopicInfo tInfo, int dataSize, long numOfMessages) throws Exception
 	{
-		final Adapter adapter = new Adapter(cacheSize);
+		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
 		long seqNumber = 0;
 		long mssgPerSecCounter = 0;
