@@ -2,6 +2,7 @@ package panda.tester;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import panda.core.PandaAdapter;
 
@@ -15,7 +16,7 @@ public class ReceiverTester
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
 
-		final Watchdog wd = new Watchdog(3000, 500);
+		final Watchdog wd = new Watchdog(5000, 500);
 		new Thread(wd).start();
 
 		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new IDataListener() {
@@ -50,11 +51,22 @@ public class ReceiverTester
 					this.messagesTillLastSec = this.messageCount;
 				}
 
-				if (this.messageSeqNum == numOfMessages)
+				/*if (this.messageSeqNum == numOfMessages)
 				{
 					this.endRecvTimeStamp = System.currentTimeMillis();
 					System.out.println("Recd. " + this.messageCount + " in " + (this.endRecvTimeStamp - this.startedRecvTimeStamp) + " milliseconds");
+				}*/
+				
+				try
+				{
+					payload.position(0);
+					adapter.send(topicInfo, InetAddress.getLocalHost().getHostAddress(), payload.array());
 				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				
 			}
 		}, netRecvBufferSize);
 	}
