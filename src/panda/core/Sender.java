@@ -1,6 +1,7 @@
 package panda.core;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
@@ -92,7 +93,7 @@ public class Sender
 		List<byte[]> packets = cachedPackets == null ? null : cachedPackets.getA();
 		long firstSequenceNumber = cachedPackets == null ? 0 : cachedPackets.getB().longValue();
 		GapResponseManager response = new GapResponseManager(channel, packets, firstSequenceNumber);
-		this.selectorThread.registerTcpChannelAction(channel, 4, response);
+		this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_WRITE, response);
 	}
 
 	public void close()
