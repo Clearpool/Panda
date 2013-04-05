@@ -90,7 +90,10 @@ public class GapRequestManager
 
 		this.firstSequenceNumberRequested = firstSequenceNumber;
 		this.packetCountRequested = packetCount;
-		LOGGER.info("Requesting " + this.packetCountRequested + " missed packets from source " + this.sequencer.getKey() + " starting with Seq. Num. " + this.firstSequenceNumberRequested + " for " + this.multicastGroup);
+		// LOGGER.info("Requesting " + this.packetCountRequested +
+		// " missed packets from source " + this.sequencer.getKey() +
+		// " starting with Seq. Num. " + this.firstSequenceNumberRequested +
+		// " for " + this.multicastGroup);
 
 		return buffer;
 	}
@@ -124,7 +127,9 @@ public class GapRequestManager
 
 					this.packetsRemainingToDeliver = this.responsePacketCount;
 
-					LOGGER.info("Recd " + this.responsePacketCount + " packets from " + this.sequencer.getKey() + " through retransmission for " + this.multicastGroup);
+					// LOGGER.info("Recd " + this.responsePacketCount +
+					// " packets from " + this.sequencer.getKey() +
+					// " through retransmission for " + this.multicastGroup);
 
 					// Potentially skip packets if request is not filled
 					if (this.responsePacketCount == 0)
@@ -167,7 +172,7 @@ public class GapRequestManager
 					{
 						this.readBuffer.reset();
 						this.readBuffer.compact();
-						this.readBuffer.limit(this.readBuffer.capacity());
+						return;
 					}
 				}
 				else

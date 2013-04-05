@@ -18,7 +18,7 @@ public class SenderTester
 	}
 
 	// 24 <= dataSize <= Utils.MAX_MESSAGE_PAYLOAD_SIZE
-	public void SendSequencedMessages(int cacheSize, TopicInfo tInfo, int dataSize, final long numOfMessages) throws Exception
+	public void SendSequencedMessages(int cacheSize, TopicInfo tInfo, int dataSize, final long numOfMessages, int netRecvBufferSize) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
@@ -64,7 +64,7 @@ public class SenderTester
 					System.exit(0);
 				}
 			}
-		}, 10000000
+		}, netRecvBufferSize
 		);
 
 		while ( true /*seqNumber < numOfMessages*/ )

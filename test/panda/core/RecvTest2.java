@@ -12,13 +12,19 @@ public class RecvTest2
 	 */
 	public static void main(String[] args) throws Exception
 	{
-		short topicID = Short.valueOf(args[0]).shortValue();
-		long numOfMessages = Long.valueOf(args[1]).longValue();
+		if (args.length != 4)
+		{
+			System.out.println(" usage -- panda.core.RecvTest2 (int)pandaAdapterCache (int)topicID (long)numOfMessages (int)netRecvBufferSize");
+			System.exit(0);
+		}
+		int adapterCache = Integer.valueOf(args[0]).intValue();
+		int topicID = Integer.valueOf(args[1]).intValue();
+		long numOfMessages = Long.valueOf(args[2]).longValue();
+		int netRecvBufferSize = Integer.valueOf(args[3]).intValue();
 		TopicInfo topicInfo = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf(topicID), "TEST_TOPIC");
 
-
 		ReceiverTester rt = new ReceiverTester();
-		rt.SubscribeToSequencedMessages(10000, topicInfo, numOfMessages, 10000000);
+		rt.SubscribeToSequencedMessages(adapterCache, topicInfo, numOfMessages, netRecvBufferSize);
 	}
 
 }

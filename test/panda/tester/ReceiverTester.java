@@ -47,15 +47,15 @@ public class ReceiverTester
 				if ((this.currentTime = System.currentTimeMillis()) > this.recdThisSecondTimeStamp + 1000)
 				{
 					this.recdThisSecondTimeStamp = this.currentTime;
-					System.out.println("Recd. " + (this.messageCount - this.messagesTillLastSec) + " messages in the last second. Total Messages Recd. " + this.messageCount);
+					if(this.messageSeqNum <= numOfMessages) System.out.println("Recd. " + (this.messageCount - this.messagesTillLastSec) + " messages in the last second. Total Messages Recd. " + this.messageCount);
 					this.messagesTillLastSec = this.messageCount;
 				}
 
-				/*if (this.messageSeqNum == numOfMessages)
+				if (this.messageSeqNum == numOfMessages)
 				{
 					this.endRecvTimeStamp = System.currentTimeMillis();
 					System.out.println("Recd. " + this.messageCount + " in " + (this.endRecvTimeStamp - this.startedRecvTimeStamp) + " milliseconds");
-				}*/
+				}
 				
 				try
 				{
