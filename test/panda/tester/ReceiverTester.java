@@ -2,16 +2,15 @@ package panda.tester;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import panda.core.PandaAdapter;
 
 import panda.core.IDataListener;
+import panda.core.PandaAdapter;
 import panda.core.containers.TopicInfo;
 
 public class ReceiverTester
 {
-	public void SubscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws IOException
+	public static void subscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws IOException
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
@@ -20,7 +19,6 @@ public class ReceiverTester
 		new Thread(wd).start();
 
 		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new IDataListener() {
-			private long senderStartTimeStamp = 0;
 			private long messageSeqNum = 0;
 			private long messageCount = 0;
 			private long messagesTillLastSec = 0;
@@ -34,7 +32,6 @@ public class ReceiverTester
 			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
 				wd.Restart();
-				this.senderStartTimeStamp = payload.getLong();
 				this.messageSeqNum = payload.getLong();
 				++this.messageCount;
 
@@ -66,11 +63,9 @@ public class ReceiverTester
 				{
 					e.printStackTrace();
 				}
-				
 			}
 		}, netRecvBufferSize);
 	}
-
 }
 
 class Watchdog implements Runnable
@@ -111,7 +106,5 @@ class Watchdog implements Runnable
 				System.exit(0);
 			}
 		}
-
 	}
-
 }
