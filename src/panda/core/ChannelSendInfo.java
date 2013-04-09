@@ -9,8 +9,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayDeque;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import panda.core.datastructures.PacketCache;
 import panda.core.datastructures.Pair;
@@ -19,8 +17,6 @@ import panda.utils.Utils;
 
 public class ChannelSendInfo implements IAction
 {
-	private static final Logger LOGGER = Logger.getLogger(ChannelSendInfo.class.getName());
-
 	private final InetAddress multicastIp;
 	private final int multicastPort;
 	private final String multicastGroup;
@@ -36,13 +32,13 @@ public class ChannelSendInfo implements IAction
 	private long sequenceNumber;
 	//private boolean skipNext;
 
-	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp)
+	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp) throws Exception
 	{
-		this.multicastIp = getInetAddress(ip);
+		this.multicastIp = InetAddress.getByName(ip);
 		this.multicastPort = port;
 		this.multicastGroup = multicastGroup;
 		this.multicastGroupAddress = new InetSocketAddress(this.multicastIp, this.multicastPort);
-		this.networkInterface = getNetworkInterface(interfaceIp);
+		this.networkInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(interfaceIp));
 		this.topicIdQueue = new ArrayDeque<Integer>();
 		this.messageQueue = new ArrayDeque<byte[]>();
 		this.cacheSize = cacheSize;
@@ -51,32 +47,6 @@ public class ChannelSendInfo implements IAction
 
 		this.channel = null;
 		this.sequenceNumber = 0;
-	}
-
-	private static InetAddress getInetAddress(String address)
-	{
-		try
-		{
-			return InetAddress.getByName(address);
-		}
-		catch (Exception e)
-		{
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
-		return null;
-	}
-
-	private static NetworkInterface getNetworkInterface(String interfaceIp)
-	{
-		try
-		{
-			return NetworkInterface.getByInetAddress(InetAddress.getByName(interfaceIp));
-		}
-		catch (Exception e)
-		{
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
-		return null;
 	}
 
 	// Called by app thread

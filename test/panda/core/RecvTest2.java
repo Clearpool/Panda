@@ -23,6 +23,7 @@ public class RecvTest2
 		int netRecvBufferSize = Integer.valueOf(args[3]).intValue();
 		TopicInfo topicInfo = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf(topicID), "TEST_TOPIC");
 
-		ReceiverTester.subscribeToSequencedMessages(adapterCache, topicInfo, numOfMessages, netRecvBufferSize);
+		ReceiverTester rt = new ReceiverTester();
+		rt.subscribeToSequencedMessages(adapterCache, topicInfo, numOfMessages, netRecvBufferSize);
 	}
 }

@@ -1,11 +1,11 @@
 package panda.tester;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
-import panda.core.IDataListener;
 import panda.core.PandaAdapter;
+import panda.core.PandaDataListener;
+import panda.core.PandaErrorCode;
 import panda.core.containers.TopicInfo;
 
 public class ReceiverTester
@@ -40,7 +40,7 @@ public class ReceiverTester
 		return this.latestMessageCount;
 	}
 
-	public void subscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws IOException
+	public void subscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
@@ -48,7 +48,7 @@ public class ReceiverTester
 		final ReceiverWatchdog wd = new ReceiverWatchdog(3000, 250, this, numOfMessages);
 		new Thread(wd).start();
 
-		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new IDataListener() {
+		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new PandaDataListener() {
 			private long messageSeqNum = 0;
 			private long highestRecdSeqNum = 0;
 			private long messageCount = 0;
@@ -98,6 +98,13 @@ public class ReceiverTester
 				{
 					e.printStackTrace();
 				}
+			}
+
+			@Override
+			public void receivedPandaError(PandaErrorCode issueCode, String message, Throwable throwable)
+			{
+				// TODO Auto-generated method stub
+				
 			}
 		}, netRecvBufferSize);
 	}

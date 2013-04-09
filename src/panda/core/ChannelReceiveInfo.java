@@ -12,13 +12,16 @@ import panda.core.containers.TopicInfo;
 
 public class ChannelReceiveInfo
 {	
+	private static final int MAX_SOURCE_DROP_THRESHOLD = 1000000;
+	
 	private final String multicastIp;
 	private final int multicastPort;
 	private final String multicastGroup;
 	private final String localIp;
 	private final int bindPort;
 	private final SelectorThread selectorThread;
-	private final Map<Integer, Set<IDataListener>> topicToListeners;
+	private final Map<Integer, Set<PandaDataListener>> topicToListeners;
+	private final Set<PandaDataListener> groupListeners;
 	private final Map<String, ChannelReceiveSequencer> sourceInfos;
 
 	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize)
@@ -29,21 +32,23 @@ public class ChannelReceiveInfo
 		this.localIp = localIp;
 		this.bindPort = bindPort;
 		this.selectorThread = selectorThread;
-		this.topicToListeners = new HashMap<Integer, Set<IDataListener>>();
+		this.topicToListeners = new HashMap<Integer, Set<PandaDataListener>>();
+		this.groupListeners = new HashSet<PandaDataListener>();
 		this.sourceInfos = new HashMap<String, ChannelReceiveSequencer>();
 		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this, recvBufferSize);
 	}
 
 	//Called by app thread
-	public void registerTopicListener(TopicInfo topicInfo, IDataListener listener)
+	public void registerTopicListener(TopicInfo topicInfo, PandaDataListener listener)
 	{
-		Set<IDataListener> listeners = this.topicToListeners.get(topicInfo.getTopicId());
-		if(listeners == null)
+		Set<PandaDataListener> topicListeners = this.topicToListeners.get(topicInfo.getTopicId());
+		if(topicListeners == null)
 		{
-			listeners = new HashSet<IDataListener>();
-			this.topicToListeners.put(topicInfo.getTopicId(), listeners);
+			topicListeners = new HashSet<PandaDataListener>();
+			this.topicToListeners.put(topicInfo.getTopicId(), topicListeners);
 		}
-		listeners.add(listener);
+		topicListeners.add(listener);
+		this.groupListeners.add(listener);
 	}
 	
 	//Called by selectorThread
@@ -80,7 +85,7 @@ public class ChannelReceiveInfo
 		ChannelReceiveSequencer sourceInfo = this.sourceInfos.get(sourceInfoKey);
 		if(sourceInfo == null)
 		{
-			sourceInfo = new ChannelReceiveSequencer(this.selectorThread, sourceInfoKey, this.multicastGroup, sourceAddress, this);
+			sourceInfo = new ChannelReceiveSequencer(this.selectorThread, sourceInfoKey, this.multicastGroup, sourceAddress, this, MAX_SOURCE_DROP_THRESHOLD);
 			this.sourceInfos.put(sourceInfoKey, sourceInfo);
 		}
 		return sourceInfo;
@@ -94,13 +99,13 @@ public class ChannelReceiveInfo
 		{
 			Integer incomingTopicId = Integer.valueOf(packetBuffer.getInt());
 			short messageLength = packetBuffer.getShort();
-			Set<IDataListener> listeners = this.topicToListeners.get(incomingTopicId);
+			Set<PandaDataListener> listeners = this.topicToListeners.get(incomingTopicId);
 			if(listeners != null)
 			{
 				byte[] messageBytes = new byte[messageLength];
 				packetBuffer.get(messageBytes);
 				ByteBuffer messageBuffer = ByteBuffer.wrap(messageBytes);
-				for(IDataListener listener : listeners)
+				for(PandaDataListener listener : listeners)
 				{
 					listener.receivedPandaData(incomingTopicId.intValue(), messageBuffer);
 				}
@@ -109,6 +114,14 @@ public class ChannelReceiveInfo
 			{
 				packetBuffer.position(packetBuffer.position() + messageLength);
 			}
+		}
+	}
+	
+	public void deliverErrorToListeners(PandaErrorCode errorCode, String message, Throwable throwable)
+	{
+		for(PandaDataListener listener : this.groupListeners)
+		{
+			listener.receivedPandaError(errorCode, this.multicastGroup +"|"+ message, throwable);
 		}
 	}
 }

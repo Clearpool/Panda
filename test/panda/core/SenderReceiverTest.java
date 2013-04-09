@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import panda.core.PandaAdapter;
-import panda.core.IDataListener;
+import panda.core.PandaDataListener;
 import panda.core.containers.TopicInfo;
 
 
@@ -19,7 +19,7 @@ public class SenderReceiverTest
 		final TopicInfo topicInfo1 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)1), "FIVE");
 		final TopicInfo topicInfo2 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)2), "FOUR");
 		final AtomicInteger integer = new AtomicInteger();
-		adapter.subscribe(topicInfo1, getLocalIp(null), new IDataListener() {
+		adapter.subscribe(topicInfo1, getLocalIp(null), new PandaDataListener() {
 			@Override
 			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
@@ -42,14 +42,26 @@ public class SenderReceiverTest
 				if (integer.get() % 1 == 0)
 					System.out.println(new Date() + " Sent packet=" + newInt);
 			}
+
+			@Override
+			public void receivedPandaError(PandaErrorCode issueCode, String message, Throwable throable)
+			{
+				System.err.println(issueCode + "|" + message);
+			}
 		}, 10000000);
-		adapter.subscribe(topicInfo2, getLocalIp(null), new IDataListener() {
+		adapter.subscribe(topicInfo2, getLocalIp(null), new PandaDataListener() {
 			@Override
 			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
 				byte[] bytes = new byte[payload.remaining()];
 				payload.get(bytes, 0, bytes.length);
 				System.out.println(new Date() + " Received packet=" + new String(bytes));
+			}
+
+			@Override
+			public void receivedPandaError(PandaErrorCode issueCode, String message, Throwable throable)
+			{
+				System.err.println(issueCode + "|" + message);
 			}
 		}, 10000000);
 	}

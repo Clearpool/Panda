@@ -3,8 +3,9 @@ package panda.tester;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
-import panda.core.IDataListener;
 import panda.core.PandaAdapter;
+import panda.core.PandaDataListener;
+import panda.core.PandaErrorCode;
 import panda.core.containers.TopicInfo;
 
 public class SenderTester
@@ -46,7 +47,7 @@ public class SenderTester
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
 
-		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new IDataListener() {
+		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new PandaDataListener() {
 
 			private long recdThisSecondTimeStamp;
 			private long currentTime;
@@ -80,6 +81,13 @@ public class SenderTester
 				}
 
 				SenderTester.this.endRecvTimeStamp = System.currentTimeMillis();
+			}
+
+			@Override
+			public void receivedPandaError(PandaErrorCode issueCode, String message, Throwable throwable)
+			{
+				// TODO Auto-generated method stub
+				
 			}
 		}, netRecvBufferSize);
 

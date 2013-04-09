@@ -1,29 +1,33 @@
 package panda.core;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
-import panda.core.PandaAdapter;
-import panda.core.IDataListener;
 import panda.core.containers.TopicInfo;
 
 
 public class ReceiverTest2
 {
-	public static void main(String[] args) throws IOException
+	public static void main(String[] args) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(0);
 		final TopicInfo topicInfo2 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)2), "FOUR");
-		adapter.subscribe(topicInfo2, getLocalIp(null), new IDataListener() {
+		adapter.subscribe(topicInfo2, getLocalIp(null), new PandaDataListener() {
 			@Override
 			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
 				byte[] bytes = new byte[payload.remaining()];
 				payload.get(bytes, 0, bytes.length);
 				System.out.println(new Date() + " Received packet=" + new String(bytes));
+			}
+
+			@Override
+			public void receivedPandaError(PandaErrorCode issueCode, String message, Throwable throwable)
+			{
+				// TODO Auto-generated method stub
+				
 			}
 		}, 10000000);
 	}

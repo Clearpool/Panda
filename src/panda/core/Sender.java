@@ -7,14 +7,13 @@ import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import panda.core.containers.TopicInfo;
 import panda.core.datastructures.Pair;
 import panda.utils.Utils;
 
-//TODO - FEATURE -handle large messages
+//TODO - FEATURE - handle large messages
 public class Sender
 {
 	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());
@@ -23,24 +22,12 @@ public class Sender
 	private final int cacheSize;
 	private final Map<String, ChannelSendInfo> channelInfos;
 
-	public Sender(SelectorThread selectorThread, ServerSocketChannel channel, int cacheSize)
+	public Sender(SelectorThread selectorThread, ServerSocketChannel channel, int cacheSize) throws Exception
 	{
 		this.selectorThread = selectorThread;
 		this.cacheSize = cacheSize;
-		registierRetransmissionChannel(channel);
+		this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_ACCEPT, this);
 		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
-	}
-
-	private void registierRetransmissionChannel(ServerSocketChannel channel)
-	{
-		try
-		{
-			this.selectorThread.registerTcpChannelAction(channel, 16, this);
-		}
-		catch (Exception e)
-		{
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
 	}
 
 	public void send(TopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
@@ -55,7 +42,7 @@ public class Sender
 		}
 	}
 
-	private ChannelSendInfo getChannelSendInfo(TopicInfo topicInfo, String interfaceIp)
+	private ChannelSendInfo getChannelSendInfo(TopicInfo topicInfo, String interfaceIp) throws Exception
 	{
 		ChannelSendInfo sendInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
 		if (sendInfo == null)
@@ -83,7 +70,6 @@ public class Sender
 			{
 				cachedPackets = sendInfo.getCachedPackets(startSequenceNumber, packetCount);
 			}
-
 		}
 		else
 		{

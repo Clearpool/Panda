@@ -5,15 +5,11 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import panda.utils.Utils;
 
 public class GapRequestManager
 {
-	private static final Logger LOGGER = Logger.getLogger(GapRequestManager.class.getName());
-
 	private final SelectorThread selectorThread;
 	private final String multicastGroup;
 	private final String sourceIp;
@@ -22,6 +18,7 @@ public class GapRequestManager
 
 	private SocketChannel socketChannel;
 	private ByteBuffer request;
+	private long timeOfRequest;
 	private long firstSequenceNumberRequested;
 	private long packetCountRequested;
 	private boolean responseHeaderReceived;
@@ -29,7 +26,8 @@ public class GapRequestManager
 	private int responsePacketCount;
 	private int packetsRemainingToDeliver;
 
-	private boolean isDisabled;
+	private boolean disabled;
+	private boolean active;
 
 	public GapRequestManager(SelectorThread selectorThread, String multicastGroup, String sourceIp, ChannelReceiveSequencer sequencer)
 	{
@@ -41,6 +39,7 @@ public class GapRequestManager
 
 		this.socketChannel = null;
 		this.request = null;
+		this.timeOfRequest = 0;
 		this.firstSequenceNumberRequested = 0;
 		this.packetCountRequested = 0;
 		this.responseHeaderReceived = false;
@@ -48,14 +47,15 @@ public class GapRequestManager
 		this.responsePacketCount = 0;
 		this.packetsRemainingToDeliver = 0;
 
-		this.isDisabled = false;
+		this.disabled = false;
+		this.active = false;
 	}
 
 	public boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
 	{
-
 		if (this.socketChannel == null)
 		{
+			this.active = true;
 			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
 			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 			this.request = createGapRequest(firstSequenceNumber, packetCount);
@@ -63,7 +63,7 @@ public class GapRequestManager
 		return true;
 	}
 
-	private static SocketChannel getSocketChannel(String remoteHost, int remotePort)
+	private SocketChannel getSocketChannel(String remoteHost, int remotePort)
 	{
 		try
 		{
@@ -74,7 +74,7 @@ public class GapRequestManager
 		}
 		catch (Exception e)
 		{
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.EXCEPTION, e.getMessage(), e);
 		}
 		return null;
 	}
@@ -88,12 +88,10 @@ public class GapRequestManager
 		buffer.put(this.multicastGroup.getBytes());
 		buffer.rewind();
 
+		this.timeOfRequest = System.currentTimeMillis();
 		this.firstSequenceNumberRequested = firstSequenceNumber;
 		this.packetCountRequested = packetCount;
-		// LOGGER.info("Requesting " + this.packetCountRequested +
-		// " missed packets from source " + this.sequencer.getKey() +
-		// " starting with Seq. Num. " + this.firstSequenceNumberRequested +
-		// " for " + this.multicastGroup);
+		// LOGGER.info("Requesting " + this.packetCountRequested + " missed packets from source " + this.sequencer.getKey() + " starting with Seq. Num. " + this.firstSequenceNumberRequested + " for " + this.multicastGroup);
 
 		return buffer;
 	}
@@ -107,8 +105,7 @@ public class GapRequestManager
 	// Called by selectorThread
 	public void processGapResponse(SocketChannel channel, SelectionKey key, ByteBuffer buffer)
 	{
-		this.readBuffer.put(buffer); // add to the end of whatever is remaining
-										// in bytebuffer
+		this.readBuffer.put(buffer); // add to the end of whatever is remaining in bytebuffer
 		this.readBuffer.flip();
 		try
 		{
@@ -126,22 +123,18 @@ public class GapRequestManager
 					this.responseHeaderReceived = true;
 
 					this.packetsRemainingToDeliver = this.responsePacketCount;
-
-					// LOGGER.info("Recd " + this.responsePacketCount +
-					// " packets from " + this.sequencer.getKey() +
-					// " through retransmission for " + this.multicastGroup);
+					// LOGGER.info("Recd " + this.responsePacketCount + " packets from " + this.sequencer.getKey() + " through retransmission for " + this.multicastGroup);
 
 					// Potentially skip packets if request is not filled
 					if (this.responsePacketCount == 0)
 					{
-						LOGGER.severe("Unable to retrieve missed packets from source= " + this.sequencer.getKey() + ". Skipping " + this.packetCountRequested + " packets.");
+						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_RESPONSE_NONE, "Unable to retrieve missed packets from source=" + this.sequencer.getKey() + ". Skipping " + this.packetCountRequested + " packets.", null);
 						long sequenceNumber = this.firstSequenceNumberRequested + this.packetCountRequested - 1;
 						this.sequencer.skipPacketAndDequeue(sequenceNumber);
 					}
 					else if (this.responsePacketCount != this.packetCountRequested)
 					{
-						LOGGER.severe("Unable to retrieve all missed packets from source=" + this.sequencer.getKey() + ". Skipping " + (this.responsePacketCount - this.packetCountRequested)
-								+ " packets.");
+						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_RESPONSE_PARTIAL, "Unable to retrieve all missed packets from source=" + this.sequencer.getKey() + ". Skipping " + (this.responsePacketCount - this.packetCountRequested) + " packets.", null);
 						this.sequencer.skipPacketAndDequeue(this.responseFirstSequenceNumber - 1);
 					}
 				}
@@ -190,7 +183,7 @@ public class GapRequestManager
 		}
 		catch (Exception e)
 		{
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.EXCEPTION, e.getMessage(), e);
 		}
 	}
 
@@ -206,27 +199,49 @@ public class GapRequestManager
 		this.readBuffer.clear();
 		this.socketChannel = null;
 		this.request = null;
+		this.timeOfRequest = 0;
 		this.firstSequenceNumberRequested = 0L;
 		this.packetCountRequested = 0L;
 		this.responseHeaderReceived = false;
 		this.responseFirstSequenceNumber = 0L;
 		this.responsePacketCount = 0;
 		this.packetsRemainingToDeliver = 0;
+		this.active = false;
 		this.sequencer.closeRetransmissionManager();
 	}
-	
-	public boolean getIsDisabled()
+
+	public boolean isDisabled()
 	{
-		return this.isDisabled;
+		return this.disabled;
 	}
-	
-	public void setIsDisabled(boolean b)
+
+	public void setDisabled(boolean disabled)
 	{
-		this.isDisabled = b;
+		this.disabled = disabled;
 	}
 
 	public String getMulticastGroup()
 	{
 		return this.multicastGroup;
+	}
+
+	public boolean isActive()
+	{
+		return this.active;
+	}
+
+	public long getTimeOfRequest()
+	{
+		return this.timeOfRequest;
+	}
+	
+	long getFirstSequenceNumberRequested()
+	{
+		return this.firstSequenceNumberRequested;
+	}
+	
+	long getPacketCountRequested()
+	{
+		return this.packetCountRequested;
 	}
 }

@@ -1,6 +1,5 @@
 package panda.core;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.logging.Level;
@@ -9,8 +8,6 @@ import java.util.logging.Logger;
 import panda.core.containers.TopicInfo;
 
 //Do not subscribe to same group on two diff network cards in same adapter
-//TODO - TEST - can multiple adapters co-exist in same process space?
-//TODO - TEST - unit tests
 public class PandaAdapter
 {
 	private static final Logger LOGGER = Logger.getLogger(PandaAdapter.class.getName());
@@ -19,7 +16,7 @@ public class PandaAdapter
 	private final Receiver receiver;
 	private final Sender sender;
 
-	public PandaAdapter(int cacheSize) throws IOException
+	public PandaAdapter(int cacheSize) throws Exception
 	{
 		this.selectorThread = new SelectorThread();
 		ServerSocketChannel channel = getServerSocketChannel();
@@ -49,7 +46,7 @@ public class PandaAdapter
 		this.sender.send(topicInfo, interfaceIp, bytes);
 	}
 
-	public void subscribe(TopicInfo topicInfo, String interfaceIp, IDataListener listener, int recvBufferSize)
+	public void subscribe(TopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)
 	{
 		this.receiver.subscribe(topicInfo, interfaceIp, listener, recvBufferSize);
 	}

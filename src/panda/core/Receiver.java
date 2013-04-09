@@ -19,7 +19,7 @@ public class Receiver
 		this.channelInfos = new HashMap<String, ChannelReceiveInfo>();
 	}
 
-	public void subscribe(TopicInfo topicInfo, String interfaceIp, IDataListener listener, int recvBufferSize)
+	public void subscribe(TopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)
 	{
 		ChannelReceiveInfo receiveInfo = getChannelReceiverInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), interfaceIp, recvBufferSize);
 		synchronized (receiveInfo)
