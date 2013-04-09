@@ -46,9 +46,8 @@ public class SenderTester
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
-
+		
 		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new PandaDataListener() {
-
 			private long recdThisSecondTimeStamp;
 			private long currentTime;
 			private int messagesTillLastSec;
