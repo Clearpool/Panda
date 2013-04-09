@@ -10,16 +10,47 @@ import panda.core.containers.TopicInfo;
 
 public class ReceiverTester
 {
-	public static void subscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws IOException
+	private long highestSeqNumber = 0;
+	private long latestMessageCount = 0;
+
+	public static long max(long a, long b)
+	{
+		if (a > b)
+			return a;
+		return b;
+	}
+
+	public void setHighestSeqNum(long l)
+	{
+		this.highestSeqNumber = l;
+	}
+
+	public long getHighestSeqNum()
+	{
+		return this.highestSeqNumber;
+	}
+
+	public void setLatestMessageCount(long l)
+	{
+		this.latestMessageCount = l;
+	}
+
+	public long getLatestMessageCount()
+	{
+		return this.latestMessageCount;
+	}
+
+	public void subscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws IOException
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final TopicInfo topicInfo = tInfo;
 
-		final Watchdog wd = new Watchdog(5000, 500);
+		final ReceiverWatchdog wd = new ReceiverWatchdog(3000, 250, this, numOfMessages);
 		new Thread(wd).start();
 
 		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new IDataListener() {
 			private long messageSeqNum = 0;
+			private long highestRecdSeqNum = 0;
 			private long messageCount = 0;
 			private long messagesTillLastSec = 0;
 
@@ -32,8 +63,11 @@ public class ReceiverTester
 			public void receivedPandaData(int topicId, ByteBuffer payload)
 			{
 				wd.Restart();
-				this.messageSeqNum = payload.getLong();
+				this.messageSeqNum = payload.getLong(8);
+				this.highestRecdSeqNum = ReceiverTester.max(this.highestRecdSeqNum, this.messageSeqNum);
 				++this.messageCount;
+				ReceiverTester.this.setHighestSeqNum(this.messageSeqNum);
+				ReceiverTester.this.setLatestMessageCount(this.messageCount);
 
 				if (this.startedRecvTimeStamp == 0)
 				{
@@ -44,16 +78,17 @@ public class ReceiverTester
 				if ((this.currentTime = System.currentTimeMillis()) > this.recdThisSecondTimeStamp + 1000)
 				{
 					this.recdThisSecondTimeStamp = this.currentTime;
-					if(this.messageSeqNum <= numOfMessages) System.out.println("Recd. " + (this.messageCount - this.messagesTillLastSec) + " messages in the last second. Total Messages Recd. " + this.messageCount);
+					if (this.messageCount <= numOfMessages)
+						System.out.println("--- Recd. " + (this.messageCount - this.messagesTillLastSec) + " Messages In The Last Second. Total Messages Recd. " + this.messageCount);
 					this.messagesTillLastSec = this.messageCount;
 				}
 
-				if (this.messageSeqNum == numOfMessages)
+				if (this.messageCount == numOfMessages)
 				{
 					this.endRecvTimeStamp = System.currentTimeMillis();
-					System.out.println("Recd. " + this.messageCount + " in " + (this.endRecvTimeStamp - this.startedRecvTimeStamp) + " milliseconds");
+					System.out.println("*** Recd. " + this.messageCount + " In " + (this.endRecvTimeStamp - this.startedRecvTimeStamp) + " Milliseconds");
 				}
-				
+
 				try
 				{
 					payload.position(0);
@@ -68,16 +103,20 @@ public class ReceiverTester
 	}
 }
 
-class Watchdog implements Runnable
+class ReceiverWatchdog implements Runnable
 {
 	final long resetTimeMillis;
 	long timeStamp;
 	final int sleepResolution;
+	ReceiverTester recvTester;
+	final long numOfMssgs;
 
-	public Watchdog(int resetTimeMillis, int resolutionMillis)
+	public ReceiverWatchdog(int resetTimeMillis, int resolutionMillis, ReceiverTester rt, long numOfMessages)
 	{
 		this.resetTimeMillis = resetTimeMillis;
 		this.sleepResolution = resolutionMillis;
+		this.recvTester = rt;
+		this.numOfMssgs = numOfMessages;
 	}
 
 	public void Restart()
@@ -94,7 +133,7 @@ class Watchdog implements Runnable
 		{
 			try
 			{
-				Thread.sleep(500);
+				Thread.sleep(this.sleepResolution);
 			}
 			catch (InterruptedException e)
 			{
@@ -102,7 +141,10 @@ class Watchdog implements Runnable
 			}
 			if (System.currentTimeMillis() > (this.timeStamp + this.resetTimeMillis))
 			{
-				//System.out.println("Watchdog Killing Process");
+				System.out.println("*** Recd. " + this.recvTester.getLatestMessageCount() + " Messages From Sender"/*. Last Recd. Sender Seq. # " + this.recvTester.getHighestSeqNum()*/);
+				System.out.println("*** Messages Lost " + (this.numOfMssgs - this.recvTester.getLatestMessageCount()) + " ("
+						+ (100 * (float) (this.numOfMssgs - this.recvTester.getLatestMessageCount()) / this.numOfMssgs) + " %)");
+
 				System.exit(0);
 			}
 		}
