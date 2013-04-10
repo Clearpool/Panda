@@ -1,6 +1,6 @@
-package panda.core.containers;
+package panda.core;
 
-public class TopicInfo
+public class PandaTopicInfo
 {
 	private final String ip;
 	private final Integer port;
@@ -8,7 +8,7 @@ public class TopicInfo
 	private final String topic;
 	private final String multicastGroup;
 	
-	public TopicInfo(String ip, Integer port, Integer topicId, String topic)
+	public PandaTopicInfo(String ip, Integer port, Integer topicId, String topic)
 	{
 		this.ip = ip;
 		this.port = port;

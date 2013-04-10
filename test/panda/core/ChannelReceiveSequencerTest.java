@@ -7,7 +7,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import panda.utils.Utils;
 
 @SuppressWarnings("static-method")
 public class ChannelReceiveSequencerTest

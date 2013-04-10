@@ -1,6 +1,5 @@
 package panda.core;
 
-import panda.core.containers.TopicInfo;
 import panda.tester.SenderTester;
 
 public class SenderTest2
@@ -29,7 +28,7 @@ public class SenderTest2
 			System.exit(0);
 		}
 
-		final TopicInfo topicInfo = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf(topicID), "TEST_TOPIC");
+		final PandaTopicInfo topicInfo = new PandaTopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf(topicID), "TEST_TOPIC");
 
 		SenderTester st = new SenderTester();
 		// st.SendToTest(10000, topicInfo,

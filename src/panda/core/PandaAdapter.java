@@ -5,7 +5,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import panda.core.containers.TopicInfo;
 
 //Do not subscribe to same group on two diff network cards in same adapter
 public class PandaAdapter
@@ -41,12 +40,12 @@ public class PandaAdapter
 		return null;
 	}
 
-	public void send(TopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
+	public void send(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
 	{
 		this.sender.send(topicInfo, interfaceIp, bytes);
 	}
 
-	public void subscribe(TopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)
+	public void subscribe(PandaTopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)
 	{
 		this.receiver.subscribe(topicInfo, interfaceIp, listener, recvBufferSize);
 	}

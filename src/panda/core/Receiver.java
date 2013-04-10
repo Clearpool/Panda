@@ -3,10 +3,9 @@ package panda.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import panda.core.containers.TopicInfo;
 
 
-public class Receiver
+class Receiver
 {
 	private final SelectorThread selectorThread;
 	private final int bindPort;
@@ -19,7 +18,7 @@ public class Receiver
 		this.channelInfos = new HashMap<String, ChannelReceiveInfo>();
 	}
 
-	public void subscribe(TopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)
+	public void subscribe(PandaTopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)
 	{
 		ChannelReceiveInfo receiveInfo = getChannelReceiverInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), interfaceIp, recvBufferSize);
 		synchronized (receiveInfo)

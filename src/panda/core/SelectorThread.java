@@ -22,12 +22,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import panda.core.containers.MulticastRegistration;
-import panda.core.containers.TcpRegistration;
-import panda.utils.Utils;
 
 
-public class SelectorThread extends Thread
+class SelectorThread extends Thread
 {
 	private static final Logger LOGGER = Logger.getLogger(SelectorThread.class.getName());
 
@@ -35,7 +32,7 @@ public class SelectorThread extends Thread
 	private final ByteBuffer udpBuffer;
 	private final ByteBuffer tcpBuffer;
 	private final Map<String, DatagramChannel> inDatagramChannels;
-	private final List<IAction> selectorActionQueue;
+	private final List<SelectorActionable> selectorActionQueue;
 
 	private DatagramChannel outDatagramChannel;
 
@@ -66,7 +63,7 @@ public class SelectorThread extends Thread
 	@Override
 	public void run()
 	{
-		final List<IAction> activeSelectorActionQueue = new LinkedList<>();
+		final List<SelectorActionable> activeSelectorActionQueue = new LinkedList<>();
 
 		while (!Thread.currentThread().isInterrupted())
 		{
@@ -111,39 +108,39 @@ public class SelectorThread extends Thread
 		LOGGER.warning("SelectorThread has been interrupted.  Stopping selection for selector");
 	}
 
-	private void moveActionQueue(List<IAction> activeActionQueue)
+	private void moveActionQueue(List<SelectorActionable> activeActionQueue)
 	{
 		if (!this.selectorActionQueue.isEmpty())
 		{
 			// Move to temporary queue
-			Iterator<IAction> actionQueueIterator = this.selectorActionQueue.iterator();
+			Iterator<SelectorActionable> actionQueueIterator = this.selectorActionQueue.iterator();
 			while (actionQueueIterator.hasNext())
 			{
-				IAction action = actionQueueIterator.next();
+				SelectorActionable action = actionQueueIterator.next();
 				activeActionQueue.add(action);
 				actionQueueIterator.remove();
 			}
 		}
 	}
 
-	private void serviveEachSelectorAction(List<IAction> activeActionQueue)
+	private void serviveEachSelectorAction(List<SelectorActionable> activeActionQueue)
 	{
 		if (!activeActionQueue.isEmpty())
 		{
-			Iterator<IAction> activeActionQueueIterator = activeActionQueue.iterator();
+			Iterator<SelectorActionable> activeActionQueueIterator = activeActionQueue.iterator();
 			while (activeActionQueueIterator.hasNext())
 			{
-				IAction action = activeActionQueueIterator.next();
+				SelectorActionable action = activeActionQueueIterator.next();
 				activeActionQueueIterator.remove();
-				if (action.getAction() == IAction.SEND_MULTICAST)
+				if (action.getAction() == SelectorActionable.SEND_MULTICAST)
 				{
 					sendMulticastData(action);
 				}
-				else if (action.getAction() == IAction.REGISTER_MULTICAST_READ)
+				else if (action.getAction() == SelectorActionable.REGISTER_MULTICAST_READ)
 				{
 					registerMulticastChannel(action);
 				}
-				else if (action.getAction() == IAction.REGISTER_TCP_ACTION)
+				else if (action.getAction() == SelectorActionable.REGISTER_TCP_ACTION)
 				{
 					registerTcpChannel(action);
 				}
@@ -315,7 +312,7 @@ public class SelectorThread extends Thread
 		}
 	}
 
-	private static void sendMulticastData(IAction action)
+	private static void sendMulticastData(SelectorActionable action)
 	{
 		ChannelSendInfo sendInfo = (ChannelSendInfo) action;
 		synchronized (sendInfo)
@@ -331,7 +328,7 @@ public class SelectorThread extends Thread
 		}
 	}
 
-	private void registerMulticastChannel(IAction action)
+	private void registerMulticastChannel(SelectorActionable action)
 	{
 		MulticastRegistration registration = (MulticastRegistration) action;
 		try
@@ -346,7 +343,7 @@ public class SelectorThread extends Thread
 		}
 	}
 
-	private void registerTcpChannel(IAction action)
+	private void registerTcpChannel(SelectorActionable action)
 	{
 		try
 		{
@@ -435,7 +432,7 @@ public class SelectorThread extends Thread
 		return null;
 	}
 
-	private void addToActionQueue(IAction action)
+	private void addToActionQueue(SelectorActionable action)
 	{
 		synchronized (this.selectorActionQueue)
 		{

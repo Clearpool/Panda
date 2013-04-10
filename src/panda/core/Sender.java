@@ -9,11 +9,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import panda.core.containers.TopicInfo;
-import panda.core.datastructures.Pair;
-import panda.utils.Utils;
 
-public class Sender
+class Sender
 {
 	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());
 
@@ -29,7 +26,7 @@ public class Sender
 		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
 	}
 
-	public void send(TopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
+	public void send(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
 	{
 		if (bytes.length > Utils.MAX_MESSAGE_PAYLOAD_SIZE)
 			throw new Exception("Message length over size=" + Utils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
@@ -41,7 +38,7 @@ public class Sender
 		}
 	}
 
-	private ChannelSendInfo getChannelSendInfo(TopicInfo topicInfo, String interfaceIp) throws Exception
+	private ChannelSendInfo getChannelSendInfo(PandaTopicInfo topicInfo, String interfaceIp) throws Exception
 	{
 		ChannelSendInfo sendInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
 		if (sendInfo == null)

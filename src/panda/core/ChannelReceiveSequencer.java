@@ -3,9 +3,8 @@ package panda.core;
 import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
-import panda.core.containers.Packet;
 
-public class ChannelReceiveSequencer
+class ChannelReceiveSequencer
 {
 	private static final int OUT_OF_ORDER_PACKET_THRESHOLD = 20;
 	private static final int QUEUE_GIVEUP_TIME = 2000;

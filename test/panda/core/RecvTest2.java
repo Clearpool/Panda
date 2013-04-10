@@ -1,6 +1,5 @@
 package panda.core;
 
-import panda.core.containers.TopicInfo;
 import panda.tester.ReceiverTester;
 
 public class RecvTest2
@@ -21,7 +20,7 @@ public class RecvTest2
 		int topicID = Integer.valueOf(args[1]).intValue();
 		long numOfMessages = Long.valueOf(args[2]).longValue();
 		int netRecvBufferSize = Integer.valueOf(args[3]).intValue();
-		TopicInfo topicInfo = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf(topicID), "TEST_TOPIC");
+		PandaTopicInfo topicInfo = new PandaTopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf(topicID), "TEST_TOPIC");
 
 		ReceiverTester rt = new ReceiverTester();
 		rt.subscribeToSequencedMessages(adapterCache, topicInfo, numOfMessages, netRecvBufferSize);

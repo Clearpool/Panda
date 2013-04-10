@@ -1,6 +1,6 @@
 package panda.core;
 
-public interface IAction
+interface SelectorActionable
 {
 	public static final int SEND_MULTICAST = 1;
 	public static final int REGISTER_MULTICAST_READ = 2;

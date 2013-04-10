@@ -7,10 +7,9 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.List;
 
-import panda.utils.Utils;
 
 
-public class GapResponseManager
+class GapResponseManager
 {
 	private final SocketChannel channel;
 	private final List<byte[]> packets;

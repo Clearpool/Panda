@@ -1,4 +1,4 @@
-package panda.core.datastructures;
+package panda.core;
 
 import java.util.List;
 
@@ -6,8 +6,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import panda.core.datastructures.PacketCache;
-import panda.core.datastructures.Pair;
+import panda.core.PacketCache;
+import panda.core.Pair;
 
 
 @SuppressWarnings("static-method")

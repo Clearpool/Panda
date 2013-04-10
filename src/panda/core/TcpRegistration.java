@@ -1,11 +1,10 @@
-package panda.core.containers;
+package panda.core;
 
 import java.nio.channels.spi.AbstractSelectableChannel;
 
-import panda.core.IAction;
 
 
-public class TcpRegistration implements IAction
+class TcpRegistration implements SelectorActionable
 {
 	private final AbstractSelectableChannel channel;
 	private final int interestOps;
@@ -36,6 +35,6 @@ public class TcpRegistration implements IAction
 	@Override
 	public int getAction()
 	{
-		return IAction.REGISTER_TCP_ACTION;
+		return SelectorActionable.REGISTER_TCP_ACTION;
 	}
 }

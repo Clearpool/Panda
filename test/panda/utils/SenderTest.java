@@ -1,11 +1,11 @@
-package panda.core;
+package panda.utils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
 
 import panda.core.PandaAdapter;
-import panda.core.containers.TopicInfo;
+import panda.core.PandaTopicInfo;
 
 
 public class SenderTest
@@ -13,7 +13,7 @@ public class SenderTest
 	public static void main(String[] args) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(1000);
-		final TopicInfo topicInfo1 = new TopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)1), "FIVE");
+		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)1), "FIVE");
 
 		int count = 0;
 		while (true)

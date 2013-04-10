@@ -1,11 +1,10 @@
-package panda.core.containers;
+package panda.core;
 
 import java.nio.channels.DatagramChannel;
 
-import panda.core.IAction;
 
 
-public class MulticastRegistration implements IAction
+class MulticastRegistration implements SelectorActionable
 {
 	private final DatagramChannel channel;
 	private final String ip;
@@ -43,6 +42,6 @@ public class MulticastRegistration implements IAction
 	@Override
 	public int getAction()
 	{
-		return IAction.REGISTER_MULTICAST_READ;
+		return SelectorActionable.REGISTER_MULTICAST_READ;
 	}
 }

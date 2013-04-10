@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import panda.core.PandaAdapter;
 import panda.core.PandaDataListener;
 import panda.core.PandaErrorCode;
-import panda.core.containers.TopicInfo;
+import panda.core.PandaTopicInfo;
 
 public class ReceiverTester
 {
@@ -40,10 +40,10 @@ public class ReceiverTester
 		return this.latestMessageCount;
 	}
 
-	public void subscribeToSequencedMessages(int cacheSize, TopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws Exception
+	public void subscribeToSequencedMessages(int cacheSize, PandaTopicInfo tInfo, final long numOfMessages, int netRecvBufferSize) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
-		final TopicInfo topicInfo = tInfo;
+		final PandaTopicInfo topicInfo = tInfo;
 
 		final ReceiverWatchdog wd = new ReceiverWatchdog(3000, 250, this, numOfMessages);
 		new Thread(wd).start();

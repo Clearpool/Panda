@@ -6,9 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
-import panda.utils.Utils;
 
-public class GapRequestManager
+class GapRequestManager
 {
 	private final SelectorThread selectorThread;
 	private final String multicastGroup;

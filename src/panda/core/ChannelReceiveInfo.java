@@ -7,10 +7,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import panda.core.containers.TopicInfo;
 
 
-public class ChannelReceiveInfo
+class ChannelReceiveInfo
 {	
 	private static final int MAX_SOURCE_DROP_THRESHOLD = 1000000;
 	
@@ -39,7 +38,7 @@ public class ChannelReceiveInfo
 	}
 
 	//Called by app thread
-	public void registerTopicListener(TopicInfo topicInfo, PandaDataListener listener)
+	public void registerTopicListener(PandaTopicInfo topicInfo, PandaDataListener listener)
 	{
 		Set<PandaDataListener> topicListeners = this.topicToListeners.get(topicInfo.getTopicId());
 		if(topicListeners == null)

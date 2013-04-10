@@ -1,7 +1,7 @@
-package panda.utils;
+package panda.core;
 
 
-public class Utils 
+class Utils 
 {
 	//Sizes
 	public static final int MTU_SIZE = 1500;

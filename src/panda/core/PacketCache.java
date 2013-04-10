@@ -1,9 +1,9 @@
-package panda.core.datastructures;
+package panda.core;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class PacketCache
+class PacketCache
 {
 	private final int cacheSize;
 	private final byte[][] cache;

@@ -1,6 +1,6 @@
-package panda.core.datastructures;
+package panda.core;
 
-public class Pair<A, B>
+class Pair<A, B>
 {
 	private A a;
 	private B b;

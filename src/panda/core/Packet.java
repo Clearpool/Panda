@@ -1,6 +1,6 @@
-package panda.core.containers;
+package panda.core;
 
-public class Packet implements Comparable<Packet>
+class Packet implements Comparable<Packet>
 {
 	private final long sequenceNumber;
 	private final byte messageCount;

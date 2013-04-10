@@ -10,12 +10,9 @@ import java.nio.channels.DatagramChannel;
 import java.util.ArrayDeque;
 import java.util.List;
 
-import panda.core.datastructures.PacketCache;
-import panda.core.datastructures.Pair;
-import panda.utils.Utils;
 
 
-public class ChannelSendInfo implements IAction
+class ChannelSendInfo implements SelectorActionable
 {
 	private final InetAddress multicastIp;
 	private final int multicastPort;
@@ -161,6 +158,6 @@ public class ChannelSendInfo implements IAction
 	@Override
 	public int getAction()
 	{
-		return IAction.SEND_MULTICAST;
+		return SelectorActionable.SEND_MULTICAST;
 	}
 }

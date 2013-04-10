@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import panda.core.PandaAdapter;
 import panda.core.PandaDataListener;
 import panda.core.PandaErrorCode;
-import panda.core.containers.TopicInfo;
+import panda.core.PandaTopicInfo;
 
 public class SenderTester
 {
@@ -42,10 +42,10 @@ public class SenderTester
 	long latencyAccumulator = 0;
 
 	// 24 <= dataSize <= Utils.MAX_MESSAGE_PAYLOAD_SIZE
-	public void SendSequencedMessages(int cacheSize, TopicInfo tInfo, int dataSize, final long numOfMessages, int netRecvBufferSize, int numOfSenderThreads) throws Exception
+	public void SendSequencedMessages(int cacheSize, PandaTopicInfo tInfo, int dataSize, final long numOfMessages, int netRecvBufferSize, int numOfSenderThreads) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
-		final TopicInfo topicInfo = tInfo;
+		final PandaTopicInfo topicInfo = tInfo;
 		
 		adapter.subscribe(topicInfo, InetAddress.getLocalHost().getHostAddress(), new PandaDataListener() {
 			private long recdThisSecondTimeStamp;
@@ -116,7 +116,7 @@ public class SenderTester
 
 	}
 
-	public static void runSender(PandaAdapter adapter, TopicInfo topicInfo, int dataSize, long numOfMessages, int senderThreadNum) throws Exception
+	public static void runSender(PandaAdapter adapter, PandaTopicInfo topicInfo, int dataSize, long numOfMessages, int senderThreadNum) throws Exception
 	{
 		long seqNumber = 0;
 		long mssgPerSecCounter = 0;
@@ -148,12 +148,12 @@ public class SenderTester
 	class SenderThread extends Thread
 	{
 		PandaAdapter pandaAdapter;
-		TopicInfo tInfo;
+		PandaTopicInfo tInfo;
 		int packetSize;
 		long numOfMssgs;
 		int thisThreadNum;
 
-		public SenderThread(PandaAdapter adapter, TopicInfo topicInfo, int dataSize, long numOfMessages, int senderThreadNum)
+		public SenderThread(PandaAdapter adapter, PandaTopicInfo topicInfo, int dataSize, long numOfMessages, int senderThreadNum)
 		{
 			this.pandaAdapter = adapter;
 			this.tInfo = topicInfo;
