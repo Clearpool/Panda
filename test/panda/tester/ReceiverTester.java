@@ -101,10 +101,9 @@ public class ReceiverTester
 			}
 
 			@Override
-			public void receivedPandaError(PandaErrorCode issueCode, String message, Throwable throwable)
+			public void receivedPandaError(PandaErrorCode issueCode, String multicastGroup, String message, Throwable throable)
 			{
-				// TODO Auto-generated method stub
-				
+				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
 		}, netRecvBufferSize);
 	}

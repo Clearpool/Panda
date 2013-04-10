@@ -42,7 +42,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testHandleGap() throws IOException
+	public void testHandleGap() throws IOException, InterruptedException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -68,7 +68,6 @@ public class ChannelReceiveSequencerTest
 		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
 		Assert.assertEquals(sequencer.getGapRequestManager().getFirstSequenceNumberRequested(), 2);
 		Assert.assertEquals(sequencer.getGapRequestManager().getPacketCountRequested(), 1);
-		Assert.assertTrue(sequencer.getGapRequestManager().isActive());
 		
 		//[24,24] - Add to queue while recovering
 		sequencer.packetReceived(true, 100, 24, (byte)3, createPacket(3));
@@ -93,6 +92,8 @@ public class ChannelReceiveSequencerTest
 		Assert.assertEquals(24, sequencer.getLastSequenceNumber());
 		Assert.assertEquals(25, sequencer.getQueueSize());
 		Assert.assertNull(sequencer.getGapRequestManager());
+		
+		Thread.sleep(1);
 		
 		//[51,51] - Add to queue while recovering
 		sequencer.packetReceived(true, 100, 51, (byte)3, createPacket(3));

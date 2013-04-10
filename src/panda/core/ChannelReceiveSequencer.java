@@ -23,6 +23,7 @@ public class ChannelReceiveSequencer
 	private long timeOfFirstQueuedPacket;
 	private long packetsDropped;
 	private long packetsLost;
+	private boolean disableRetransmissions;
 
 	public ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo, int maxDroppedPacketsAllowed)
 	{
@@ -39,6 +40,7 @@ public class ChannelReceiveSequencer
 		this.timeOfFirstQueuedPacket = 0;
 		this.packetsDropped = 0;
 		this.packetsLost = 0;
+		this.disableRetransmissions = false;
 	}
 
 	// Called by selectorThread
@@ -79,10 +81,15 @@ public class ChannelReceiveSequencer
 					skipPacket = true;
 					skipReason = PandaErrorCode.PACKET_LOSS_MAX_DROPS_EXCEEDED;
 				}
-				if (supportsRetranmissions)
+				else if (this.disableRetransmissions)
+				{
+					skipPacket = true;
+					skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_DISABLED;
+				}
+				else if (supportsRetranmissions)
 				{
 					skipPacket = !this.handleGap(retransmissionPort);
-					if(skipPacket)
+					if (skipPacket)
 					{
 						skipReason = PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
 					}
@@ -96,8 +103,7 @@ public class ChannelReceiveSequencer
 
 			if (skipPacket)
 			{
-				this.channelReceiveInfo.deliverErrorToListeners(skipReason,
-						"Source=" + this.key + " Expected=" + (this.lastSequenceNumber + 1) + " Received=" + sequenceNumber + ". Retransmission not supported, skipping packets", null);
+				this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " Expected=" + (this.lastSequenceNumber + 1) + " Received=" + sequenceNumber, null);
 				long headSequenceNumber = this.queuedPackets.peek().getSequenceNumber();
 				skipPacketAndDequeue(headSequenceNumber - 1);
 			}
@@ -134,17 +140,12 @@ public class ChannelReceiveSequencer
 
 	private boolean handleGap(int retransmissionPort)
 	{
-		if (this.retransmissionManager != null && this.retransmissionManager.isDisabled()) return false;
-		if (this.retransmissionManager != null && this.retransmissionManager.isActive()) return true;
+		if (this.retransmissionManager != null) return true;
 
 		Packet headPacket = this.queuedPackets.peek();
 		if (headPacket.getSequenceNumber() > this.lastSequenceNumber + 1)
 		{
-			if (this.retransmissionManager == null)
-			{
-				this.retransmissionManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
-			}
-
+			this.retransmissionManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
 			int packetCount = (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1);
 			return this.retransmissionManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, packetCount);
 		}
@@ -188,6 +189,12 @@ public class ChannelReceiveSequencer
 	public void closeRetransmissionManager()
 	{
 		this.retransmissionManager = null;
+	}
+
+	public void disableRetransmissions()
+	{
+		this.disableRetransmissions = true;
+		this.channelReceiveInfo.deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_DISABLED, "Source=" + this.key, null);
 	}
 
 	public String getKey()

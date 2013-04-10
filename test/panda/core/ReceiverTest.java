@@ -28,9 +28,9 @@ public class ReceiverTest
 			}
 
 			@Override
-			public void receivedPandaError(PandaErrorCode issueCode, String message, Throwable throable)
+			public void receivedPandaError(PandaErrorCode issueCode, String multicastGroup, String message, Throwable throable)
 			{
-				System.err.println(issueCode + "|" + message);
+				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
 		}, 10000000);
 		adapter.subscribe(topicInfo2, getLocalIp(null), new PandaDataListener() {
@@ -45,9 +45,9 @@ public class ReceiverTest
 			}
 
 			@Override
-			public void receivedPandaError(PandaErrorCode issueCode, String message, Throwable throable)
+			public void receivedPandaError(PandaErrorCode issueCode, String multicastGroup, String message, Throwable throable)
 			{
-				System.err.println(issueCode + "|" + message);
+				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
 		}, 10000000);
 	}

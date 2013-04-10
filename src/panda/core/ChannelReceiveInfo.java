@@ -121,7 +121,7 @@ public class ChannelReceiveInfo
 	{
 		for(PandaDataListener listener : this.groupListeners)
 		{
-			listener.receivedPandaError(errorCode, this.multicastGroup +"|"+ message, throwable);
+			listener.receivedPandaError(errorCode, this.multicastGroup, message, throwable);
 		}
 	}
 }

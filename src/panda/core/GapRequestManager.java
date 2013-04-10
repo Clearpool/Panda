@@ -26,9 +26,6 @@ public class GapRequestManager
 	private int responsePacketCount;
 	private int packetsRemainingToDeliver;
 
-	private boolean disabled;
-	private boolean active;
-
 	public GapRequestManager(SelectorThread selectorThread, String multicastGroup, String sourceIp, ChannelReceiveSequencer sequencer)
 	{
 		this.selectorThread = selectorThread;
@@ -46,16 +43,12 @@ public class GapRequestManager
 		this.responseFirstSequenceNumber = 0;
 		this.responsePacketCount = 0;
 		this.packetsRemainingToDeliver = 0;
-
-		this.disabled = false;
-		this.active = false;
 	}
 
 	public boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
 	{
 		if (this.socketChannel == null)
 		{
-			this.active = true;
 			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
 			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 			this.request = createGapRequest(firstSequenceNumber, packetCount);
@@ -206,28 +199,18 @@ public class GapRequestManager
 		this.responseFirstSequenceNumber = 0L;
 		this.responsePacketCount = 0;
 		this.packetsRemainingToDeliver = 0;
-		this.active = false;
 		this.sequencer.closeRetransmissionManager();
 	}
 
-	public boolean isDisabled()
+	public void setDisabled()
 	{
-		return this.disabled;
-	}
-
-	public void setDisabled(boolean disabled)
-	{
-		this.disabled = disabled;
+		close();
+		this.sequencer.disableRetransmissions();
 	}
 
 	public String getMulticastGroup()
 	{
 		return this.multicastGroup;
-	}
-
-	public boolean isActive()
-	{
-		return this.active;
 	}
 
 	public long getTimeOfRequest()

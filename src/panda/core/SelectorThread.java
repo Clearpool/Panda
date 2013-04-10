@@ -252,7 +252,7 @@ public class SelectorThread extends Thread
 
 				GapRequestManager gapManager = (GapRequestManager) selectedKey.attachment();
 				LOGGER.severe("Failed to establish TCP connection for re-transmission. Disabling future re-transmission attempts for " + gapManager.getMulticastGroup() + " on the receiver side.");
-				gapManager.setDisabled(true);
+				gapManager.setDisabled();
 				try
 				{
 					((SocketChannel) selectedKey.channel()).close();
