@@ -13,7 +13,6 @@ import panda.core.containers.TopicInfo;
 import panda.core.datastructures.Pair;
 import panda.utils.Utils;
 
-//TODO - FEATURE - handle large messages
 public class Sender
 {
 	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());
