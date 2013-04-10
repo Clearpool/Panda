@@ -196,7 +196,7 @@ public class SelectorThread extends Thread
 				}
 				else
 				{
-					gapManager.close();
+					gapManager.close(false);
 				}
 			}
 		}

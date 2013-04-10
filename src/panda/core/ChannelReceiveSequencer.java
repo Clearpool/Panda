@@ -8,7 +8,8 @@ import panda.core.containers.Packet;
 public class ChannelReceiveSequencer
 {
 	private static final int OUT_OF_ORDER_PACKET_THRESHOLD = 20;
-	private static final int QUEUE_GIVEUP_TIME = 3000;
+	private static final int QUEUE_GIVEUP_TIME = 2000;
+	private static final int REQUEST_MANAGER_FAILURE_THRESHOLD = 3;
 
 	private final SelectorThread selectorThread;
 	private final String key;
@@ -19,11 +20,12 @@ public class ChannelReceiveSequencer
 	private final PriorityQueue<Packet> queuedPackets;
 
 	private long lastSequenceNumber;
-	private GapRequestManager retransmissionManager;
+	private GapRequestManager requestManager;
 	private long timeOfFirstQueuedPacket;
 	private long packetsDropped;
 	private long packetsLost;
 	private boolean disableRetransmissions;
+	private int requestManagerFailures;
 
 	public ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo, int maxDroppedPacketsAllowed)
 	{
@@ -36,11 +38,12 @@ public class ChannelReceiveSequencer
 		this.queuedPackets = new PriorityQueue<Packet>();
 
 		this.lastSequenceNumber = 0;
-		this.retransmissionManager = null;
+		this.requestManager = null;
 		this.timeOfFirstQueuedPacket = 0;
 		this.packetsDropped = 0;
 		this.packetsLost = 0;
 		this.disableRetransmissions = false;
+		this.requestManagerFailures = 0;
 	}
 
 	// Called by selectorThread
@@ -60,48 +63,61 @@ public class ChannelReceiveSequencer
 				this.lastSequenceNumber = sequenceNumber;
 				this.channelReceiveInfo.parseAndDeliverToListeners(messageCount, packetBuffer);
 				this.queuedPackets.clear();
-				if (this.retransmissionManager != null)
+				if (this.requestManager != null)
 				{
-					this.retransmissionManager.close();
-					this.retransmissionManager = null;
+					this.requestManager.close(false);
+					this.requestManager = null;
 				}
 			}
 		}
 		else
 		{
 			addPacketToQueue(sequenceNumber, messageCount, packetBuffer);
-			boolean skipPacket = false;
 			PandaErrorCode skipReason = null;
 			if (shouldDeclareDrop())
 			{
 				long dropped = this.queuedPackets.peek().getSequenceNumber() - this.lastSequenceNumber - 1;
-				this.packetsDropped += dropped;
+
+				// Max drops exceeded
 				if (this.packetsDropped >= this.maxDroppedPacketsAllowed)
 				{
-					skipPacket = true;
 					skipReason = PandaErrorCode.PACKET_LOSS_MAX_DROPS_EXCEEDED;
+					this.packetsDropped += dropped;
 				}
+				// Retransmissions is disabled
 				else if (this.disableRetransmissions)
 				{
-					skipPacket = true;
 					skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_DISABLED;
+					this.packetsDropped += dropped;
 				}
+				// Retransmissions is supported
 				else if (supportsRetranmissions)
 				{
-					skipPacket = !this.handleGap(retransmissionPort);
-					if (skipPacket)
+					if (this.requestManager != null && System.currentTimeMillis() - this.requestManager.getTimeOfRequest() >= QUEUE_GIVEUP_TIME)
 					{
-						skipReason = PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
+						skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_TIMEOUT;
+						this.requestManager.close(false);
+					}
+					else if (this.requestManagerFailures >= REQUEST_MANAGER_FAILURE_THRESHOLD)
+					{
+						skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_FAILED;
+						this.requestManagerFailures = 0;
+					}
+					else
+					{
+						boolean success = this.sendGapRequest(retransmissionPort);
+						skipReason = (success) ? null : PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
+						if (this.requestManagerFailures == 0) this.packetsDropped += dropped;
 					}
 				}
 				else
 				{
-					skipPacket = true;
 					skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_UNSUPPORTED;
+					this.packetsDropped += dropped;
 				}
 			}
 
-			if (skipPacket)
+			if (skipReason != null)
 			{
 				this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " Expected=" + (this.lastSequenceNumber + 1) + " Received=" + sequenceNumber, null);
 				long headSequenceNumber = this.queuedPackets.peek().getSequenceNumber();
@@ -138,16 +154,16 @@ public class ChannelReceiveSequencer
 		}
 	}
 
-	private boolean handleGap(int retransmissionPort)
+	private boolean sendGapRequest(int retransmissionPort)
 	{
-		if (this.retransmissionManager != null) return true;
+		if (this.requestManager != null) return true;
 
 		Packet headPacket = this.queuedPackets.peek();
 		if (headPacket.getSequenceNumber() > this.lastSequenceNumber + 1)
 		{
-			this.retransmissionManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
+			this.requestManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
 			int packetCount = (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1);
-			return this.retransmissionManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, packetCount);
+			return this.requestManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, packetCount);
 		}
 		return false;
 	}
@@ -168,7 +184,7 @@ public class ChannelReceiveSequencer
 	{
 		if (this.packetsDropped >= this.maxDroppedPacketsAllowed) return true;
 		if (this.queuedPackets.size() > OUT_OF_ORDER_PACKET_THRESHOLD) return true;
-		if (System.currentTimeMillis() - this.timeOfFirstQueuedPacket > QUEUE_GIVEUP_TIME) return true;
+		if (System.currentTimeMillis() - this.timeOfFirstQueuedPacket >= QUEUE_GIVEUP_TIME) return true;
 		return false;
 	}
 
@@ -186,9 +202,10 @@ public class ChannelReceiveSequencer
 		return this.channelReceiveInfo;
 	}
 
-	public void closeRetransmissionManager()
+	public void closeRequestManager(boolean successful)
 	{
-		this.retransmissionManager = null;
+		this.requestManager = null;
+		this.requestManagerFailures = (successful) ? 0 : this.requestManagerFailures + 1;
 	}
 
 	public void disableRetransmissions()
@@ -209,7 +226,7 @@ public class ChannelReceiveSequencer
 
 	GapRequestManager getGapRequestManager()
 	{
-		return this.retransmissionManager;
+		return this.requestManager;
 	}
 
 	long getLastSequenceNumber()

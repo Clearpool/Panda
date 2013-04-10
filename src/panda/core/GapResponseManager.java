@@ -6,16 +6,12 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import panda.utils.Utils;
 
 
 public class GapResponseManager
 {
-	private static final Logger LOGGER = Logger.getLogger(GapResponseManager.class.getName());
-	
 	private final SocketChannel channel;
 	private final List<byte[]> packets;
 	private final int totalPackets;
@@ -85,8 +81,7 @@ public class GapResponseManager
 		}
 		catch (Exception e)
 		{
-			LOGGER.log(Level.SEVERE,  e.getMessage(), e);
-			try{this.channel.close();} catch (IOException e1){LOGGER.log(Level.SEVERE,  e1.getMessage(), e1);}
+			try{this.channel.close();} catch (IOException e1){}
 			key.cancel();
 		}
 	}

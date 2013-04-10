@@ -30,7 +30,6 @@ public class ChannelSendInfo implements IAction
 
 	private DatagramChannel channel;
 	private long sequenceNumber;
-	//private boolean skipNext;
 
 	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp) throws Exception
 	{
@@ -153,16 +152,7 @@ public class ChannelSendInfo implements IAction
 		while (hasOutboundDataRemaining())
 		{
 			byte[] bytes = getNextPacket();
-			/*if (this.sequenceNumber % 5L == 0L)
-			{
-				this.skipNext = true;
-				return;
-			}
-			if (this.skipNext)
-			{
-				this.skipNext = false;
-				return;
-			}*/
+			//if (this.sequenceNumber % 5L == 0L) return;
 			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, this.networkInterface);
 			this.channel.send(ByteBuffer.wrap(bytes), this.multicastGroupAddress);
 		}

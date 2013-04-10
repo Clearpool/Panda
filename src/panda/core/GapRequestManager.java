@@ -171,7 +171,7 @@ public class GapRequestManager
 
 			if (this.packetsRemainingToDeliver == 0)
 			{
-				close(channel, key);
+				close(channel, key, true);
 			}
 		}
 		catch (Exception e)
@@ -180,14 +180,14 @@ public class GapRequestManager
 		}
 	}
 
-	private void close(SocketChannel channel, SelectionKey key) throws IOException
+	private void close(SocketChannel channel, SelectionKey key, boolean successful) throws IOException
 	{
 		channel.close();
 		key.cancel();
-		close();
+		close(successful);
 	}
 
-	public void close()
+	public void close(boolean successful)
 	{
 		this.readBuffer.clear();
 		this.socketChannel = null;
@@ -199,12 +199,12 @@ public class GapRequestManager
 		this.responseFirstSequenceNumber = 0L;
 		this.responsePacketCount = 0;
 		this.packetsRemainingToDeliver = 0;
-		this.sequencer.closeRetransmissionManager();
+		this.sequencer.closeRequestManager(successful);
 	}
 
 	public void setDisabled()
 	{
-		close();
+		close(false);
 		this.sequencer.disableRetransmissions();
 	}
 

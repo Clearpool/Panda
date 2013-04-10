@@ -42,7 +42,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testHandleGap() throws IOException, InterruptedException
+	public void testSendGapRequest() throws IOException, InterruptedException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -87,7 +87,7 @@ public class ChannelReceiveSequencerTest
 		Assert.assertEquals(timeOfRequest, sequencer.getGapRequestManager().getTimeOfRequest());
 		
 		//declare 2 as dropped
-		sequencer.closeRetransmissionManager();
+		sequencer.closeRequestManager(false);
 		sequencer.skipPacketAndDequeue(2);
 		Assert.assertEquals(24, sequencer.getLastSequenceNumber());
 		Assert.assertEquals(25, sequencer.getQueueSize());
@@ -104,7 +104,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testNoDrops() throws IOException
+	public void testPacketReceivedNoDrops() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -122,7 +122,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testSelfCorrectingOutOfSequence() throws IOException
+	public void testPacketReceivedSelfCorrectingOutOfSequence() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -151,7 +151,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testOutofSequenceThresholdNoRetransSupport() throws IOException
+	public void testPacketReceivedOutofSequenceThresholdNoRetransSupport() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -178,7 +178,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testOutofSequenceThresholdWithRetransSupport() throws IOException
+	public void testPacketReceivedOutofSequenceThresholdWithRetransSupport() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -209,7 +209,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testQueueGiveUpTimeNoRetransSupport() throws IOException, InterruptedException
+	public void testPacketReceivedQueueGiveUpTimeNoRetransSupport() throws IOException, InterruptedException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -228,7 +228,7 @@ public class ChannelReceiveSequencerTest
 		Assert.assertNull(sequencer.getGapRequestManager());
 		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
 		
-		Thread.sleep(3500);
+		Thread.sleep(2050);
 		
 		//[11] - Will cause threshold to be crossed
 		sequencer.packetReceived(false, 100, 11, (byte)3, createPacket(3));
@@ -240,7 +240,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testQueueGiveUpTimeWithRetransSupport() throws IOException, InterruptedException
+	public void testPacketReceivedQueueGiveUpTimeWithRetransSupport() throws IOException, InterruptedException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -259,7 +259,7 @@ public class ChannelReceiveSequencerTest
 		Assert.assertNull(sequencer.getGapRequestManager());
 		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
 		
-		Thread.sleep(3500);
+		Thread.sleep(2050);
 		
 		//[11] - Will cause threshold to be crossed
 		sequencer.packetReceived(true, 100, 11, (byte)3, createPacket(3));
@@ -273,7 +273,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testSenderRestart() throws IOException
+	public void testPacketReceivedSenderRestart() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -316,7 +316,7 @@ public class ChannelReceiveSequencerTest
 	}
 	
 	@Test
-	public void testMaxDroppedPacketsAllowed() throws IOException
+	public void testPacketReceivedMaxDroppedPacketsAllowed() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
 		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
@@ -365,6 +365,137 @@ public class ChannelReceiveSequencerTest
 		sequencer.packetReceived(false, 100, 49, (byte)3, createPacket(3));
 		Assert.assertEquals(49, sequencer.getLastSequenceNumber());
 		Assert.assertEquals(4, sequencer.getPacketsDropped());
+	}
+	
+	@Test
+	public void testPacketReceivedDisabledRetransmissions() throws IOException
+	{
+		TestSelectorThread testSelectorThread = new TestSelectorThread();
+		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		
+		//[1,1] - No Queue
+		sequencer.packetReceived(true, 100, 1, (byte)3, createPacket(3));
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		
+		//Disable retransmissions
+		sequencer.disableRetransmissions();
+		
+		//[3,22] - Queued
+		for(int i=3;i<=22;i++)
+		{
+			sequencer.packetReceived(true, 100, i, (byte)3, createPacket(3));
+		}
+		Assert.assertEquals(20, sequencer.getQueueSize());
+		Assert.assertNull(sequencer.getGapRequestManager());
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(0, sequencer.getPacketsDropped());
+		
+		//[23,23] - Queued - causes drop
+		sequencer.packetReceived(true, 100, 23, (byte)3, createPacket(3));
+		Assert.assertEquals(23, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
+		Assert.assertEquals(1, sequencer.getPacketsLost());
+		Assert.assertNull(sequencer.getGapRequestManager());
+	}
+	
+	@Test
+	public void testPacketReceivedRetransmissionTimeout() throws IOException, InterruptedException
+	{
+		TestSelectorThread testSelectorThread = new TestSelectorThread();
+		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		
+		//[1,1] - No Queue
+		sequencer.packetReceived(true, 100, 1, (byte)3, createPacket(3));
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		
+		//[3,22] - Queued
+		for(int i=3;i<=22;i++)
+		{
+			sequencer.packetReceived(true, 100, i, (byte)3, createPacket(3));
+		}
+		Assert.assertEquals(20, sequencer.getQueueSize());
+		Assert.assertNull(sequencer.getGapRequestManager());
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(0, sequencer.getPacketsDropped());
+		
+		//[23,23] - Queued - causes drop
+		sequencer.packetReceived(true, 100, 23, (byte)3, createPacket(3));
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
+		Assert.assertEquals(0, sequencer.getPacketsLost());
+		Assert.assertNotNull(sequencer.getGapRequestManager());
+		Assert.assertEquals(sequencer.getGapRequestManager().getFirstSequenceNumberRequested(), 2);
+		Assert.assertEquals(sequencer.getGapRequestManager().getPacketCountRequested(), 1);
+		
+		Thread.sleep(2050);
+		
+		//[24,24] - Queued - causes retranmission to be cancelled and lost
+		sequencer.packetReceived(true, 100, 24, (byte)3, createPacket(3));
+		Assert.assertEquals(24, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
+		Assert.assertEquals(1, sequencer.getPacketsLost());
+		Assert.assertNull(sequencer.getGapRequestManager());
+	}
+	
+	@Test
+	public void testPacketReceivedRetransmissionFailed() throws IOException
+	{
+		TestSelectorThread testSelectorThread = new TestSelectorThread();
+		TestChannelReceiveInfo testChannelReceiveInfo = new TestChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		
+		//[1,1] - No Queue
+		sequencer.packetReceived(true, 100, 1, (byte)3, createPacket(3));
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		
+		//[3,22] - Queued
+		for(int i=3;i<=22;i++)
+		{
+			sequencer.packetReceived(true, 100, i, (byte)3, createPacket(3));
+		}
+		Assert.assertEquals(20, sequencer.getQueueSize());
+		Assert.assertNull(sequencer.getGapRequestManager());
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(0, sequencer.getPacketsDropped());
+		
+		//[23,23] - Queued - causes retrans 1
+		sequencer.packetReceived(true, 100, 23, (byte)3, createPacket(3));
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
+		Assert.assertEquals(0, sequencer.getPacketsLost());
+		Assert.assertNotNull(sequencer.getGapRequestManager());
+		Assert.assertEquals(sequencer.getGapRequestManager().getFirstSequenceNumberRequested(), 2);
+		Assert.assertEquals(sequencer.getGapRequestManager().getPacketCountRequested(), 1);
+		sequencer.getGapRequestManager().close(false);
+		
+		//[24,24] - Queued - causes retrans 2
+		sequencer.packetReceived(true, 100, 24, (byte)3, createPacket(3));
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
+		Assert.assertEquals(0, sequencer.getPacketsLost());
+		Assert.assertNotNull(sequencer.getGapRequestManager());
+		Assert.assertEquals(sequencer.getGapRequestManager().getFirstSequenceNumberRequested(), 2);
+		Assert.assertEquals(sequencer.getGapRequestManager().getPacketCountRequested(), 1);
+		sequencer.getGapRequestManager().close(false);
+		
+		//[25,25] - Queued - causes retrans 3
+		sequencer.packetReceived(true, 100, 25, (byte)3, createPacket(3));
+		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
+		Assert.assertEquals(0, sequencer.getPacketsLost());
+		Assert.assertNotNull(sequencer.getGapRequestManager());
+		Assert.assertEquals(sequencer.getGapRequestManager().getFirstSequenceNumberRequested(), 2);
+		Assert.assertEquals(sequencer.getGapRequestManager().getPacketCountRequested(), 1);
+		sequencer.getGapRequestManager().close(false);
+		
+		//[26,26] - Queued - causes skip
+		sequencer.packetReceived(true, 100, 26, (byte)3, createPacket(3));
+		Assert.assertEquals(26, sequencer.getLastSequenceNumber());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
+		Assert.assertEquals(1, sequencer.getPacketsLost());
+		Assert.assertNull(sequencer.getGapRequestManager());
 	}
 
 	private static ByteBuffer createPacket(int messageCount)
