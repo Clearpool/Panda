@@ -14,6 +14,4 @@ class Utils
 	public static final int RETRANSMISSION_RESPONSE_HEADER_SIZE = 12;
 	public static final int RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE = 4;
 	public static final int RETRANSMISSION_REQUEST_HEADER_SIZE = 12;
-	public static final byte START_OF_RETRANSMISSION = 2;
-	public static final byte END_OF_RETRANSMISSION = 3;
 }

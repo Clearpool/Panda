@@ -10,8 +10,6 @@ import java.nio.channels.DatagramChannel;
 import java.util.ArrayDeque;
 import java.util.List;
 
-
-
 class ChannelSendInfo implements SelectorActionable
 {
 	private final InetAddress multicastIp;
@@ -120,16 +118,14 @@ class ChannelSendInfo implements SelectorActionable
 
 	private void addToPacketQueue(byte[] packetBytes, long sequenceNum)
 	{
-		if (this.packetCache == null)
-			return;
+		if (this.packetCache == null) return;
 		this.packetCache.add(packetBytes, sequenceNum);
 	}
 
 	// Called by selectorThread
 	public Pair<List<byte[]>, Long> getCachedPackets(long firstSequenceNumberRequested, int packetCount)
 	{
-		if (this.cacheSize == 0)
-			return null;
+		if (this.cacheSize == 0) return null;
 		long lastSequenceNumberRequested = firstSequenceNumberRequested + packetCount - 1L;
 		return this.packetCache.getCachedPackets(firstSequenceNumberRequested, lastSequenceNumberRequested);
 	}
@@ -149,7 +145,7 @@ class ChannelSendInfo implements SelectorActionable
 		while (hasOutboundDataRemaining())
 		{
 			byte[] bytes = getNextPacket();
-			//if (this.sequenceNumber % 5L == 0L) return;
+			// if (this.sequenceNumber % 5L == 0L) return;
 			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, this.networkInterface);
 			this.channel.send(ByteBuffer.wrap(bytes), this.multicastGroupAddress);
 		}
@@ -159,5 +155,10 @@ class ChannelSendInfo implements SelectorActionable
 	public int getAction()
 	{
 		return SelectorActionable.SEND_MULTICAST;
+	}
+
+	int getMessageQueueSize()
+	{
+		return this.messageQueue.size();
 	}
 }

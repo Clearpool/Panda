@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
-
 class GapRequestManager
 {
 	private final SelectorThread selectorThread;
@@ -83,7 +82,6 @@ class GapRequestManager
 		this.timeOfRequest = System.currentTimeMillis();
 		this.firstSequenceNumberRequested = firstSequenceNumber;
 		this.packetCountRequested = packetCount;
-		// LOGGER.info("Requesting " + this.packetCountRequested + " missed packets from source " + this.sequencer.getKey() + " starting with Seq. Num. " + this.firstSequenceNumberRequested + " for " + this.multicastGroup);
 
 		return buffer;
 	}
@@ -115,18 +113,19 @@ class GapRequestManager
 					this.responseHeaderReceived = true;
 
 					this.packetsRemainingToDeliver = this.responsePacketCount;
-					// LOGGER.info("Recd " + this.responsePacketCount + " packets from " + this.sequencer.getKey() + " through retransmission for " + this.multicastGroup);
 
 					// Potentially skip packets if request is not filled
 					if (this.responsePacketCount == 0)
 					{
-						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_RESPONSE_NONE, "Unable to retrieve missed packets from source=" + this.sequencer.getKey() + ". Skipping " + this.packetCountRequested + " packets.", null);
+						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_RESPONSE_NONE,
+								"Unable to retrieve missed packets from source=" + this.sequencer.getKey() + ". Skipping " + this.packetCountRequested + " packets.", null);
 						long sequenceNumber = this.firstSequenceNumberRequested + this.packetCountRequested - 1;
 						this.sequencer.skipPacketAndDequeue(sequenceNumber);
 					}
 					else if (this.responsePacketCount != this.packetCountRequested)
 					{
-						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_RESPONSE_PARTIAL, "Unable to retrieve all missed packets from source=" + this.sequencer.getKey() + ". Skipping " + (this.responsePacketCount - this.packetCountRequested) + " packets.", null);
+						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_RESPONSE_PARTIAL,
+								"Unable to retrieve all missed packets from source=" + this.sequencer.getKey() + ". Skipping " + (this.responsePacketCount - this.packetCountRequested) + " packets.", null);
 						this.sequencer.skipPacketAndDequeue(this.responseFirstSequenceNumber - 1);
 					}
 				}
@@ -134,7 +133,7 @@ class GapRequestManager
 				{
 					this.readBuffer.reset();
 					this.readBuffer.compact();
-					this.readBuffer.limit(this.readBuffer.capacity());
+					return;
 				}
 			}
 
@@ -150,7 +149,7 @@ class GapRequestManager
 						byte[] bytes = new byte[packetLength];
 						this.readBuffer.get(bytes);
 						ByteBuffer packetBuffer = ByteBuffer.wrap(bytes);
-						this.sequencer.getChannelReceiveInfo().dataReceived((InetSocketAddress) channel.socket().getRemoteSocketAddress(), packetBuffer);
+						if(channel != null) this.sequencer.getChannelReceiveInfo().dataReceived((InetSocketAddress) channel.socket().getRemoteSocketAddress(), packetBuffer);
 						this.packetsRemainingToDeliver--;
 					}
 					else
@@ -176,13 +175,14 @@ class GapRequestManager
 		catch (Exception e)
 		{
 			this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.EXCEPTION, e.getMessage(), e);
+			e.printStackTrace();
 		}
 	}
 
 	private void close(SocketChannel channel, SelectionKey key, boolean successful) throws IOException
 	{
-		channel.close();
-		key.cancel();
+		if (channel != null) channel.close();
+		if (key != null) key.cancel();
 		close(successful);
 	}
 
@@ -191,13 +191,6 @@ class GapRequestManager
 		this.readBuffer.clear();
 		this.socketChannel = null;
 		this.request = null;
-		this.timeOfRequest = 0;
-		this.firstSequenceNumberRequested = 0L;
-		this.packetCountRequested = 0L;
-		this.responseHeaderReceived = false;
-		this.responseFirstSequenceNumber = 0L;
-		this.responsePacketCount = 0;
-		this.packetsRemainingToDeliver = 0;
 		this.sequencer.closeRequestManager(successful);
 	}
 
@@ -216,14 +209,34 @@ class GapRequestManager
 	{
 		return this.timeOfRequest;
 	}
-	
+
 	long getFirstSequenceNumberRequested()
 	{
 		return this.firstSequenceNumberRequested;
 	}
-	
+
 	long getPacketCountRequested()
 	{
 		return this.packetCountRequested;
+	}
+	
+	boolean isResponseHeaderReceived()
+	{
+		return this.responseHeaderReceived;
+	}
+	
+	long getResponseFirstSequenceNumber()
+	{
+		return this.responseFirstSequenceNumber;
+	}
+	
+	int getResponsePacketCount()
+	{
+		return this.responsePacketCount;
+	}
+	
+	int getPacketsRemainingToDeliver()
+	{
+		return this.packetsRemainingToDeliver;
 	}
 }

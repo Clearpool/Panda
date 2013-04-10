@@ -1,6 +1,6 @@
-package panda.core;
+package panda.tester;
 
-import panda.tester.ReceiverTester;
+import panda.core.PandaTopicInfo;
 
 public class RecvTest2
 {
