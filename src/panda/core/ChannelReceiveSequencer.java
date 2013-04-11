@@ -67,6 +67,7 @@ class ChannelReceiveSequencer
 					this.requestManager.close(false);
 					this.requestManager = null;
 				}
+				this.packetsDropped = 0;
 			}
 		}
 		else
@@ -118,7 +119,7 @@ class ChannelReceiveSequencer
 
 			if (skipReason != null)
 			{
-				this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " Expected=" + (this.lastSequenceNumber + 1) + " Received=" + sequenceNumber, null);
+				this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " packetsDropped=" + this.packetsDropped, null);
 				long headSequenceNumber = this.queuedPackets.peek().getSequenceNumber();
 				skipPacketAndDequeue(headSequenceNumber - 1);
 			}

@@ -16,8 +16,8 @@ public class ReceiverTest
 	public static void main(String[] args) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(0);
-		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)1), "FIVE");
-		final PandaTopicInfo topicInfo2 = new PandaTopicInfo("239.9.9.9", Integer.valueOf(9001), Integer.valueOf((short)2), "FOUR");
+		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), Integer.valueOf((short)1), "FIVE");
+		final PandaTopicInfo topicInfo2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), Integer.valueOf((short)2), "FOUR");
 		
 		adapter.subscribe(topicInfo1, getLocalIp(null), new PandaDataListener() {
 			@Override
@@ -27,7 +27,7 @@ public class ReceiverTest
 				payload.get(bytes, 0, bytes.length);
 				String string = new String(bytes);
 				int stringValue = Integer.parseInt(string);
-				if (stringValue % 1 == 0) System.out.println(new Date() + " Received packet=" + string);
+				if (stringValue % 100000 == 0) System.out.println(new Date() + " Received packet=" + string);
 			}
 
 			@Override
@@ -44,7 +44,7 @@ public class ReceiverTest
 				payload.get(bytes, 0, bytes.length);
 				String string = new String(bytes);
 				int stringValue = Integer.parseInt(string);
-				if (stringValue % 1 == 0) System.out.println(new Date() + " Received packet=" + string);
+				if (stringValue % 100000 == 0) System.out.println(new Date() + " Received packet=" + string);
 			}
 
 			@Override
