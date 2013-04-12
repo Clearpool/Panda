@@ -43,9 +43,15 @@ class Sender
 		ChannelSendInfo sendInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
 		if (sendInfo == null)
 		{
-			sendInfo = new ChannelSendInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), this.cacheSize, interfaceIp);
-
-			this.channelInfos.put(topicInfo.getMulticastGroup(), sendInfo);
+			synchronized (this.channelInfos)
+			{
+				sendInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
+				if(sendInfo == null)
+				{
+					sendInfo = new ChannelSendInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), this.cacheSize, interfaceIp);
+					this.channelInfos.put(topicInfo.getMulticastGroup(), sendInfo);					
+				}
+			}
 		}
 		return sendInfo;
 	}
