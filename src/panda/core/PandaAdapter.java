@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 //Do not subscribe to same group on two diff network cards in same adapter
 //Do not subscribe to same group on two diff adapters
 //TODO - change topic from short to string
+//TODO - allow range for recovery port
 public class PandaAdapter
 {
 	private static final Logger LOGGER = Logger.getLogger(PandaAdapter.class.getName());
