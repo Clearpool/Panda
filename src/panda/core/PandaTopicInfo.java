@@ -4,15 +4,13 @@ public class PandaTopicInfo
 {
 	private final String ip;
 	private final Integer port;
-	private final Integer topicId;
 	private final String topic;
 	private final String multicastGroup;
 	
-	public PandaTopicInfo(String ip, Integer port, Integer topicId, String topic)
+	public PandaTopicInfo(String ip, Integer port, String topic)
 	{
 		this.ip = ip;
 		this.port = port;
-		this.topicId = topicId;
 		this.topic = topic;
 		this.multicastGroup = ip + ":" + port;
 	}
@@ -25,11 +23,6 @@ public class PandaTopicInfo
 	public Integer getPort()
 	{
 		return this.port;
-	}
-
-	public Integer getTopicId()
-	{
-		return this.topicId;
 	}
 
 	public String getTopic()

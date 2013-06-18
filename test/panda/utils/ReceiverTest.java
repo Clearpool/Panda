@@ -16,12 +16,12 @@ public class ReceiverTest
 	public static void main(String[] args) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(0);
-		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), Integer.valueOf((short)1), "FIVE");
-		final PandaTopicInfo topicInfo2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), Integer.valueOf((short)2), "FOUR");
+		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "FIVE");
+		final PandaTopicInfo topicInfo2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "FOUR");
 		
 		adapter.subscribe(topicInfo1, getLocalIp(null), new PandaDataListener() {
 			@Override
-			public void receivedPandaData(int topicId, ByteBuffer payload)
+			public void receivedPandaData(String topic, ByteBuffer payload)
 			{
 				byte[] bytes = new byte[payload.remaining()];
 				payload.get(bytes, 0, bytes.length);
@@ -38,7 +38,7 @@ public class ReceiverTest
 		}, 10000000);
 		adapter.subscribe(topicInfo2, getLocalIp(null), new PandaDataListener() {
 			@Override
-			public void receivedPandaData(int topicId, ByteBuffer payload)
+			public void receivedPandaData(String topic, ByteBuffer payload)
 			{
 				byte[] bytes = new byte[payload.remaining()];
 				payload.get(bytes, 0, bytes.length);

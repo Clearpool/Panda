@@ -499,7 +499,7 @@ public class ChannelReceiveSequencerTest
 
 	private static ByteBuffer createPacket(int messageCount)
 	{
-		ByteBuffer buffer = ByteBuffer.allocate(messageCount*(Utils.MESSAGE_HEADER_SIZE + 4)); //4 is the payloadsize
+		ByteBuffer buffer = ByteBuffer.allocate(messageCount*(Utils.MESSAGE_HEADER_FIXED_SIZE + 4)); //4 is the payloadsize
 		for(int i=0; i<messageCount; i++)
 		{
 			buffer.putInt(i); //topicId

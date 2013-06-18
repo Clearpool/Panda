@@ -186,7 +186,7 @@ public class GapRequestManagerTest
 
 	private static ByteBuffer createPacket(int messageCount, long sequenceNumber)
 	{
-		ByteBuffer buffer = ByteBuffer.allocate(Utils.PACKET_HEADER_SIZE + (Utils.MESSAGE_HEADER_SIZE + 4) * messageCount);
+		ByteBuffer buffer = ByteBuffer.allocate(Utils.PACKET_HEADER_SIZE + (Utils.MESSAGE_HEADER_FIXED_SIZE + 4) * messageCount);
 		buffer.put(Utils.PACKET_HEADER_SIZE);
 		buffer.put((byte) 1); // supports retrans
 		buffer.putLong(sequenceNumber);

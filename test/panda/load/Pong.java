@@ -10,10 +10,10 @@ import panda.core.PandaTopicInfo;
 
 public class Pong implements PandaDataListener
 {
-	private static final PandaTopicInfo TOPICINFO1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), Integer.valueOf(34), "TESTSSS");
-	private static final PandaTopicInfo TOPICINFO2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), Integer.valueOf(35), "TESTSSS");
+	private static final PandaTopicInfo TOPICINFO1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TESTSS1");
+	private static final PandaTopicInfo TOPICINFO2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TESTSS2");
 	private static final int RECV_BUFFER_SIZE = 10000000;
-	
+
 	private final PandaAdapter adapter;
 	private final String localIp;
 	private final boolean shouldPong;
@@ -21,7 +21,7 @@ public class Pong implements PandaDataListener
 	private int messagesReceived;
 	private long timeLastReceived;
 	private int errors;
-	
+
 	public Pong(int cacheSize, boolean shouldPong) throws Exception
 	{
 		this.adapter = new PandaAdapter(cacheSize);
@@ -41,21 +41,21 @@ public class Pong implements PandaDataListener
 	}
 
 	@Override
-	public void receivedPandaData(int arg0, ByteBuffer arg1)
-	{	
+	public void receivedPandaData(String topic, ByteBuffer arg1)
+	{
 		try
 		{
-			if(arg0 == 33)
+			if (topic.equals("TESTSS1"))
 			{
 				this.messagesReceived++;
 				this.timeLastReceived = System.currentTimeMillis();
-				if(this.shouldPong) this.adapter.send(TOPICINFO1, this.localIp, arg1.array());
+				if (this.shouldPong) this.adapter.publish(TOPICINFO1, this.localIp, arg1.array());
 			}
-			else if(arg0 == 34)
+			else if (topic.equals("TESTSS2"))
 			{
 				this.messagesReceived++;
 				this.timeLastReceived = System.currentTimeMillis();
-				if(this.shouldPong) this.adapter.send(TOPICINFO2, this.localIp, arg1.array());
+				if (this.shouldPong) this.adapter.publish(TOPICINFO2, this.localIp, arg1.array());
 			}
 		}
 		catch (Exception e)
@@ -70,15 +70,15 @@ public class Pong implements PandaDataListener
 		this.errors++;
 		System.out.println("ERROR," + arg0 + "," + arg1 + "," + arg2);
 	}
-	
+
 	public static void main(String[] args) throws Exception
 	{
 		int cacheSize = Integer.valueOf(args[0]).intValue();
 		boolean shouldPong = Boolean.valueOf(args[1]).booleanValue();
-		
+
 		Pong pong = new Pong(cacheSize, shouldPong);
 		pong.start();
-		while(pong.messagesReceived == 0 || pong.messagesReceived > 0 && (System.currentTimeMillis() - pong.timeLastReceived < 1000))
+		while (pong.messagesReceived == 0 || pong.messagesReceived > 0 && (System.currentTimeMillis() - pong.timeLastReceived < 1000))
 		{
 			Thread.sleep(1000);
 		}

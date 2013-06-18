@@ -51,7 +51,7 @@ public class ReceiverTester
 			private long endRecvTimeStamp;
 
 			@Override
-			public void receivedPandaData(int topicId, ByteBuffer payload)
+			public void receivedPandaData(String topic, ByteBuffer payload)
 			{
 				wd.restart();
 				this.messageSeqNum = payload.getLong(8);
@@ -83,7 +83,7 @@ public class ReceiverTester
 				try
 				{
 					payload.position(0);
-					adapter.send(topicInfo, localIp, payload.array());
+					adapter.publish(topicInfo, localIp, payload.array());
 				}
 				catch (Exception e)
 				{

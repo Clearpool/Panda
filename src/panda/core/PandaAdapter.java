@@ -8,22 +8,20 @@ import java.util.logging.Logger;
 
 //Do not subscribe to same group on two diff network cards in same adapter
 //Do not subscribe to same group on two diff adapters
-//TODO - change topic from short to string
-//TODO - allow range for recovery port
 public class PandaAdapter
 {
 	private static final Logger LOGGER = Logger.getLogger(PandaAdapter.class.getName());
 
 	private final SelectorThread selectorThread;
 	private final Receiver receiver;
-	private final Sender sender;
+	private final Publisher sender;
 
 	public PandaAdapter(int cacheSize) throws Exception
 	{
 		this.selectorThread = new SelectorThread();
 		ServerSocketChannel channel = getServerSocketChannel();
 		this.receiver = new Receiver(this.selectorThread, channel.socket().getLocalPort());
-		this.sender = new Sender(this.selectorThread, channel, cacheSize);
+		this.sender = new Publisher(this.selectorThread, channel, cacheSize);
 		this.selectorThread.createOutDatagramChannel(channel.socket().getLocalPort());
 		this.selectorThread.start();
 	}
@@ -43,9 +41,9 @@ public class PandaAdapter
 		return null;
 	}
 
-	public void send(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
+	public void publish(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
 	{
-		this.sender.send(topicInfo, interfaceIp, bytes);
+		this.sender.publish(topicInfo, interfaceIp, bytes);
 	}
 
 	public void subscribe(PandaTopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)

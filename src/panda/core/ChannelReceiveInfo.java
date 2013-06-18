@@ -17,7 +17,7 @@ class ChannelReceiveInfo
 	private final String localIp;
 	private final int bindPort;
 	private final SelectorThread selectorThread;
-	private final Map<Integer, Set<PandaDataListener>> topicToListeners;
+	private final Map<String, Set<PandaDataListener>> topicToListeners;
 	private final Set<PandaDataListener> groupListeners;
 	private final Map<String, ChannelReceiveSequencer> sourceInfos;
 
@@ -33,7 +33,7 @@ class ChannelReceiveInfo
 		this.localIp = localIp;
 		this.bindPort = bindPort;
 		this.selectorThread = selectorThread;
-		this.topicToListeners = new HashMap<Integer, Set<PandaDataListener>>();
+		this.topicToListeners = new HashMap<String, Set<PandaDataListener>>();
 		this.groupListeners = new HashSet<PandaDataListener>();
 		this.sourceInfos = new HashMap<String, ChannelReceiveSequencer>();
 		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this, recvBufferSize);
@@ -46,11 +46,11 @@ class ChannelReceiveInfo
 	// Called by app thread
 	public void registerTopicListener(PandaTopicInfo topicInfo, PandaDataListener listener)
 	{
-		Set<PandaDataListener> topicListeners = this.topicToListeners.get(topicInfo.getTopicId());
+		Set<PandaDataListener> topicListeners = this.topicToListeners.get(topicInfo.getTopic());
 		if (topicListeners == null)
 		{
 			topicListeners = new HashSet<PandaDataListener>();
-			this.topicToListeners.put(topicInfo.getTopicId(), topicListeners);
+			this.topicToListeners.put(topicInfo.getTopic(), topicListeners);
 		}
 		topicListeners.add(listener);
 		this.groupListeners.add(listener);
@@ -102,9 +102,12 @@ class ChannelReceiveInfo
 		// Parse messages and deliver to listeners
 		for (int i = 0; i < messageCount; i++)
 		{
-			Integer incomingTopicId = Integer.valueOf(packetBuffer.getInt());
+			byte incomingTopicLength = packetBuffer.get();
+			byte[] incomingTopicBytes = new byte[incomingTopicLength];
+			packetBuffer.get(incomingTopicBytes);
+			String incomingTopic = new String(incomingTopicBytes);
 			short messageLength = packetBuffer.getShort();
-			Set<PandaDataListener> listeners = this.topicToListeners.get(incomingTopicId);
+			Set<PandaDataListener> listeners = this.topicToListeners.get(incomingTopic);
 			if (listeners != null)
 			{
 				byte[] messageBytes = new byte[messageLength];
@@ -112,7 +115,7 @@ class ChannelReceiveInfo
 				ByteBuffer messageBuffer = ByteBuffer.wrap(messageBytes);
 				for (PandaDataListener listener : listeners)
 				{
-					listener.receivedPandaData(incomingTopicId.intValue(), messageBuffer);
+					listener.receivedPandaData(incomingTopic, messageBuffer);
 				}
 				this.messagesHandled++;
 			}

@@ -19,12 +19,11 @@ public class RecvTest2
 			System.exit(0);
 		}
 		int adapterCache = Integer.valueOf(args[0]).intValue();
-		int topicID = Integer.valueOf(args[1]).intValue();
-		long numOfMessages = Long.valueOf(args[2]).longValue();
-		int netRecvBufferSize = Integer.valueOf(args[3]).intValue();
-		PandaTopicInfo topicInfo = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), Integer.valueOf(topicID), "TEST_TOPIC");
+		long numOfMessages = Long.valueOf(args[1]).longValue();
+		int netRecvBufferSize = Integer.valueOf(args[2]).intValue();
+		PandaTopicInfo topicInfo = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TEST_TOPIC");
 		String localIp = InetAddress.getLocalHost().getHostAddress();
-		
+
 		ReceiverTester rt = new ReceiverTester();
 		rt.subscribeToSequencedMessages(adapterCache, topicInfo, numOfMessages, netRecvBufferSize, localIp);
 	}

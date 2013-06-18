@@ -36,7 +36,7 @@ public class Ping implements PandaDataListener
 	private long roundTrip;
 	private int errors;
 	
-	public Ping(int cacheSize, int numMessages, int messagesPerMilli, int ignoreCount, int logRate, int numThreads, int topicId) throws Exception
+	public Ping(int cacheSize, int numMessages, int messagesPerMilli, int ignoreCount, int logRate, int numThreads) throws Exception
 	{
 		this.adapter = new PandaAdapter(cacheSize);
 		this.numMessages = numMessages;
@@ -47,7 +47,7 @@ public class Ping implements PandaDataListener
 		this.numThreads = numThreads;
 		this.sendThreads = new ArrayList<Thread>();
 		this.threadSequences = new int[numThreads];
-		this.topicInfo = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), Integer.valueOf(topicId), "TESTSSS");
+		this.topicInfo = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TESTSSS");
 	}
 
 	private void start() throws Exception
@@ -77,7 +77,7 @@ public class Ping implements PandaDataListener
 							buffer.putInt(index);
 							buffer.putInt(j);
 							buffer.rewind();
-							Ping.this.adapter.send(Ping.this.topicInfo, localIp, buffer.array());
+							Ping.this.adapter.publish(Ping.this.topicInfo, localIp, buffer.array());
 							if(j % messagesPerMil == 0) Thread.sleep(1);
 						}
 					}
@@ -105,11 +105,11 @@ public class Ping implements PandaDataListener
 	}
 
 	@Override
-	public void receivedPandaData(int arg0, ByteBuffer arg1)
+	public void receivedPandaData(String topic, ByteBuffer payload)
 	{
-		long timestamp = arg1.getLong();
-		int thread = arg1.getInt();
-		int sequence = arg1.getInt();
+		long timestamp = payload.getLong();
+		int thread = payload.getInt();
+		int sequence = payload.getInt();
 		int lastThreadSequence = this.threadSequences[thread];
 		if(lastThreadSequence + 1 != sequence)
 		{
@@ -144,10 +144,9 @@ public class Ping implements PandaDataListener
 		int ignoreCount = Integer.valueOf(args[3]).intValue();
 		int logRate = Integer.valueOf(args[4]).intValue();
 		int numThreads = Integer.valueOf(args[5]).intValue();
-		int topicId = Integer.valueOf(args[5]).intValue();
 		numMessages+=ignoreCount;
 		
-		Ping ping = new Ping(cacheSize, numMessages, messagesPerMilli, ignoreCount, logRate, numThreads, topicId);
+		Ping ping = new Ping(cacheSize, numMessages, messagesPerMilli, ignoreCount, logRate, numThreads);
 		ping.start();
 		while(ping.sendThreads.size() > 0)
 		{
