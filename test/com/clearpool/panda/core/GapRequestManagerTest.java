@@ -10,7 +10,7 @@ import org.junit.Test;
 import com.clearpool.panda.core.ChannelReceiveInfo;
 import com.clearpool.panda.core.ChannelReceiveSequencer;
 import com.clearpool.panda.core.GapRequestManager;
-import com.clearpool.panda.core.Utils;
+import com.clearpool.panda.core.PandaUtils;
 
 @SuppressWarnings("static-method")
 public class GapRequestManagerTest
@@ -175,7 +175,7 @@ public class GapRequestManagerTest
 			totalLength += buffer.remaining();
 		}
 		
-		int responseLength = Utils.RETRANSMISSION_RESPONSE_HEADER_SIZE + Utils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE*packetCount + totalLength;
+		int responseLength = PandaUtils.RETRANSMISSION_RESPONSE_HEADER_SIZE + PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE*packetCount + totalLength;
 		ByteBuffer buffer = ByteBuffer.allocate(responseLength);
 		buffer.putLong(firstSequenceNumber);
 		buffer.putInt(packetCount);
@@ -192,8 +192,8 @@ public class GapRequestManagerTest
 	private static ByteBuffer createPacket(int messageCount, long sequenceNumber)
 	{
 		String topic = "1";
-		ByteBuffer buffer = ByteBuffer.allocate(Utils.PACKET_HEADER_SIZE + (Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + 4) * messageCount);
-		buffer.put(Utils.PACKET_HEADER_SIZE);
+		ByteBuffer buffer = ByteBuffer.allocate(PandaUtils.PACKET_HEADER_SIZE + (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + 4) * messageCount);
+		buffer.put(PandaUtils.PACKET_HEADER_SIZE);
 		buffer.put((byte) 1); // supports retrans
 		buffer.putLong(sequenceNumber);
 		buffer.put((byte) messageCount); 

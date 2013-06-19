@@ -44,13 +44,13 @@ class ChannelReceiveInfo
 	}
 
 	// Called by app thread
-	public void registerTopicListener(PandaTopicInfo topicInfo, PandaDataListener listener)
+	public void registerTopicListener(String topic, PandaDataListener listener)
 	{
-		Set<PandaDataListener> topicListeners = this.topicToListeners.get(topicInfo.getTopic());
+		Set<PandaDataListener> topicListeners = this.topicToListeners.get(topic);
 		if (topicListeners == null)
 		{
 			topicListeners = new HashSet<PandaDataListener>();
-			this.topicToListeners.put(topicInfo.getTopic(), topicListeners);
+			this.topicToListeners.put(topic, topicListeners);
 		}
 		topicListeners.add(listener);
 		this.groupListeners.add(listener);

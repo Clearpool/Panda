@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import com.clearpool.panda.core.ChannelReceiveInfo;
 import com.clearpool.panda.core.ChannelReceiveSequencer;
-import com.clearpool.panda.core.Utils;
+import com.clearpool.panda.core.PandaUtils;
 
 @SuppressWarnings("static-method")
 public class ChannelReceiveSequencerTest
@@ -503,7 +503,7 @@ public class ChannelReceiveSequencerTest
 	private static ByteBuffer createPacket(int messageCount)
 	{
 		String topic = "1";
-		ByteBuffer buffer = ByteBuffer.allocate(messageCount * (Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + 4)); // 4 is the payloadsize
+		ByteBuffer buffer = ByteBuffer.allocate(messageCount * (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + 4)); // 4 is the payloadsize
 		for (int i = 0; i < messageCount; i++)
 		{
 			buffer.put((byte) 1);

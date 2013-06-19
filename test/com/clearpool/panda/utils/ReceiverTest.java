@@ -8,19 +8,23 @@ import java.util.Date;
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
-import com.clearpool.panda.core.PandaTopicInfo;
+import com.clearpool.panda.core.PandaUtils;
 
 
 
 public class ReceiverTest
 {
+	private static final String TOPIC1 = "ONE";
+	private static final String TOPIC2 = "TWO";
+	private static final String IP = "239.9.9.10";
+	private static final int PORT = 9002;
+	private static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
+	
 	public static void main(String[] args) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(0);
-		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "ONE");
-		final PandaTopicInfo topicInfo2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TWO");
 		
-		adapter.subscribe(topicInfo1, getLocalIp(null), new PandaDataListener() {
+		adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, getLocalIp(null), new PandaDataListener() {
 			@Override
 			public void receivedPandaData(String topic, ByteBuffer payload)
 			{
@@ -37,7 +41,7 @@ public class ReceiverTest
 				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
 		}, 10000000);
-		adapter.subscribe(topicInfo2, getLocalIp(null), new PandaDataListener() {
+		adapter.subscribe(TOPIC2, IP, PORT, MULTICASTGROUP, getLocalIp(null), new PandaDataListener() {
 			@Override
 			public void receivedPandaData(String topic, ByteBuffer payload)
 			{

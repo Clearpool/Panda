@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.clearpool.panda.core.ChannelReceiveInfo;
-import com.clearpool.panda.core.Utils;
+import com.clearpool.panda.core.PandaUtils;
 
 @SuppressWarnings("static-method")
 public class ChannelReceiveInfoTest
@@ -20,7 +20,7 @@ public class ChannelReceiveInfoTest
 		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
 
 		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.1", 10);
-		ByteBuffer packetBuffer = createPacketBuffer(Utils.PACKET_HEADER_SIZE, 5, 1);
+		ByteBuffer packetBuffer = createPacketBuffer(PandaUtils.PACKET_HEADER_SIZE, 5, 1);
 		channelReceiveInfo.dataReceived(sourceAddress, packetBuffer);
 		Assert.assertEquals(0, channelReceiveInfo.getPacketsProcessed());
 		Assert.assertEquals(0, channelReceiveInfo.getMessagesProcessed());
@@ -34,12 +34,12 @@ public class ChannelReceiveInfoTest
 
 		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.2", 10);
 
-		ByteBuffer packetBuffer1 = createPacketBuffer(Utils.PACKET_HEADER_SIZE, 5, 1);
+		ByteBuffer packetBuffer1 = createPacketBuffer(PandaUtils.PACKET_HEADER_SIZE, 5, 1);
 		channelReceiveInfo.dataReceived(sourceAddress, packetBuffer1);
 		Assert.assertEquals(1, channelReceiveInfo.getPacketsProcessed());
 		Assert.assertEquals(5, channelReceiveInfo.getMessagesProcessed());
 
-		ByteBuffer packetBuffer2 = createPacketBuffer(Utils.PACKET_HEADER_SIZE, 6, 2);
+		ByteBuffer packetBuffer2 = createPacketBuffer(PandaUtils.PACKET_HEADER_SIZE, 6, 2);
 		channelReceiveInfo.dataReceived(sourceAddress, packetBuffer2);
 		Assert.assertEquals(2, channelReceiveInfo.getPacketsProcessed());
 		Assert.assertEquals(11, channelReceiveInfo.getMessagesProcessed());
@@ -62,7 +62,7 @@ public class ChannelReceiveInfoTest
 	private static ByteBuffer createPacketBuffer(int packetHeaderSize, int messageCount, long sequenceNumber)
 	{
 		String topic = "1";
-		ByteBuffer buffer = ByteBuffer.allocate(packetHeaderSize + (Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + 4) * messageCount);
+		ByteBuffer buffer = ByteBuffer.allocate(packetHeaderSize + (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + 4) * messageCount);
 		buffer.put((byte) packetHeaderSize);
 		buffer.put((byte) 1); // supports retrans
 		buffer.putLong(sequenceNumber);

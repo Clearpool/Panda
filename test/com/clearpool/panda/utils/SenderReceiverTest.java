@@ -9,18 +9,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
-import com.clearpool.panda.core.PandaTopicInfo;
+import com.clearpool.panda.core.PandaUtils;
 
 
 public class SenderReceiverTest
 {
+	private static final String TOPIC1 = "ONE";
+	private static final String TOPIC2 = "TWO";
+	private static final String IP = "239.9.9.10";
+	private static final int PORT = 9002;
+	static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
+	
 	public static void main(String[] args) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(1000);
-		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "ONE");
-		final PandaTopicInfo topicInfo2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TWO");
 		final AtomicInteger integer = new AtomicInteger();
-		adapter.subscribe(topicInfo1, getLocalIp(null), new PandaDataListener() {
+		adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, getLocalIp(null), new PandaDataListener() {
 			@Override
 			public void receivedPandaData(String topic, ByteBuffer payload)
 			{
@@ -33,7 +37,7 @@ public class SenderReceiverTest
 				String newInt = String.valueOf(integer.incrementAndGet());
 				try
 				{
-					adapter.send(topicInfo2, SenderReceiverTest.getLocalIp(null), newInt.getBytes());
+					adapter.send(TOPIC2, IP, PORT, MULTICASTGROUP, SenderReceiverTest.getLocalIp(null), newInt.getBytes());
 				}
 				catch (Exception e)
 				{
@@ -48,7 +52,7 @@ public class SenderReceiverTest
 				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
 		}, 10000000);
-		adapter.subscribe(topicInfo2, getLocalIp(null), new PandaDataListener() {
+		adapter.subscribe(TOPIC2, IP, PORT, MULTICASTGROUP, getLocalIp(null), new PandaDataListener() {
 			@Override
 			public void receivedPandaData(String topic, ByteBuffer payload)
 			{

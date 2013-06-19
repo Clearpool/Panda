@@ -43,7 +43,7 @@ class GapResponseManager
 			//Send Header
 			if(this.packets == null || this.packets.size() == this.totalPackets)
 			{
-				byte[] bytes = new byte[Utils.RETRANSMISSION_RESPONSE_HEADER_SIZE];
+				byte[] bytes = new byte[PandaUtils.RETRANSMISSION_RESPONSE_HEADER_SIZE];
 				ByteBuffer buffer = ByteBuffer.wrap(bytes);
 				buffer.putLong(this.startSequenceNumber);
 				buffer.putInt(this.totalPackets);
@@ -61,7 +61,7 @@ class GapResponseManager
 				{
 					byte[] packetBytes = responseIterator.next();
 					responseIterator.remove();
-					byte[] bytes = new byte[Utils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE + packetBytes.length];
+					byte[] bytes = new byte[PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE + packetBytes.length];
 					ByteBuffer buffer = ByteBuffer.wrap(bytes);
 					buffer.putInt(packetBytes.length);
 					buffer.put(packetBytes);

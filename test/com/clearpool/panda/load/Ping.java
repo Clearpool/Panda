@@ -11,13 +11,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
-import com.clearpool.panda.core.PandaTopicInfo;
+import com.clearpool.panda.core.PandaUtils;
 
 
 public class Ping implements PandaDataListener
 {
 	private static final int MESSAGE_LENTH = 100;
 	private static final int RECV_BUFFER_SIZE = 10000000;
+
+	private static final String TOPIC = "TESTSSS";
+	private static final String IP = "239.9.9.10";
+	private static final int PORT = 9002;
+	private static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
 	
 	private final PandaAdapter adapter;
 	private final int numMessages;
@@ -28,7 +33,6 @@ public class Ping implements PandaDataListener
 	private final int numThreads;
 	private final List<Thread> sendThreads;
 	private final int[] threadSequences;
-	private final PandaTopicInfo topicInfo;
 	
 	
 	private long firstUnignoredMessageTime;
@@ -48,13 +52,12 @@ public class Ping implements PandaDataListener
 		this.numThreads = numThreads;
 		this.sendThreads = new ArrayList<Thread>();
 		this.threadSequences = new int[numThreads];
-		this.topicInfo = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TESTSSS");
 	}
 
 	private void start() throws Exception
 	{
 		final String localIp = InetAddress.getLocalHost().getHostAddress();
-		this.adapter.subscribe(this.topicInfo, localIp, this, RECV_BUFFER_SIZE);
+		this.adapter.subscribe(TOPIC, IP, PORT, MULTICASTGROUP, localIp, this, RECV_BUFFER_SIZE);
 		
 		for(int i=0; i<this.numThreads; i++)
 		{
@@ -78,7 +81,7 @@ public class Ping implements PandaDataListener
 							buffer.putInt(index);
 							buffer.putInt(j);
 							buffer.rewind();
-							Ping.this.adapter.send(Ping.this.topicInfo, localIp, buffer.array());
+							Ping.this.adapter.send(TOPIC, IP, PORT, MULTICASTGROUP, localIp, buffer.array());
 							if(j % messagesPerMil == 0) Thread.sleep(1);
 						}
 					}

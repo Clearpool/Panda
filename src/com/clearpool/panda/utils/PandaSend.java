@@ -3,8 +3,7 @@ package com.clearpool.panda.utils;
 import java.net.InetAddress;
 
 import com.clearpool.panda.core.PandaAdapter;
-import com.clearpool.panda.core.PandaTopicInfo;
-
+import com.clearpool.panda.core.PandaUtils;
 
 public class PandaSend
 {
@@ -23,9 +22,8 @@ public class PandaSend
 			String data = args[3];
 
 			PandaAdapter adapter = new PandaAdapter(0);
-			PandaTopicInfo topicInfo = new PandaTopicInfo(ip, Integer.valueOf(port), topic);
 
-			adapter.send(topicInfo, interfaceIp, data.getBytes());
+			adapter.send(topic, ip, port, PandaUtils.getMulticastGroup(ip, port), interfaceIp, data.getBytes());
 			Thread.sleep(10);
 			System.exit(0);
 		}

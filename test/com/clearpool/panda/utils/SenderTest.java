@@ -5,15 +5,19 @@ import java.net.UnknownHostException;
 import java.util.Date;
 
 import com.clearpool.panda.core.PandaAdapter;
-import com.clearpool.panda.core.PandaTopicInfo;
+import com.clearpool.panda.core.PandaUtils;
 
 
 public class SenderTest
 {
+	private static final String TOPIC1 = "ONE";
+	private static final String IP = "239.9.9.10";
+	private static final int PORT = 9002;
+	private static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
+	
 	public static void main(String[] args) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(1000);
-		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "ONE");
 		final String localIp = getLocalIp(null);
 
 		int count = 0;
@@ -23,7 +27,7 @@ public class SenderTest
 			{
 				count++;
 				String countString = String.valueOf(count);
-				adapter.send(topicInfo1, localIp, countString.getBytes());
+				adapter.send(TOPIC1, IP, PORT, MULTICASTGROUP, localIp, countString.getBytes());
 				if (count % 100000 == 0)
 				{
 					System.out.println(new Date());

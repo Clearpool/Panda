@@ -6,11 +6,16 @@ import java.nio.ByteBuffer;
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
-import com.clearpool.panda.core.PandaTopicInfo;
+import com.clearpool.panda.core.PandaUtils;
 
 
 public class SenderTester
-{
+{	
+	private static final String TOPIC = "TEST_TOPIC";
+	private static final String IP = "239.9.9.10";
+	private static final int PORT = 9002;
+	private static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
+
 	long messageSeqNum;
 	long highestSeqNum;
 	int returnedMessageCount;
@@ -22,12 +27,11 @@ public class SenderTester
 	long latencyAccumulator = 0;
 
 	// 24 <= dataSize <= Utils.MAX_MESSAGE_PAYLOAD_SIZE
-	public void sendSequencedMessages(int cacheSize, PandaTopicInfo tInfo, int dataSize, final long numOfMessages, int netRecvBufferSize, int numOfSenderThreads, final String localIp) throws Exception
+	public void sendSequencedMessages(int cacheSize, int dataSize, final long numOfMessages, int netRecvBufferSize, int numOfSenderThreads, final String localIp) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
-		final PandaTopicInfo topicInfo = tInfo;
 
-		adapter.subscribe(topicInfo, localIp, new PandaDataListener() {
+		adapter.subscribe(TOPIC, IP, PORT, MULTICASTGROUP, localIp, new PandaDataListener() {
 			private long recdThisSecondTimeStamp;
 			private long currentTime;
 			private int messagesTillLastSec;
@@ -72,11 +76,11 @@ public class SenderTester
 		long mssgsPerOtherThreads = numOfMessages / numOfSenderThreads;
 		long mssgsPerFirstThread = (numOfMessages - (numOfSenderThreads - 1) * mssgsPerOtherThreads);
 
-		senderThreads[0] = new SenderThread(adapter, topicInfo, dataSize, mssgsPerFirstThread, 0, localIp);
+		senderThreads[0] = new SenderThread(adapter, dataSize, mssgsPerFirstThread, 0, localIp);
 		senderThreads[0].start();
 		for (int i = 1; i < numOfSenderThreads; ++i)
 		{
-			senderThreads[i] = new SenderThread(adapter, topicInfo, dataSize, mssgsPerOtherThreads, i, localIp);
+			senderThreads[i] = new SenderThread(adapter, dataSize, mssgsPerOtherThreads, i, localIp);
 			senderThreads[i].start();
 		}
 
@@ -94,7 +98,7 @@ public class SenderTester
 
 	}
 
-	public static void runSender(PandaAdapter adapter, PandaTopicInfo topicInfo, String localIp, int dataSize, long numOfMessages, int senderThreadNum) throws Exception
+	public static void runSender(PandaAdapter adapter, String localIp, int dataSize, long numOfMessages, int senderThreadNum) throws Exception
 	{
 		long seqNumber = 0;
 		long mssgPerSecCounter = 0;
@@ -113,7 +117,7 @@ public class SenderTester
 				System.out.println("--- Sender Thread " + senderThreadNum + " Sent " + (seqNumber - mssgPerSecCounter) + " Messages This second. Total Messages Sent " + seqNumber);
 				mssgPerSecCounter = seqNumber;
 			}
-			adapter.send(topicInfo, localIp, buffer.array());
+			adapter.send(TOPIC, IP, PORT, MULTICASTGROUP, localIp, buffer.array());
 			if (seqNumber % 200 == 0)
 			{
 				Thread.sleep(1);
@@ -126,16 +130,14 @@ public class SenderTester
 	class SenderThread extends Thread
 	{
 		PandaAdapter pandaAdapter;
-		PandaTopicInfo tInfo;
 		int packetSize;
 		long numOfMssgs;
 		int thisThreadNum;
 		String localIp;
 
-		public SenderThread(PandaAdapter adapter, PandaTopicInfo topicInfo, int dataSize, long numOfMessages, int senderThreadNum, String localIp)
+		public SenderThread(PandaAdapter adapter, int dataSize, long numOfMessages, int senderThreadNum, String localIp)
 		{
 			this.pandaAdapter = adapter;
-			this.tInfo = topicInfo;
 			this.packetSize = dataSize;
 			this.numOfMssgs = numOfMessages;
 			this.thisThreadNum = senderThreadNum;
@@ -147,7 +149,7 @@ public class SenderTester
 		{
 			try
 			{
-				SenderTester.runSender(this.pandaAdapter, this.tInfo, this.localIp, this.packetSize, this.numOfMssgs, this.thisThreadNum);
+				SenderTester.runSender(this.pandaAdapter, this.localIp, this.packetSize, this.numOfMssgs, this.thisThreadNum);
 			}
 			catch (Exception e)
 			{
@@ -175,11 +177,10 @@ public class SenderTester
 			System.exit(0);
 		}
 
-		PandaTopicInfo topicInfo = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TEST_TOPIC");
 		String localIp = InetAddress.getLocalHost().getHostAddress();
 
 		SenderTester st = new SenderTester();
-		st.sendSequencedMessages(adapterCache, topicInfo, payloadSize, numOfMessages, netRecvBufferSize, numOfThreads, localIp);
+		st.sendSequencedMessages(adapterCache, payloadSize, numOfMessages, netRecvBufferSize, numOfThreads, localIp);
 		System.exit(0);
 	}
 }

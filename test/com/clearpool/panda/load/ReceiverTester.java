@@ -6,11 +6,15 @@ import java.nio.ByteBuffer;
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
-import com.clearpool.panda.core.PandaTopicInfo;
-
+import com.clearpool.panda.core.PandaUtils;
 
 public class ReceiverTester
 {
+	private static final String TOPIC = "TEST_TOPIC";
+	private static final String IP = "239.9.9.10";
+	private static final int PORT = 9002;
+	static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
+			
 	private long highestSeqNumber = 0;
 	private long latestMessageCount = 0;
 
@@ -34,14 +38,14 @@ public class ReceiverTester
 		return this.latestMessageCount;
 	}
 
-	public void subscribeToSequencedMessages(int cacheSize, final PandaTopicInfo topicInfo, final long numOfMessages, int netRecvBufferSize, final String localIp) throws Exception
+	public void subscribeToSequencedMessages(int cacheSize, final long numOfMessages, int netRecvBufferSize, final String localIp) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final ReceiverWatchdog wd = new ReceiverWatchdog(3000, 250, this, numOfMessages);
 
 		new Thread(wd).start();
 
-		adapter.subscribe(topicInfo, localIp, new PandaDataListener() {
+		adapter.subscribe(TOPIC, IP, PORT, MULTICASTGROUP, localIp, new PandaDataListener() {
 			private long messageSeqNum = 0;
 			private long highestRecdSeqNum = 0;
 			private long messageCount = 0;
@@ -53,7 +57,7 @@ public class ReceiverTester
 			private long endRecvTimeStamp;
 
 			@Override
-			public void receivedPandaData(String topic, ByteBuffer payload)
+			public void receivedPandaData(String incomingTopic, ByteBuffer payload)
 			{
 				wd.restart();
 				this.messageSeqNum = payload.getLong(8);
@@ -84,7 +88,7 @@ public class ReceiverTester
 				try
 				{
 					payload.position(0);
-					adapter.send(topicInfo, localIp, payload.array());
+					adapter.send(TOPIC, IP, PORT, MULTICASTGROUP, localIp, payload.array());
 				}
 				catch (Exception e)
 				{
@@ -158,10 +162,9 @@ class ReceiverWatchdog implements Runnable
 		int adapterCache = Integer.valueOf(args[0]).intValue();
 		long numOfMessages = Long.valueOf(args[1]).longValue();
 		int netRecvBufferSize = Integer.valueOf(args[2]).intValue();
-		PandaTopicInfo topicInfo = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TEST_TOPIC");
 		String localIp = InetAddress.getLocalHost().getHostAddress();
 
 		ReceiverTester rt = new ReceiverTester();
-		rt.subscribeToSequencedMessages(adapterCache, topicInfo, numOfMessages, netRecvBufferSize, localIp);
+		rt.subscribeToSequencedMessages(adapterCache, numOfMessages, netRecvBufferSize, localIp);
 	}
 }

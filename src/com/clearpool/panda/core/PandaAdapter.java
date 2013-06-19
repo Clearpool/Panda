@@ -5,7 +5,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 //Do not subscribe to same group on two diff network cards in same adapter
 //Do not subscribe to same group on two diff adapters
 public class PandaAdapter
@@ -34,20 +33,23 @@ public class PandaAdapter
 			channel.configureBlocking(false);
 			channel.bind(new InetSocketAddress(0));
 			return channel;
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 		return null;
 	}
 
-	public void send(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
+	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
 	{
-		this.sender.send(topicInfo, interfaceIp, bytes);
+		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(interfaceIp, port);
+		this.sender.send(topic, ip, port, multicastGroup, interfaceIp, bytes);
 	}
 
-	public void subscribe(PandaTopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)
+	public void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize)
 	{
-		this.receiver.subscribe(topicInfo, interfaceIp, listener, recvBufferSize);
+		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(interfaceIp, port);
+		this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize);
 	}
 }

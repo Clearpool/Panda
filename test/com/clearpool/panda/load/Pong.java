@@ -6,13 +6,17 @@ import java.nio.ByteBuffer;
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
-import com.clearpool.panda.core.PandaTopicInfo;
+import com.clearpool.panda.core.PandaUtils;
 
 
 public class Pong implements PandaDataListener
 {
-	private static final PandaTopicInfo TOPICINFO1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TESTSS1");
-	private static final PandaTopicInfo TOPICINFO2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TESTSS2");
+	private static final String TOPIC1 = "TESTSS1";
+	private static final String TOPIC2 = "TESTSS2";
+	private static final String IP = "239.9.9.10";
+	private static final int PORT = 9002;
+	private static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
+	
 	private static final int RECV_BUFFER_SIZE = 10000000;
 
 	private final PandaAdapter adapter;
@@ -32,8 +36,8 @@ public class Pong implements PandaDataListener
 
 	private void start() throws Exception
 	{
-		this.adapter.subscribe(TOPICINFO1, this.localIp, this, RECV_BUFFER_SIZE);
-		this.adapter.subscribe(TOPICINFO2, this.localIp, this, RECV_BUFFER_SIZE);
+		this.adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, this.localIp, this, RECV_BUFFER_SIZE);
+		this.adapter.subscribe(TOPIC2, IP, PORT, MULTICASTGROUP, this.localIp, this, RECV_BUFFER_SIZE);
 	}
 
 	private void printStats()
@@ -50,13 +54,13 @@ public class Pong implements PandaDataListener
 			{
 				this.messagesReceived++;
 				this.timeLastReceived = System.currentTimeMillis();
-				if (this.shouldPong) this.adapter.send(TOPICINFO1, this.localIp, arg1.array());
+				if (this.shouldPong) this.adapter.send(TOPIC1, IP, PORT, MULTICASTGROUP, this.localIp, arg1.array());
 			}
 			else if (topic.equals("TESTSS2"))
 			{
 				this.messagesReceived++;
 				this.timeLastReceived = System.currentTimeMillis();
-				if (this.shouldPong) this.adapter.send(TOPICINFO2, this.localIp, arg1.array());
+				if (this.shouldPong) this.adapter.send(TOPIC2, IP, PORT, MULTICASTGROUP, this.localIp, arg1.array());
 			}
 		}
 		catch (Exception e)

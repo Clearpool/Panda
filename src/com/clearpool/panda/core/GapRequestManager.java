@@ -30,7 +30,7 @@ class GapRequestManager
 		this.multicastGroup = multicastGroup;
 		this.sourceIp = sourceIp;
 		this.sequencer = sequencer;
-		this.readBuffer = ByteBuffer.allocateDirect(2 * Utils.MAX_TCP_SIZE);
+		this.readBuffer = ByteBuffer.allocateDirect(2 * PandaUtils.MAX_TCP_SIZE);
 
 		this.socketChannel = null;
 		this.request = null;
@@ -72,7 +72,7 @@ class GapRequestManager
 
 	private ByteBuffer createGapRequest(long firstSequenceNumber, int packetCount)
 	{
-		byte[] bytes = new byte[Utils.RETRANSMISSION_REQUEST_HEADER_SIZE + this.multicastGroup.length()];
+		byte[] bytes = new byte[PandaUtils.RETRANSMISSION_REQUEST_HEADER_SIZE + this.multicastGroup.length()];
 		ByteBuffer buffer = ByteBuffer.wrap(bytes);
 		buffer.putLong(firstSequenceNumber);
 		buffer.putInt(packetCount);
@@ -103,7 +103,7 @@ class GapRequestManager
 			if (!this.responseHeaderReceived)
 			{
 				this.readBuffer.mark();
-				if (this.readBuffer.remaining() >= Utils.RETRANSMISSION_RESPONSE_HEADER_SIZE)
+				if (this.readBuffer.remaining() >= PandaUtils.RETRANSMISSION_RESPONSE_HEADER_SIZE)
 				{
 					long startSequenceNumber = this.readBuffer.getLong();
 					int totalPackets = this.readBuffer.getInt();
@@ -141,7 +141,7 @@ class GapRequestManager
 			while (this.packetsRemainingToDeliver > 0)
 			{
 				this.readBuffer.mark();
-				if (this.readBuffer.remaining() >= Utils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE)
+				if (this.readBuffer.remaining() >= PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE)
 				{
 					int packetLength = this.readBuffer.getInt();
 					if (this.readBuffer.remaining() >= packetLength)

@@ -39,8 +39,8 @@ class SelectorThread extends Thread
 	public SelectorThread() throws IOException
 	{
 		this.selector = Selector.open();
-		this.udpBuffer = ByteBuffer.allocateDirect(Utils.MTU_SIZE);
-		this.tcpBuffer = ByteBuffer.allocateDirect(Utils.MAX_TCP_SIZE);
+		this.udpBuffer = ByteBuffer.allocateDirect(PandaUtils.MTU_SIZE);
+		this.tcpBuffer = ByteBuffer.allocateDirect(PandaUtils.MAX_TCP_SIZE);
 		this.inDatagramChannels = new HashMap<String, DatagramChannel>();
 		this.selectorActionQueue = new LinkedList<>();
 

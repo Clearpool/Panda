@@ -7,24 +7,22 @@ import java.util.Date;
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
-import com.clearpool.panda.core.PandaTopicInfo;
+import com.clearpool.panda.core.PandaUtils;
 
 
 
 public class PandaReceive implements PandaDataListener
 {
 	private final PandaAdapter adapter;
-	private final PandaTopicInfo topicInfo;
 	
-	public PandaReceive(String ip, int port, String topic) throws Exception
+	public PandaReceive() throws Exception
 	{
 		this.adapter = new PandaAdapter(0);
-		this.topicInfo = new PandaTopicInfo(ip, Integer.valueOf(port), topic);
 	}
 	
-	public void start(String interfaceIp)
+	public void start(String topic, String ip, int port, String multicastGroup, String interfaceIp)
 	{
-		this.adapter.subscribe(this.topicInfo, interfaceIp, this, 100000);
+		this.adapter.subscribe(topic, ip, port, interfaceIp, multicastGroup, this, 100000);
 	}
 	
 	@Override
@@ -58,8 +56,8 @@ public class PandaReceive implements PandaDataListener
 			String topic = args[2];
 			String interfaceIp = InetAddress.getLocalHost().getHostAddress();
 			
-			PandaReceive pandaListener = new PandaReceive(ip, port, topic);
-			pandaListener.start(interfaceIp);
+			PandaReceive pandaListener = new PandaReceive();
+			pandaListener.start(topic, ip, port, PandaUtils.getMulticastGroup(ip, port), interfaceIp);
 		}
 	}
 }

@@ -2,7 +2,7 @@ package com.clearpool.panda.core;
 
 
 
-class Utils 
+public class PandaUtils 
 {
 	//Sizes
 	public static final int MTU_SIZE = 1500;
@@ -15,4 +15,9 @@ class Utils
 	public static final int RETRANSMISSION_RESPONSE_HEADER_SIZE = 12;
 	public static final int RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE = 4;
 	public static final int RETRANSMISSION_REQUEST_HEADER_SIZE = 12;
+	
+	public static String getMulticastGroup(String ip, int port)
+	{
+		return ip + ":" + port;
+	}
 }

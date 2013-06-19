@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-
 class Sender
 {
 	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());
@@ -26,30 +25,29 @@ class Sender
 		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
 	}
 
-	public void send(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
+	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
 	{
-		if (bytes.length > Utils.MAX_MESSAGE_PAYLOAD_SIZE)
-			throw new Exception("Message length over size=" + Utils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
-		ChannelSendInfo sendInfo = getChannelSendInfo(topicInfo, interfaceIp);
+		if (bytes.length > PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE) throw new Exception("Message length over size=" + PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
+		ChannelSendInfo sendInfo = getChannelSendInfo(ip, port, multicastGroup, interfaceIp);
 		synchronized (sendInfo)
 		{
-			sendInfo.addMessageToSendQueue(topicInfo.getTopic(), bytes);
+			sendInfo.addMessageToSendQueue(topic, bytes);
 			this.selectorThread.sendToMulticastChannel(sendInfo);
 		}
 	}
 
-	private ChannelSendInfo getChannelSendInfo(PandaTopicInfo topicInfo, String interfaceIp) throws Exception
+	private ChannelSendInfo getChannelSendInfo(String ip, int port, String multicastGroup, String interfaceIp) throws Exception
 	{
-		ChannelSendInfo sendInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
+		ChannelSendInfo sendInfo = this.channelInfos.get(multicastGroup);
 		if (sendInfo == null)
 		{
 			synchronized (this.channelInfos)
 			{
-				sendInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
-				if(sendInfo == null)
+				sendInfo = this.channelInfos.get(multicastGroup);
+				if (sendInfo == null)
 				{
-					sendInfo = new ChannelSendInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), this.cacheSize, interfaceIp);
-					this.channelInfos.put(topicInfo.getMulticastGroup(), sendInfo);					
+					sendInfo = new ChannelSendInfo(ip, port, multicastGroup, this.cacheSize, interfaceIp);
+					this.channelInfos.put(multicastGroup, sendInfo);
 				}
 			}
 		}
@@ -86,6 +84,6 @@ class Sender
 
 	public void close()
 	{
-		
+
 	}
 }

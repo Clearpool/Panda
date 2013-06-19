@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.clearpool.panda.core.ChannelSendInfo;
-import com.clearpool.panda.core.Utils;
+import com.clearpool.panda.core.PandaUtils;
 
 @SuppressWarnings("static-method")
 public class ChannelSendInfoTest
@@ -20,7 +20,7 @@ public class ChannelSendInfoTest
 		channelSendInfo.addMessageToSendQueue(topic, message.getBytes());
 
 		byte[] packet = channelSendInfo.getNextPacket();
-		Assert.assertEquals(Utils.PACKET_HEADER_SIZE + Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length(), packet.length);
+		Assert.assertEquals(PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length(), packet.length);
 		Assert.assertEquals(0, channelSendInfo.getMessageQueueSize());
 	}
 
@@ -40,7 +40,7 @@ public class ChannelSendInfoTest
 		channelSendInfo.addMessageToSendQueue(topic2, message2.getBytes());
 
 		byte[] packet = channelSendInfo.getNextPacket();
-		Assert.assertEquals(Utils.PACKET_HEADER_SIZE + Utils.MESSAGE_HEADER_FIXED_SIZE * 2 + topic.length() + topic2.length() + message.length() + message2.length(), packet.length);
+		Assert.assertEquals(PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE * 2 + topic.length() + topic2.length() + message.length() + message2.length(), packet.length);
 		Assert.assertEquals(0, channelSendInfo.getMessageQueueSize());
 	}
 
@@ -58,15 +58,15 @@ public class ChannelSendInfoTest
 		}
 
 		byte[] packet1 = channelSendInfo.getNextPacket();
-		Assert.assertEquals(Utils.PACKET_HEADER_SIZE + (Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length()) * 127, packet1.length);
+		Assert.assertEquals(PandaUtils.PACKET_HEADER_SIZE + (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length()) * 127, packet1.length);
 		Assert.assertEquals(173, channelSendInfo.getMessageQueueSize());
 
 		byte[] packet2 = channelSendInfo.getNextPacket();
-		Assert.assertEquals(Utils.PACKET_HEADER_SIZE + (Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length()) * 127, packet2.length);
+		Assert.assertEquals(PandaUtils.PACKET_HEADER_SIZE + (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length()) * 127, packet2.length);
 		Assert.assertEquals(46, channelSendInfo.getMessageQueueSize());
 
 		byte[] packet3 = channelSendInfo.getNextPacket();
-		Assert.assertEquals(Utils.PACKET_HEADER_SIZE + (Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length()) * 46, packet3.length);
+		Assert.assertEquals(PandaUtils.PACKET_HEADER_SIZE + (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length()) * 46, packet3.length);
 		Assert.assertEquals(0, channelSendInfo.getMessageQueueSize());
 	}
 }

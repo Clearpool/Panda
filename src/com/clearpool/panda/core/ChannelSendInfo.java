@@ -46,7 +46,7 @@ class ChannelSendInfo implements SelectorActionable
 	// Called by app thread
 	public boolean addMessageToSendQueue(String topic, byte[] bytes)
 	{
-		if (bytes.length <= Utils.MAX_MESSAGE_PAYLOAD_SIZE)
+		if (bytes.length <= PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE)
 		{
 			this.topicQueue.add(topic);
 			this.messageQueue.add(bytes);
@@ -70,9 +70,9 @@ class ChannelSendInfo implements SelectorActionable
 			byte[] bytes = this.messageQueue.remove();
 
 			byte messageCount = 1;
-			byte[] prependedBytes = new byte[Utils.PACKET_HEADER_SIZE + Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + bytes.length];
+			byte[] prependedBytes = new byte[PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + bytes.length];
 			ByteBuffer buffer = ByteBuffer.wrap(prependedBytes);
-			buffer.put(Utils.PACKET_HEADER_SIZE);
+			buffer.put(PandaUtils.PACKET_HEADER_SIZE);
 			buffer.put(this.supportsRetransmissions);
 			buffer.putLong(++this.sequenceNumber);
 			buffer.put(messageCount);
@@ -84,7 +84,7 @@ class ChannelSendInfo implements SelectorActionable
 			return prependedBytes;
 		}
 
-		byte[] packetPayloadBytes = new byte[Utils.MAX_PACKET_PAYLOAD_SIZE];
+		byte[] packetPayloadBytes = new byte[PandaUtils.MAX_PACKET_PAYLOAD_SIZE];
 		ByteBuffer messageBuffer = ByteBuffer.wrap(packetPayloadBytes);
 		byte messageCount = 0;
 		while (this.messageQueue.size() > 0 && messageCount < Byte.MAX_VALUE)
@@ -101,16 +101,16 @@ class ChannelSendInfo implements SelectorActionable
 			byte[] nextMessageBytes = this.messageQueue.peek();
 			if (nextMessageBytes != null)
 			{
-				if (messageBuffer.remaining() < Utils.MESSAGE_HEADER_FIXED_SIZE + nextTopic.length() + nextMessageBytes.length)
+				if (messageBuffer.remaining() < PandaUtils.MESSAGE_HEADER_FIXED_SIZE + nextTopic.length() + nextMessageBytes.length)
 				{
 					break;
 				}
 			}
 		}
 
-		byte[] packetBytes = new byte[Utils.PACKET_HEADER_SIZE + messageBuffer.position()];
+		byte[] packetBytes = new byte[PandaUtils.PACKET_HEADER_SIZE + messageBuffer.position()];
 		ByteBuffer packetBuffer = ByteBuffer.wrap(packetBytes);
-		packetBuffer.put(Utils.PACKET_HEADER_SIZE);
+		packetBuffer.put(PandaUtils.PACKET_HEADER_SIZE);
 		packetBuffer.put(this.supportsRetransmissions);
 		packetBuffer.putLong(++this.sequenceNumber);
 		packetBuffer.put(messageCount);
