@@ -22,7 +22,7 @@ public class SenderTest
 			{
 				count++;
 				String countString = String.valueOf(count);
-				adapter.publish(topicInfo1, localIp, countString.getBytes());
+				adapter.send(topicInfo1, localIp, countString.getBytes());
 				// System.out.println(new Date() + " Sent packet=" + countString);
 				// Thread.sleep(1000L);
 				if (count % 100000 == 0)

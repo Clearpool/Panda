@@ -14,14 +14,14 @@ public class PandaAdapter
 
 	private final SelectorThread selectorThread;
 	private final Receiver receiver;
-	private final Publisher sender;
+	private final Sender sender;
 
 	public PandaAdapter(int cacheSize) throws Exception
 	{
 		this.selectorThread = new SelectorThread();
 		ServerSocketChannel channel = getServerSocketChannel();
 		this.receiver = new Receiver(this.selectorThread, channel.socket().getLocalPort());
-		this.sender = new Publisher(this.selectorThread, channel, cacheSize);
+		this.sender = new Sender(this.selectorThread, channel, cacheSize);
 		this.selectorThread.createOutDatagramChannel(channel.socket().getLocalPort());
 		this.selectorThread.start();
 	}
@@ -41,7 +41,7 @@ public class PandaAdapter
 		return null;
 	}
 
-	public void publish(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
+	public void send(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
 	{
 		this.sender.publish(topicInfo, interfaceIp, bytes);
 	}

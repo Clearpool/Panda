@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import panda.core.PandaAdapter;
 import panda.core.PandaTopicInfo;
 
-public class PandaPublish
+public class PandaSend
 {
 	public static void main(String[] args) throws Exception
 	{
@@ -24,7 +24,7 @@ public class PandaPublish
 			PandaAdapter adapter = new PandaAdapter(0);
 			PandaTopicInfo topicInfo = new PandaTopicInfo(ip, Integer.valueOf(port), topic);
 
-			adapter.publish(topicInfo, interfaceIp, data.getBytes());
+			adapter.send(topicInfo, interfaceIp, data.getBytes());
 			Thread.sleep(10);
 			System.exit(0);
 		}

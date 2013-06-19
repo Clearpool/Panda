@@ -113,7 +113,7 @@ public class SenderTester
 				System.out.println("--- Sender Thread " + senderThreadNum + " Sent " + (seqNumber - mssgPerSecCounter) + " Messages This second. Total Messages Sent " + seqNumber);
 				mssgPerSecCounter = seqNumber;
 			}
-			adapter.publish(topicInfo, localIp, buffer.array());
+			adapter.send(topicInfo, localIp, buffer.array());
 			if (seqNumber % 200 == 0)
 			{
 				Thread.sleep(1);

@@ -172,9 +172,9 @@ class SelectorThread extends Thread
 			boolean successfulRead = readTcpChannel(channel, selectedKey);
 
 			Object attachment = selectedKey.attachment();
-			if (attachment instanceof Publisher)
+			if (attachment instanceof Sender)
 			{
-				Publisher publish = (Publisher) attachment;
+				Sender publish = (Sender) attachment;
 				if (successfulRead)
 				{
 					publish.processGapRequest(channel, this.tcpBuffer);
@@ -314,7 +314,7 @@ class SelectorThread extends Thread
 
 	private static void sendMulticastData(SelectorActionable action)
 	{
-		ChannelPublishInfo sendInfo = (ChannelPublishInfo) action;
+		ChannelSendInfo sendInfo = (ChannelSendInfo) action;
 		synchronized (sendInfo)
 		{
 			try
@@ -357,7 +357,7 @@ class SelectorThread extends Thread
 	}
 
 	// Will be called synchronously
-	public void sendToMulticastChannel(ChannelPublishInfo sendInfo)
+	public void sendToMulticastChannel(ChannelSendInfo sendInfo)
 	{
 		try
 		{

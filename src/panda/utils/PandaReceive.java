@@ -10,12 +10,12 @@ import panda.core.PandaErrorCode;
 import panda.core.PandaTopicInfo;
 
 
-public class PandaSubscribe implements PandaDataListener
+public class PandaReceive implements PandaDataListener
 {
 	private final PandaAdapter adapter;
 	private final PandaTopicInfo topicInfo;
 	
-	public PandaSubscribe(String ip, int port, String topic) throws Exception
+	public PandaReceive(String ip, int port, String topic) throws Exception
 	{
 		this.adapter = new PandaAdapter(0);
 		this.topicInfo = new PandaTopicInfo(ip, Integer.valueOf(port), topic);
@@ -57,7 +57,7 @@ public class PandaSubscribe implements PandaDataListener
 			String topic = args[2];
 			String interfaceIp = InetAddress.getLocalHost().getHostAddress();
 			
-			PandaSubscribe pandaListener = new PandaSubscribe(ip, port, topic);
+			PandaReceive pandaListener = new PandaReceive(ip, port, topic);
 			pandaListener.start(interfaceIp);
 		}
 	}

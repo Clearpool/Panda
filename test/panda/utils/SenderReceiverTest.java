@@ -32,7 +32,7 @@ public class SenderReceiverTest
 				String newInt = String.valueOf(integer.incrementAndGet());
 				try
 				{
-					adapter.publish(topicInfo2, SenderReceiverTest.getLocalIp(null), newInt.getBytes());
+					adapter.send(topicInfo2, SenderReceiverTest.getLocalIp(null), newInt.getBytes());
 				}
 				catch (Exception e)
 				{

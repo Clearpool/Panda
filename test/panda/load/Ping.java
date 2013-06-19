@@ -77,7 +77,7 @@ public class Ping implements PandaDataListener
 							buffer.putInt(index);
 							buffer.putInt(j);
 							buffer.rewind();
-							Ping.this.adapter.publish(Ping.this.topicInfo, localIp, buffer.array());
+							Ping.this.adapter.send(Ping.this.topicInfo, localIp, buffer.array());
 							if(j % messagesPerMil == 0) Thread.sleep(1);
 						}
 					}

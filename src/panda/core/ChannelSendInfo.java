@@ -10,7 +10,7 @@ import java.nio.channels.DatagramChannel;
 import java.util.ArrayDeque;
 import java.util.List;
 
-class ChannelPublishInfo implements SelectorActionable
+class ChannelSendInfo implements SelectorActionable
 {
 	private final InetAddress multicastIp;
 	private final int multicastPort;
@@ -26,7 +26,7 @@ class ChannelPublishInfo implements SelectorActionable
 	private DatagramChannel channel;
 	private long sequenceNumber;
 
-	public ChannelPublishInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp) throws Exception
+	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp) throws Exception
 	{
 		this.multicastIp = InetAddress.getByName(ip);
 		this.multicastPort = port;
@@ -87,7 +87,7 @@ class ChannelPublishInfo implements SelectorActionable
 		byte[] packetPayloadBytes = new byte[Utils.MAX_PACKET_PAYLOAD_SIZE];
 		ByteBuffer messageBuffer = ByteBuffer.wrap(packetPayloadBytes);
 		byte messageCount = 0;
-		while (this.messageQueue.size() > 0 && messageCount <= Byte.MAX_VALUE)
+		while (this.messageQueue.size() > 0 && messageCount < Byte.MAX_VALUE)
 		{
 			String topic = this.topicQueue.remove();
 			byte[] messageBytes = this.messageQueue.remove();

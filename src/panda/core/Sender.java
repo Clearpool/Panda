@@ -10,27 +10,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 
-class Publisher
+class Sender
 {
-	private final static Logger LOGGER = Logger.getLogger(Publisher.class.getName());
+	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());
 
 	private final SelectorThread selectorThread;
 	private final int cacheSize;
-	private final Map<String, ChannelPublishInfo> channelInfos;
+	private final Map<String, ChannelSendInfo> channelInfos;
 
-	public Publisher(SelectorThread selectorThread, ServerSocketChannel channel, int cacheSize) throws Exception
+	public Sender(SelectorThread selectorThread, ServerSocketChannel channel, int cacheSize) throws Exception
 	{
 		this.selectorThread = selectorThread;
 		this.cacheSize = cacheSize;
 		this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_ACCEPT, this);
-		this.channelInfos = new ConcurrentHashMap<String, ChannelPublishInfo>();
+		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
 	}
 
 	public void publish(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
 	{
 		if (bytes.length > Utils.MAX_MESSAGE_PAYLOAD_SIZE)
 			throw new Exception("Message length over size=" + Utils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
-		ChannelPublishInfo sendInfo = getChannelSendInfo(topicInfo, interfaceIp);
+		ChannelSendInfo sendInfo = getChannelSendInfo(topicInfo, interfaceIp);
 		synchronized (sendInfo)
 		{
 			sendInfo.addMessageToSendQueue(topicInfo.getTopic(), bytes);
@@ -38,9 +38,9 @@ class Publisher
 		}
 	}
 
-	private ChannelPublishInfo getChannelSendInfo(PandaTopicInfo topicInfo, String interfaceIp) throws Exception
+	private ChannelSendInfo getChannelSendInfo(PandaTopicInfo topicInfo, String interfaceIp) throws Exception
 	{
-		ChannelPublishInfo publishInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
+		ChannelSendInfo publishInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
 		if (publishInfo == null)
 		{
 			synchronized (this.channelInfos)
@@ -48,7 +48,7 @@ class Publisher
 				publishInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
 				if(publishInfo == null)
 				{
-					publishInfo = new ChannelPublishInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), this.cacheSize, interfaceIp);
+					publishInfo = new ChannelSendInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), this.cacheSize, interfaceIp);
 					this.channelInfos.put(topicInfo.getMulticastGroup(), publishInfo);					
 				}
 			}
@@ -65,7 +65,7 @@ class Publisher
 		String multicastGroup = new String(bytes);
 
 		Pair<List<byte[]>, Long> cachedPackets = null;
-		ChannelPublishInfo publishInfo = this.channelInfos.get(multicastGroup);
+		ChannelSendInfo publishInfo = this.channelInfos.get(multicastGroup);
 		if (publishInfo != null)
 		{
 			synchronized (publishInfo)

@@ -58,7 +58,8 @@ public class ChannelReceiveInfoTest
 
 	private static ByteBuffer createPacketBuffer(int packetHeaderSize, int messageCount, long sequenceNumber)
 	{
-		ByteBuffer buffer = ByteBuffer.allocate(packetHeaderSize + (Utils.MESSAGE_HEADER_FIXED_SIZE + 4) * messageCount);
+		String topic = "1";
+		ByteBuffer buffer = ByteBuffer.allocate(packetHeaderSize + (Utils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + 4) * messageCount);
 		buffer.put((byte) packetHeaderSize);
 		buffer.put((byte) 1); // supports retrans
 		buffer.putLong(sequenceNumber);
@@ -70,7 +71,8 @@ public class ChannelReceiveInfoTest
 		}
 		for (int i = 0; i < messageCount; i++)
 		{
-			buffer.putInt(1); // topicId
+			buffer.put((byte) 1);
+			buffer.put(topic.getBytes());
 			buffer.putShort((short) 4); // messageLength
 			buffer.putInt(0);
 		}

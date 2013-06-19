@@ -49,13 +49,13 @@ public class Pong implements PandaDataListener
 			{
 				this.messagesReceived++;
 				this.timeLastReceived = System.currentTimeMillis();
-				if (this.shouldPong) this.adapter.publish(TOPICINFO1, this.localIp, arg1.array());
+				if (this.shouldPong) this.adapter.send(TOPICINFO1, this.localIp, arg1.array());
 			}
 			else if (topic.equals("TESTSS2"))
 			{
 				this.messagesReceived++;
 				this.timeLastReceived = System.currentTimeMillis();
-				if (this.shouldPong) this.adapter.publish(TOPICINFO2, this.localIp, arg1.array());
+				if (this.shouldPong) this.adapter.send(TOPICINFO2, this.localIp, arg1.array());
 			}
 		}
 		catch (Exception e)

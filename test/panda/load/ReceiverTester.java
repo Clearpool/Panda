@@ -83,7 +83,7 @@ public class ReceiverTester
 				try
 				{
 					payload.position(0);
-					adapter.publish(topicInfo, localIp, payload.array());
+					adapter.send(topicInfo, localIp, payload.array());
 				}
 				catch (Exception e)
 				{
