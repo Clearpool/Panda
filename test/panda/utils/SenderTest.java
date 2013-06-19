@@ -4,8 +4,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
 
-import panda.core.PandaAdapter;
-import panda.core.PandaTopicInfo;
+import com.clearpool.panda.core.PandaAdapter;
+import com.clearpool.panda.core.PandaTopicInfo;
+
 
 public class SenderTest
 {
