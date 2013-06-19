@@ -16,8 +16,8 @@ public class SenderReceiverTest
 	public static void main(String[] args) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(1000);
-		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "FIVE");
-		final PandaTopicInfo topicInfo2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "FOUR");
+		final PandaTopicInfo topicInfo1 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "ONE");
+		final PandaTopicInfo topicInfo2 = new PandaTopicInfo("239.9.9.10", Integer.valueOf(9002), "TWO");
 		final AtomicInteger integer = new AtomicInteger();
 		adapter.subscribe(topicInfo1, getLocalIp(null), new PandaDataListener() {
 			@Override
