@@ -26,7 +26,7 @@ class Sender
 		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
 	}
 
-	public void publish(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
+	public void send(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
 	{
 		if (bytes.length > Utils.MAX_MESSAGE_PAYLOAD_SIZE)
 			throw new Exception("Message length over size=" + Utils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
@@ -40,20 +40,20 @@ class Sender
 
 	private ChannelSendInfo getChannelSendInfo(PandaTopicInfo topicInfo, String interfaceIp) throws Exception
 	{
-		ChannelSendInfo publishInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
-		if (publishInfo == null)
+		ChannelSendInfo sendInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
+		if (sendInfo == null)
 		{
 			synchronized (this.channelInfos)
 			{
-				publishInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
-				if(publishInfo == null)
+				sendInfo = this.channelInfos.get(topicInfo.getMulticastGroup());
+				if(sendInfo == null)
 				{
-					publishInfo = new ChannelSendInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), this.cacheSize, interfaceIp);
-					this.channelInfos.put(topicInfo.getMulticastGroup(), publishInfo);					
+					sendInfo = new ChannelSendInfo(topicInfo.getIp(), topicInfo.getPort().intValue(), topicInfo.getMulticastGroup(), this.cacheSize, interfaceIp);
+					this.channelInfos.put(topicInfo.getMulticastGroup(), sendInfo);					
 				}
 			}
 		}
-		return publishInfo;
+		return sendInfo;
 	}
 
 	public void processGapRequest(SocketChannel channel, ByteBuffer tcpBuffer)
@@ -65,12 +65,12 @@ class Sender
 		String multicastGroup = new String(bytes);
 
 		Pair<List<byte[]>, Long> cachedPackets = null;
-		ChannelSendInfo publishInfo = this.channelInfos.get(multicastGroup);
-		if (publishInfo != null)
+		ChannelSendInfo sendInfo = this.channelInfos.get(multicastGroup);
+		if (sendInfo != null)
 		{
-			synchronized (publishInfo)
+			synchronized (sendInfo)
 			{
-				cachedPackets = publishInfo.getCachedPackets(startSequenceNumber, packetCount);
+				cachedPackets = sendInfo.getCachedPackets(startSequenceNumber, packetCount);
 			}
 		}
 		else

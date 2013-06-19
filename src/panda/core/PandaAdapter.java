@@ -43,7 +43,7 @@ public class PandaAdapter
 
 	public void send(PandaTopicInfo topicInfo, String interfaceIp, byte[] bytes) throws Exception
 	{
-		this.sender.publish(topicInfo, interfaceIp, bytes);
+		this.sender.send(topicInfo, interfaceIp, bytes);
 	}
 
 	public void subscribe(PandaTopicInfo topicInfo, String interfaceIp, PandaDataListener listener, int recvBufferSize)
