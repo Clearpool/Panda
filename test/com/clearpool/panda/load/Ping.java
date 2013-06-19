@@ -19,7 +19,7 @@ public class Ping implements PandaDataListener
 	private static final int MESSAGE_LENTH = 100;
 	private static final int RECV_BUFFER_SIZE = 10000000;
 
-	private static final String TOPIC = "TESTSSS";
+	private static final String TOPIC1 = "TESTSS1";
 	private static final String IP = "239.9.9.10";
 	private static final int PORT = 9002;
 	private static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
@@ -57,7 +57,7 @@ public class Ping implements PandaDataListener
 	private void start() throws Exception
 	{
 		final String localIp = InetAddress.getLocalHost().getHostAddress();
-		this.adapter.subscribe(TOPIC, IP, PORT, MULTICASTGROUP, localIp, this, RECV_BUFFER_SIZE);
+		this.adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, localIp, this, RECV_BUFFER_SIZE);
 		
 		for(int i=0; i<this.numThreads; i++)
 		{
@@ -81,7 +81,7 @@ public class Ping implements PandaDataListener
 							buffer.putInt(index);
 							buffer.putInt(j);
 							buffer.rewind();
-							Ping.this.adapter.send(TOPIC, IP, PORT, MULTICASTGROUP, localIp, buffer.array());
+							Ping.this.adapter.send(TOPIC1, IP, PORT, MULTICASTGROUP, localIp, buffer.array());
 							if(j % messagesPerMil == 0) Thread.sleep(1);
 						}
 					}
