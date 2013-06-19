@@ -1,4 +1,4 @@
-package panda.utils;
+package com.clearpool.panda.utils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
