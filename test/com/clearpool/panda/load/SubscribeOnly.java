@@ -2,35 +2,33 @@ package com.clearpool.panda.load;
 
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
 import com.clearpool.panda.core.PandaUtils;
 
-
-public class Pong implements PandaDataListener
+public class SubscribeOnly implements PandaDataListener
 {
 	private static final String TOPIC1 = "TESTSS1";
 	private static final String IP = "239.9.9.10";
 	private static final int PORT = 9002;
 	private static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
-	
 	private static final int RECV_BUFFER_SIZE = 10000000;
 
 	private final PandaAdapter adapter;
 	private final String localIp;
-	private final boolean shouldPong;
 
 	private int messagesReceived;
 	private long timeLastReceived;
 	private int errors;
 
-	public Pong(int cacheSize, boolean shouldPong) throws Exception
+	public SubscribeOnly(int cacheSize) throws Exception
 	{
 		this.adapter = new PandaAdapter(cacheSize);
 		this.localIp = InetAddress.getLocalHost().getHostAddress();
-		this.shouldPong = shouldPong;
 	}
 
 	private void start() throws Exception
@@ -40,6 +38,7 @@ public class Pong implements PandaDataListener
 
 	private void printStats()
 	{
+		System.out.println("LastMsgReceived-" + new SimpleDateFormat("HH:mm:ss:SSS").format(new Date(this.timeLastReceived)));
 		System.out.println("SUMMARY,MessagesReceived=" + this.messagesReceived + ",Errors=" + this.errors);
 	}
 
@@ -52,7 +51,6 @@ public class Pong implements PandaDataListener
 			{
 				this.messagesReceived++;
 				this.timeLastReceived = System.currentTimeMillis();
-				if (this.shouldPong) this.adapter.send(TOPIC1, IP, PORT, MULTICASTGROUP, this.localIp, arg1.array());
 			}
 		}
 		catch (Exception e)
@@ -71,15 +69,15 @@ public class Pong implements PandaDataListener
 	public static void main(String[] args) throws Exception
 	{
 		int cacheSize = Integer.valueOf(args[0]).intValue();
-		boolean shouldPong = Boolean.valueOf(args[1]).booleanValue();
 
-		Pong pong = new Pong(cacheSize, shouldPong);
-		pong.start();
-		while (pong.messagesReceived == 0 || pong.messagesReceived > 0 && (System.currentTimeMillis() - pong.timeLastReceived < 1000))
+		SubscribeOnly subscriber = new SubscribeOnly(cacheSize);
+		subscriber.start();
+		while (subscriber.messagesReceived == 0 || subscriber.messagesReceived > 0 && (System.currentTimeMillis() - subscriber.timeLastReceived < 1000))
 		{
 			Thread.sleep(1000);
 		}
-		pong.printStats();
+		System.out.println(new SimpleDateFormat("HH:mm:ss:SSS").format(new Date()));
+		subscriber.printStats();
 		System.exit(0);
 	}
 }

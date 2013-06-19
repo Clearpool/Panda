@@ -31,6 +31,7 @@ public class Ping implements PandaDataListener
 	private final int messagesPerMilli;
 	private final int logRate;
 	private final int numThreads;
+	private final boolean shouldSubscribe;
 	private final List<Thread> sendThreads;
 	private final int[] threadSequences;
 	
@@ -41,7 +42,7 @@ public class Ping implements PandaDataListener
 	private long roundTrip;
 	private int errors;
 	
-	public Ping(int cacheSize, int numMessages, int messagesPerMilli, int ignoreCount, int logRate, int numThreads) throws Exception
+	public Ping(int cacheSize, int numMessages, int messagesPerMilli, int ignoreCount, int logRate, int numThreads, boolean shouldSubscribe) throws Exception
 	{
 		this.adapter = new PandaAdapter(cacheSize);
 		this.numMessages = numMessages;
@@ -50,6 +51,7 @@ public class Ping implements PandaDataListener
 		this.messagesPerMilli = messagesPerMilli;
 		this.logRate = logRate;
 		this.numThreads = numThreads;
+		this.shouldSubscribe = shouldSubscribe;
 		this.sendThreads = new ArrayList<Thread>();
 		this.threadSequences = new int[numThreads];
 	}
@@ -57,7 +59,7 @@ public class Ping implements PandaDataListener
 	private void start() throws Exception
 	{
 		final String localIp = InetAddress.getLocalHost().getHostAddress();
-		this.adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, localIp, this, RECV_BUFFER_SIZE);
+		if(this.shouldSubscribe) this.adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, localIp, this, RECV_BUFFER_SIZE);
 		
 		for(int i=0; i<this.numThreads; i++)
 		{
@@ -148,9 +150,10 @@ public class Ping implements PandaDataListener
 		int ignoreCount = Integer.valueOf(args[3]).intValue();
 		int logRate = Integer.valueOf(args[4]).intValue();
 		int numThreads = Integer.valueOf(args[5]).intValue();
+		boolean shouldSubscribe = Boolean.valueOf(args[6]).booleanValue();
 		numMessages+=ignoreCount;
 		
-		Ping ping = new Ping(cacheSize, numMessages, messagesPerMilli, ignoreCount, logRate, numThreads);
+		Ping ping = new Ping(cacheSize, numMessages, messagesPerMilli, ignoreCount, logRate, numThreads, shouldSubscribe);
 		ping.start();
 		while(ping.sendThreads.size() > 0)
 		{
