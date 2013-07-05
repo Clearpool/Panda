@@ -22,7 +22,7 @@ public class PandaReceive implements PandaDataListener
 	
 	public void start(String topic, String ip, int port, String multicastGroup, String interfaceIp)
 	{
-		this.adapter.subscribe(topic, ip, port, interfaceIp, multicastGroup, this, 100000);
+		this.adapter.subscribe(topic, ip, port, multicastGroup, interfaceIp, this, 100000);
 	}
 	
 	@Override
@@ -45,7 +45,7 @@ public class PandaReceive implements PandaDataListener
 	
 	public static void main(String[] args) throws Exception
 	{
-		if(args.length < 4)
+		if(args.length < 3)
 		{
 			System.out.println("Min. 3 args required <ip,port,topicString>");
 		}
