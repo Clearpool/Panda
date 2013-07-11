@@ -14,7 +14,7 @@ public class PandaUtils
 	public static final int MAX_PACKET_PAYLOAD_SIZE = MTU_SIZE - PACKET_HEADER_SIZE - NETWORK_HEADER_SIZE;
 	public static final int RETRANSMISSION_RESPONSE_HEADER_SIZE = 12;
 	public static final int RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE = 4;
-	public static final int RETRANSMISSION_REQUEST_HEADER_SIZE = 12;
+	public static final int RETRANSMISSION_REQUEST_HEADER_SIZE = 15;
 	
 	public static String getMulticastGroup(String ip, int port)
 	{

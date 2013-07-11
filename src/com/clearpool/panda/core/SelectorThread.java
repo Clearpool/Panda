@@ -22,8 +22,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
-
 class SelectorThread extends Thread
 {
 	private static final Logger LOGGER = Logger.getLogger(SelectorThread.class.getName());
@@ -150,8 +148,7 @@ class SelectorThread extends Thread
 
 	private void handleTcpSelection(SelectionKey selectedKey)
 	{
-		if (!selectedKey.isValid())
-			return;
+		if (!selectedKey.isValid()) return;
 		if (selectedKey.isAcceptable())
 		{
 			try
@@ -174,14 +171,14 @@ class SelectorThread extends Thread
 			Object attachment = selectedKey.attachment();
 			if (attachment instanceof Sender)
 			{
-				Sender publish = (Sender) attachment;
+				Sender sender = (Sender) attachment;
 				if (successfulRead)
 				{
-					publish.processGapRequest(channel, this.tcpBuffer);
+					sender.processGapRequest(channel, this.tcpBuffer);
 				}
 				else
 				{
-					publish.close();
+					sender.close();
 				}
 			}
 			else if (attachment instanceof GapRequestManager)

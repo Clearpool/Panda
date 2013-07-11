@@ -76,6 +76,7 @@ class GapRequestManager
 		ByteBuffer buffer = ByteBuffer.wrap(bytes);
 		buffer.putLong(firstSequenceNumber);
 		buffer.putInt(packetCount);
+		buffer.put((byte) this.multicastGroup.length());
 		buffer.put(this.multicastGroup.getBytes());
 		buffer.rewind();
 
@@ -149,7 +150,7 @@ class GapRequestManager
 						byte[] bytes = new byte[packetLength];
 						this.readBuffer.get(bytes);
 						ByteBuffer packetBuffer = ByteBuffer.wrap(bytes);
-						if(channel != null) this.sequencer.getChannelReceiveInfo().dataReceived((InetSocketAddress) channel.socket().getRemoteSocketAddress(), packetBuffer);
+						if (channel != null) this.sequencer.getChannelReceiveInfo().dataReceived((InetSocketAddress) channel.socket().getRemoteSocketAddress(), packetBuffer);
 						this.packetsRemainingToDeliver--;
 					}
 					else
@@ -219,22 +220,22 @@ class GapRequestManager
 	{
 		return this.packetCountRequested;
 	}
-	
+
 	boolean isResponseHeaderReceived()
 	{
 		return this.responseHeaderReceived;
 	}
-	
+
 	long getResponseFirstSequenceNumber()
 	{
 		return this.responseFirstSequenceNumber;
 	}
-	
+
 	int getResponsePacketCount()
 	{
 		return this.responsePacketCount;
 	}
-	
+
 	int getPacketsRemainingToDeliver()
 	{
 		return this.packetsRemainingToDeliver;

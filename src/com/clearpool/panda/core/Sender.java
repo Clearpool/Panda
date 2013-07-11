@@ -58,7 +58,8 @@ class Sender
 	{
 		long startSequenceNumber = tcpBuffer.getLong();
 		int packetCount = tcpBuffer.getInt();
-		byte[] bytes = new byte[tcpBuffer.remaining()];
+		byte multicastGroupLength = tcpBuffer.get();
+		byte[] bytes = new byte[multicastGroupLength];
 		tcpBuffer.get(bytes);
 		String multicastGroup = new String(bytes);
 
