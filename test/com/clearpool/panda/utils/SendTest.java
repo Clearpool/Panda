@@ -8,7 +8,7 @@ import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaUtils;
 
 
-public class SenderTest
+public class SendTest
 {
 	private static final String TOPIC1 = "ONE";
 	private static final String IP = "239.9.9.10";
