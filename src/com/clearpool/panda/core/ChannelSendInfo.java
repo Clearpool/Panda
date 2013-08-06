@@ -150,6 +150,7 @@ class ChannelSendInfo implements SelectorActionable
 			byte[] bytes = getNextPacket();
 			// if (this.sequenceNumber % 5L == 0L) return;
 			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, this.networkInterface);
+			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_TTL, Integer.valueOf(255));
 			this.channel.send(ByteBuffer.wrap(bytes), this.multicastGroupAddress);
 		}
 	}
