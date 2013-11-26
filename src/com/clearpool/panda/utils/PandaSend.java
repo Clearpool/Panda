@@ -9,7 +9,7 @@ public class PandaSend
 {
 	public static void main(String[] args) throws Exception
 	{
-		if (args.length < 5)
+		if (args.length < 4)
 		{
 			System.out.println("Min. 4 args required <ip,port,topicString,DATA>");
 		}
