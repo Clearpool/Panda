@@ -377,7 +377,7 @@ class SelectorThread extends Thread
 			if (channel == null)
 			{
 				channel = createDatagramChannel(interfaceIp);
-				channel.bind(new InetSocketAddress(port));
+				channel.bind(new InetSocketAddress(InetAddress.getByName(ip), port));
 				channel.setOption(StandardSocketOptions.SO_RCVBUF, Integer.valueOf(recvBufferSize));
 				this.inDatagramChannels.put(multicastGroup, channel);
 				MulticastRegistration registration = new MulticastRegistration(channel, ip, port, receiverInfo);
