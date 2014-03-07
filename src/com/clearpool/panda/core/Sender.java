@@ -56,31 +56,37 @@ class Sender
 
 	public void processGapRequest(SocketChannel channel, ByteBuffer tcpBuffer)
 	{
-		long startSequenceNumber = tcpBuffer.getLong();
-		int packetCount = tcpBuffer.getInt();
-		byte multicastGroupLength = tcpBuffer.get();
-		byte[] bytes = new byte[multicastGroupLength];
-		tcpBuffer.get(bytes);
-		String multicastGroup = new String(bytes);
-
-		Pair<List<byte[]>, Long> cachedPackets = null;
-		ChannelSendInfo sendInfo = this.channelInfos.get(multicastGroup);
-		if (sendInfo != null)
+		if (tcpBuffer.remaining() >= PandaUtils.RETRANSMISSION_REQUEST_HEADER_SIZE)
 		{
-			synchronized (sendInfo)
+			long startSequenceNumber = tcpBuffer.getLong();
+			int packetCount = tcpBuffer.getInt();
+			byte multicastGroupLength = tcpBuffer.get();
+			if (tcpBuffer.remaining() >= multicastGroupLength)
 			{
-				cachedPackets = sendInfo.getCachedPackets(startSequenceNumber, packetCount);
+				byte[] bytes = new byte[multicastGroupLength];
+				tcpBuffer.get(bytes);
+				String multicastGroup = new String(bytes);
+
+				Pair<List<byte[]>, Long> cachedPackets = null;
+				ChannelSendInfo sendInfo = this.channelInfos.get(multicastGroup);
+				if (sendInfo != null)
+				{
+					synchronized (sendInfo)
+					{
+						cachedPackets = sendInfo.getCachedPackets(startSequenceNumber, packetCount);
+					}
+				}
+				else
+				{
+					LOGGER.severe("Unable to fullfil request because can't find sendinfo for multicastGroup=" + multicastGroup);
+				}
+
+				List<byte[]> packets = cachedPackets == null ? null : cachedPackets.getA();
+				long firstSequenceNumber = cachedPackets == null ? 0 : cachedPackets.getB().longValue();
+				GapResponseManager response = new GapResponseManager(channel, packets, firstSequenceNumber);
+				this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_WRITE, response);
 			}
 		}
-		else
-		{
-			LOGGER.severe("Unable to fullfil request because can't find sendinfo for multicastGroup=" + multicastGroup);
-		}
-
-		List<byte[]> packets = cachedPackets == null ? null : cachedPackets.getA();
-		long firstSequenceNumber = cachedPackets == null ? 0 : cachedPackets.getB().longValue();
-		GapResponseManager response = new GapResponseManager(channel, packets, firstSequenceNumber);
-		this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_WRITE, response);
 	}
 
 	public void close()

@@ -6,42 +6,43 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.List;
-
-
+import java.util.logging.Logger;
 
 class GapResponseManager
 {
+	private static final Logger LOGGER = Logger.getLogger(GapResponseManager.class.getName());
+
 	private final SocketChannel channel;
 	private final List<byte[]> packets;
 	private final int totalPackets;
 	private final long startSequenceNumber;
-	
+
 	private ByteBuffer previousBuffer;
-	
+
 	public GapResponseManager(SocketChannel channel, List<byte[]> packets, long startSequenceNumber)
 	{
 		this.channel = channel;
 		this.packets = packets;
 		this.totalPackets = (packets == null ? 0 : packets.size());
 		this.startSequenceNumber = startSequenceNumber;
-		
+
 		this.previousBuffer = null;
 	}
 
-	//Called by selectorThread
+	// Called by selectorThread
 	public void sendResponse(SelectionKey key)
 	{
 		try
-		{	
-			//Send previous send which was fragmented
-			if(this.previousBuffer != null)
+		{
+			// Send previous send which was fragmented
+			if (this.previousBuffer != null)
 			{
 				boolean allWritten = writeBufferToChannel(this.previousBuffer);
-				if(!allWritten) return;
+				if (!allWritten) return;
 			}
-			
-			//Send Header
-			if(this.packets == null || this.packets.size() == this.totalPackets)
+
+			// Send Header
+			if (this.packets == null || this.packets.size() == this.totalPackets)
 			{
 				byte[] bytes = new byte[PandaUtils.RETRANSMISSION_RESPONSE_HEADER_SIZE];
 				ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -49,30 +50,35 @@ class GapResponseManager
 				buffer.putInt(this.totalPackets);
 				buffer.rewind();
 				boolean allWritten = writeBufferToChannel(buffer);
-				if(!allWritten) return;
+				if (!allWritten) return;
 			}
-			
-			//Send Response
-			if(this.packets != null)
-			{	
-				//Send remaining packets
+
+			// Send Response
+			if (this.packets != null)
+			{
+				// Send remaining packets
 				Iterator<byte[]> responseIterator = this.packets.iterator();
-				while(responseIterator.hasNext())
+				while (responseIterator.hasNext())
 				{
 					byte[] packetBytes = responseIterator.next();
 					responseIterator.remove();
-					byte[] bytes = new byte[PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE + packetBytes.length];
+					int packetLength = packetBytes.length;
+					if (packetLength <= 0) // TODO - Remove this If{} once the issue is resolved
+					{
+						LOGGER.severe("Sending Negative/Zero Packet Length In Gap Response - ReadBuffer Bytes - " + new String(packetBytes));
+					}
+					byte[] bytes = new byte[PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE + packetLength];
 					ByteBuffer buffer = ByteBuffer.wrap(bytes);
 					buffer.putInt(packetBytes.length);
 					buffer.put(packetBytes);
 					buffer.rewind();
 					boolean allWritten = writeBufferToChannel(buffer);
-					if(!allWritten) return;
+					if (!allWritten) return;
 				}
 			}
-			
-			//Close channel when all responses have been written or if no responses ever existed
-			if(this.packets == null || this.packets.size() == 0)
+
+			// Close channel when all responses have been written or if no responses ever existed
+			if (this.packets == null || this.packets.size() == 0)
 			{
 				this.channel.close();
 				key.cancel();
@@ -80,7 +86,13 @@ class GapResponseManager
 		}
 		catch (Exception e)
 		{
-			try{this.channel.close();} catch (IOException e1){}
+			try
+			{
+				this.channel.close();
+			}
+			catch (IOException e1)
+			{
+			}
 			key.cancel();
 		}
 	}
@@ -88,7 +100,7 @@ class GapResponseManager
 	private boolean writeBufferToChannel(ByteBuffer buffer) throws IOException
 	{
 		this.channel.write(buffer);
-		if(buffer.remaining() == 0)
+		if (buffer.remaining() == 0)
 		{
 			this.previousBuffer = null;
 			return true;

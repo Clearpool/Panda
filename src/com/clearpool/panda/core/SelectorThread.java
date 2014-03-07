@@ -45,17 +45,10 @@ class SelectorThread extends Thread
 		this.outDatagramChannel = null;
 	}
 
-	public void createOutDatagramChannel(int mcBindPort)
+	public void createOutDatagramChannel(int mcBindPort) throws IOException
 	{
-		try
-		{
-			this.outDatagramChannel = createDatagramChannel();
-			this.outDatagramChannel.bind(new InetSocketAddress(mcBindPort));
-		}
-		catch (IOException e)
-		{
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
+		this.outDatagramChannel = createDatagramChannel();
+		this.outDatagramChannel.bind(new InetSocketAddress(mcBindPort));
 	}
 
 	@Override
@@ -245,7 +238,8 @@ class SelectorThread extends Thread
 				LOGGER.log(Level.SEVERE, e.getMessage(), e);
 
 				GapRequestManager gapManager = (GapRequestManager) selectedKey.attachment();
-				LOGGER.severe("Failed to establish TCP connection for re-transmission. Disabling future re-transmission attempts for " + gapManager.getMulticastGroup() + " on the receiver side.");
+				LOGGER.severe("Failed to establish TCP connection for re-transmission. Disabling future re-transmission attempts for " + gapManager.getMulticastGroup()
+						+ " on the receiver side.");
 				gapManager.setDisabled();
 				try
 				{
@@ -377,7 +371,7 @@ class SelectorThread extends Thread
 			if (channel == null)
 			{
 				channel = createDatagramChannel(interfaceIp);
-				if(System.getProperty("os.name").toLowerCase().contains("windows"))
+				if (System.getProperty("os.name").toLowerCase().contains("windows"))
 				{
 					channel.bind(new InetSocketAddress(port));
 				}

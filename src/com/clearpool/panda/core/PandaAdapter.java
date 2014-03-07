@@ -1,5 +1,6 @@
 package com.clearpool.panda.core;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.logging.Level;
@@ -18,11 +19,28 @@ public class PandaAdapter
 	public PandaAdapter(int cacheSize) throws Exception
 	{
 		this.selectorThread = new SelectorThread();
-		ServerSocketChannel channel = getServerSocketChannel();
+		ServerSocketChannel channel = initChannels();
 		this.receiver = new Receiver(this.selectorThread, channel.socket().getLocalPort());
 		this.sender = new Sender(this.selectorThread, channel, cacheSize);
-		this.selectorThread.createOutDatagramChannel(channel.socket().getLocalPort());
 		this.selectorThread.start();
+	}
+
+	private ServerSocketChannel initChannels() throws Exception
+	{
+		while (true)
+		{
+			try
+			{
+				ServerSocketChannel channel = getServerSocketChannel();
+				this.selectorThread.createOutDatagramChannel(channel.socket().getLocalPort());
+				LOGGER.info("Binding on port " + channel.socket().getLocalPort());
+				return channel;
+			}
+			catch (IOException e)
+			{
+				LOGGER.info(e.getMessage());
+			}
+		}
 	}
 
 	private static ServerSocketChannel getServerSocketChannel()

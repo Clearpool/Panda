@@ -5,9 +5,12 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.logging.Logger;
 
 class GapRequestManager
 {
+	private static final Logger LOGGER = Logger.getLogger(GapRequestManager.class.getName());
+
 	private final SelectorThread selectorThread;
 	private final String multicastGroup;
 	private final String sourceIp;
@@ -96,7 +99,7 @@ class GapRequestManager
 	// Called by selectorThread
 	public void processGapResponse(SocketChannel channel, SelectionKey key, ByteBuffer buffer)
 	{
-		//TODO - what if buffer.length is > remaining? - POSSIBLE scenario = after PACKET_LOSS_RETRANSMISSION_TIMEOUT
+		// TODO - what if buffer.length is > remaining? - POSSIBLE scenario = after PACKET_LOSS_RETRANSMISSION_TIMEOUT
 		this.readBuffer.put(buffer); // add to the end of whatever is remaining in bytebuffer
 		this.readBuffer.flip();
 		try
@@ -126,8 +129,10 @@ class GapRequestManager
 					}
 					else if (this.responsePacketCount != this.packetCountRequested)
 					{
-						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_RESPONSE_PARTIAL,
-								"Unable to retrieve all missed packets from source=" + this.sequencer.getKey() + ". Skipping " + (this.responsePacketCount - this.packetCountRequested) + " packets.", null);
+						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(
+								PandaErrorCode.RETRANSMISSION_RESPONSE_PARTIAL,
+								"Unable to retrieve missed packets from source=" + this.sequencer.getKey() + ". Skipping " + (this.responsePacketCount - this.packetCountRequested)
+										+ " packets.", null);
 						this.sequencer.skipPacketAndDequeue(this.responseFirstSequenceNumber - 1);
 					}
 				}
@@ -145,21 +150,39 @@ class GapRequestManager
 				this.readBuffer.mark();
 				if (this.readBuffer.remaining() >= PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE)
 				{
-					//TODO - what if this is zero or negative? possible scenario - after PACKET_LOSS_RETRANSMISSION_TIMEOUT
 					int packetLength = this.readBuffer.getInt();
-					if (this.readBuffer.remaining() >= packetLength)
+					if (packetLength > 0)
 					{
-						byte[] bytes = new byte[packetLength];
-						this.readBuffer.get(bytes);
-						ByteBuffer packetBuffer = ByteBuffer.wrap(bytes);
-						if (channel != null) this.sequencer.getChannelReceiveInfo().dataReceived((InetSocketAddress) channel.socket().getRemoteSocketAddress(), packetBuffer);
-						this.packetsRemainingToDeliver--;
+						if (this.readBuffer.remaining() >= packetLength)
+						{
+							byte[] bytes = new byte[packetLength];
+							this.readBuffer.get(bytes);
+							ByteBuffer packetBuffer = ByteBuffer.wrap(bytes);
+							if (channel != null) this.sequencer.getChannelReceiveInfo().dataReceived((InetSocketAddress) channel.socket().getRemoteSocketAddress(), packetBuffer);
+							this.packetsRemainingToDeliver--;
+						}
+						else
+						{
+							this.readBuffer.reset();
+							this.readBuffer.compact();
+							return;
+						}
 					}
 					else
+					// TODO - Remove the Logger once the issue is resolved
 					{
-						this.readBuffer.reset();
-						this.readBuffer.compact();
-						return;
+						// Log readBuffer
+						this.readBuffer.rewind();
+						LOGGER.severe("Received Negative/Zero Packet Length In Gap Response - ReadBuffer Bytes - " + new String(this.readBuffer.array()));
+						// Declare drop due to corruption
+						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(
+								PandaErrorCode.PACKET_LOSS_RETRANSMISSION_CORRUPTION,
+								"Unable to retrieve missed packets due to possible data corruption from source=" + this.sequencer.getKey() + ". Skipping "
+										+ this.packetsRemainingToDeliver + " packets.", null);
+						long sequenceNumber = this.firstSequenceNumberRequested + this.packetCountRequested - 1;
+						this.sequencer.skipPacketAndDequeue(sequenceNumber);
+						// Induce channel close
+						this.packetsRemainingToDeliver = 0;
 					}
 				}
 				else
