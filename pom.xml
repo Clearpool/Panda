@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.clearpool</groupId>
     <artifactId>Clearpool</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 </project>
