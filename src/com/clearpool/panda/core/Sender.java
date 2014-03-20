@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import com.clearpool.common.datastractures.Pair;
+
 class Sender
 {
 	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());

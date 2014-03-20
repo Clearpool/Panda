@@ -5,8 +5,8 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.clearpool.common.datastractures.Pair;
 import com.clearpool.panda.core.PacketCache;
-import com.clearpool.panda.core.Pair;
 
 
 @SuppressWarnings("static-method")

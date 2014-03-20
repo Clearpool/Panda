@@ -3,6 +3,8 @@ package com.clearpool.panda.core;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.clearpool.common.datastractures.Pair;
+
 class PacketCache
 {
 	private final int cacheSize;
