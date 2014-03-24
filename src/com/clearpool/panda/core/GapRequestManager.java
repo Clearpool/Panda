@@ -48,30 +48,29 @@ class GapRequestManager
 
 	public boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
 	{
-		try
+		if (this.socketChannel == null)
 		{
-			if (this.socketChannel == null)
-			{
-				this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
-				this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
-				this.request = createGapRequest(firstSequenceNumber, packetCount);
-			}
-		}
-		catch (Exception e)
-		{
-			return false;
+			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
+			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
+			this.request = createGapRequest(firstSequenceNumber, packetCount);
 		}
 		return true;
 	}
 
-	private static SocketChannel getSocketChannel(String remoteHost, int remotePort) throws Exception
+	private SocketChannel getSocketChannel(String remoteHost, int remotePort)
 	{
-
-		SocketChannel channel = SocketChannel.open();
-		channel.configureBlocking(false);
-		channel.connect(new InetSocketAddress(remoteHost, remotePort));
-		return channel;
-
+		try
+		{
+			SocketChannel channel = SocketChannel.open();
+			channel.configureBlocking(false);
+			channel.connect(new InetSocketAddress(remoteHost, remotePort));
+			return channel;
+		}
+		catch (Exception e)
+		{
+			this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.EXCEPTION, e.getMessage(), e);
+		}
+		return null;
 	}
 
 	private ByteBuffer createGapRequest(long firstSequenceNumber, int packetCount)
