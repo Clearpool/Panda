@@ -48,29 +48,30 @@ class GapRequestManager
 
 	public boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
 	{
-		if (this.socketChannel == null)
+		try
 		{
-			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
-			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
-			this.request = createGapRequest(firstSequenceNumber, packetCount);
+			if (this.socketChannel == null)
+			{
+				this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
+				this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
+				this.request = createGapRequest(firstSequenceNumber, packetCount);
+			}
+		}
+		catch (Exception e)
+		{
+			return false;
 		}
 		return true;
 	}
 
-	private SocketChannel getSocketChannel(String remoteHost, int remotePort)
+	private static SocketChannel getSocketChannel(String remoteHost, int remotePort) throws Exception
 	{
-		try
-		{
-			SocketChannel channel = SocketChannel.open();
-			channel.configureBlocking(false);
-			channel.connect(new InetSocketAddress(remoteHost, remotePort));
-			return channel;
-		}
-		catch (Exception e)
-		{
-			this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.EXCEPTION, e.getMessage(), e);
-		}
-		return null;
+
+		SocketChannel channel = SocketChannel.open();
+		channel.configureBlocking(false);
+		channel.connect(new InetSocketAddress(remoteHost, remotePort));
+		return channel;
+
 	}
 
 	private ByteBuffer createGapRequest(long firstSequenceNumber, int packetCount)
@@ -173,7 +174,13 @@ class GapRequestManager
 					{
 						// Log readBuffer
 						this.readBuffer.rewind();
-						LOGGER.severe("Received Negative/Zero Packet Length In Gap Response - ReadBuffer Bytes - " + new String(this.readBuffer.array()));
+						StringBuilder bufferSB = new StringBuilder();
+						while (this.readBuffer.hasRemaining())
+						{
+							bufferSB.append(',');
+							bufferSB.append(this.readBuffer.get());
+						}
+						LOGGER.severe("Received Negative/Zero Packet Length In Gap Response - ReadBuffer Bytes - " + bufferSB.toString());
 						// Declare drop due to corruption
 						this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(
 								PandaErrorCode.PACKET_LOSS_RETRANSMISSION_CORRUPTION,
