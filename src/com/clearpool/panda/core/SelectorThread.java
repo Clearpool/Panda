@@ -196,11 +196,18 @@ class SelectorThread extends Thread
 				{
 					GapRequestManager gapManager = (GapRequestManager) attachment;
 					ByteBuffer outBuffer = gapManager.getGapRequest();
-					SocketChannel channel = (SocketChannel) selectedKey.channel();
-					channel.write(outBuffer);
-					if (outBuffer.remaining() == 0)
+					if (outBuffer != null)
 					{
-						selectedKey.interestOps(SelectionKey.OP_READ);
+						SocketChannel channel = (SocketChannel) selectedKey.channel();
+						channel.write(outBuffer);
+						if (outBuffer.remaining() == 0)
+						{
+							selectedKey.interestOps(SelectionKey.OP_READ);
+						}
+					}
+					else
+					{
+						LOGGER.log(Level.SEVERE, "handleTcpSelection - gapManager.getGapRequest() is null");
 					}
 				}
 				catch (Exception e)
