@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class GapRequestManager
@@ -68,6 +69,7 @@ class GapRequestManager
 		}
 		catch (Exception e)
 		{
+			LOGGER.log(Level.SEVERE, e.getMessage());
 			this.sequencer.getChannelReceiveInfo().deliverErrorToListeners(PandaErrorCode.EXCEPTION, e.getMessage(), e);
 		}
 		return null;
