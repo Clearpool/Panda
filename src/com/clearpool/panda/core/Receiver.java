@@ -18,16 +18,16 @@ class Receiver
 		this.channelInfos = new HashMap<String, ChannelReceiveInfo>();
 	}
 
-	public void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize)
+	public void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize, boolean skipGaps)
 	{
-		ChannelReceiveInfo receiveInfo = getChannelReceiverInfo(ip, port, multicastGroup, interfaceIp, recvBufferSize);
+		ChannelReceiveInfo receiveInfo = getChannelReceiverInfo(ip, port, multicastGroup, interfaceIp, recvBufferSize, skipGaps);
 		synchronized (receiveInfo)
 		{
 			receiveInfo.registerTopicListener(topic, listener);
 		}
 	}
 
-	private ChannelReceiveInfo getChannelReceiverInfo(String multicastIp, int multicastPort, String multicastGroup, String interfaceIp, int recvBufferSize)
+	private ChannelReceiveInfo getChannelReceiverInfo(String multicastIp, int multicastPort, String multicastGroup, String interfaceIp, int recvBufferSize, boolean skipGaps)
 	{
 		ChannelReceiveInfo receiveInfo = this.channelInfos.get(multicastGroup);
 		if (receiveInfo == null)
@@ -37,7 +37,7 @@ class Receiver
 				receiveInfo = this.channelInfos.get(multicastGroup);
 				if (receiveInfo == null)
 				{
-					receiveInfo = new ChannelReceiveInfo(multicastIp, multicastPort, multicastGroup, interfaceIp, this.bindPort, this.selectorThread, recvBufferSize);
+					receiveInfo = new ChannelReceiveInfo(multicastIp, multicastPort, multicastGroup, interfaceIp, this.bindPort, this.selectorThread, recvBufferSize, skipGaps);
 					this.channelInfos.put(multicastGroup, receiveInfo);
 				}
 			}

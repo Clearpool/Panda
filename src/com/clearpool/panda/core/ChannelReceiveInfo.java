@@ -17,6 +17,7 @@ class ChannelReceiveInfo
 	private final String localIp;
 	private final int bindPort;
 	private final SelectorThread selectorThread;
+	private final boolean skipGaps;
 	private final Map<String, Set<PandaDataListener>> topicToListeners;
 	private final Set<PandaDataListener> groupListeners;
 	private final Map<String, ChannelReceiveSequencer> sourceInfos;
@@ -25,7 +26,7 @@ class ChannelReceiveInfo
 	private long messageProcessed;
 	private long messagesHandled;
 
-	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize)
+	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize, boolean skipGaps)
 	{
 		this.multicastIp = multicastIp;
 		this.multicastPort = multicastPort;
@@ -37,6 +38,7 @@ class ChannelReceiveInfo
 		this.groupListeners = new HashSet<PandaDataListener>();
 		this.sourceInfos = new HashMap<String, ChannelReceiveSequencer>();
 		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this, recvBufferSize);
+		this.skipGaps = skipGaps;
 
 		this.packetsProcessed = 0;
 		this.messageProcessed = 0;
@@ -90,7 +92,7 @@ class ChannelReceiveInfo
 		ChannelReceiveSequencer sourceInfo = this.sourceInfos.get(sourceInfoKey);
 		if (sourceInfo == null)
 		{
-			sourceInfo = new ChannelReceiveSequencer(this.selectorThread, sourceInfoKey, this.multicastGroup, sourceAddress, this, MAX_SOURCE_DROP_THRESHOLD);
+			sourceInfo = new ChannelReceiveSequencer(this.selectorThread, sourceInfoKey, this.multicastGroup, sourceAddress, this, MAX_SOURCE_DROP_THRESHOLD, this.skipGaps);
 			this.sourceInfos.put(sourceInfoKey, sourceInfo);
 		}
 		return sourceInfo;

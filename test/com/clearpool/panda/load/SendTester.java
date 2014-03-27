@@ -70,7 +70,7 @@ public class SendTester
 			{
 				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
-		}, netRecvBufferSize);
+		}, netRecvBufferSize, false);
 
 		SenderThread[] senderThreads = new SenderThread[numOfSenderThreads];
 		long mssgsPerOtherThreads = numOfMessages / numOfSenderThreads;

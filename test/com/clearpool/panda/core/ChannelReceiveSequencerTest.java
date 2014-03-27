@@ -18,8 +18,8 @@ public class ChannelReceiveSequencerTest
 	public void testSkipPacketAndDequeue() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(true, 100, 1, (byte) 3, createPacket(3));
@@ -47,8 +47,8 @@ public class ChannelReceiveSequencerTest
 	public void testSendGapRequest() throws IOException, InterruptedException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(true, 100, 1, (byte) 3, createPacket(3));
@@ -109,8 +109,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedNoDrops() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		for (int i = 1; i <= 1000; i++)
 		{
@@ -127,8 +127,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedSelfCorrectingOutOfSequence() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(true, 100, 1, (byte) 3, createPacket(3));
@@ -156,8 +156,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedOutofSequenceThresholdNoRetransSupport() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(false, 100, 1, (byte) 3, createPacket(3));
@@ -183,8 +183,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedOutofSequenceThresholdWithRetransSupport() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(true, 100, 1, (byte) 3, createPacket(3));
@@ -214,8 +214,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedQueueGiveUpTimeNoRetransSupport() throws IOException, InterruptedException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(false, 100, 1, (byte) 3, createPacket(3));
@@ -245,8 +245,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedQueueGiveUpTimeWithRetransSupport() throws IOException, InterruptedException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(true, 100, 1, (byte) 3, createPacket(3));
@@ -278,8 +278,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedSenderRestart() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// Scenario 1 - restart after only receiving 1 packet
 		sequencer.packetReceived(false, 100, 1, (byte) 3, createPacket(3));
@@ -321,8 +321,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedMaxDroppedPacketsAllowed() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 2);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 2, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(false, 100, 1, (byte) 3, createPacket(3));
@@ -373,8 +373,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedDisabledRetransmissions() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(true, 100, 1, (byte) 3, createPacket(3));
@@ -405,8 +405,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedRetransmissionTimeout() throws IOException, InterruptedException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(true, 100, 1, (byte) 3, createPacket(3));
@@ -445,8 +445,8 @@ public class ChannelReceiveSequencerTest
 	public void testPacketReceivedRetransmissionFailed() throws IOException
 	{
 		TestSelectorThread testSelectorThread = new TestSelectorThread();
-		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100);
+		ChannelReceiveInfo testChannelReceiveInfo = new ChannelReceiveInfo("test1:1000", 1000, "test1:1000", "127.0.0.1", 1, testSelectorThread, 1000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(testSelectorThread, "test", "test1:1000", "test0", testChannelReceiveInfo, 100, false);
 
 		// [1,1] - No Queue
 		sequencer.packetReceived(true, 100, 1, (byte) 3, createPacket(3));

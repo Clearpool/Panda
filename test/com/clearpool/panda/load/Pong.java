@@ -35,7 +35,7 @@ public class Pong implements PandaDataListener
 
 	private void start() throws Exception
 	{
-		this.adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, this.localIp, this, RECV_BUFFER_SIZE);
+		this.adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, this.localIp, this, RECV_BUFFER_SIZE, false);
 	}
 
 	private void printStats()

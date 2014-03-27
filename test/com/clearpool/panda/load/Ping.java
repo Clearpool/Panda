@@ -59,7 +59,7 @@ public class Ping implements PandaDataListener
 	private void start() throws Exception
 	{
 		final String localIp = InetAddress.getLocalHost().getHostAddress();
-		if(this.shouldSubscribe) this.adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, localIp, this, RECV_BUFFER_SIZE);
+		if(this.shouldSubscribe) this.adapter.subscribe(TOPIC1, IP, PORT, MULTICASTGROUP, localIp, this, RECV_BUFFER_SIZE, false);
 		
 		for(int i=0; i<this.numThreads; i++)
 		{

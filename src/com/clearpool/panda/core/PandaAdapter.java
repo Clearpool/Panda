@@ -65,9 +65,10 @@ public class PandaAdapter
 		this.sender.send(topic, ip, port, multicastGroup, interfaceIp, bytes);
 	}
 
-	public void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize)
+	// Skipping will only work at the ip/port level.
+	public void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize, boolean skipGaps)
 	{
 		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(interfaceIp, port);
-		this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize);
+		this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize, skipGaps);
 	}
 }

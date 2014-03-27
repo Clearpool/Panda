@@ -3,7 +3,6 @@ package com.clearpool.panda.core;
 import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
-
 class ChannelReceiveSequencer
 {
 	private static final int OUT_OF_ORDER_PACKET_THRESHOLD = 20;
@@ -16,6 +15,7 @@ class ChannelReceiveSequencer
 	private final String sourceIp;
 	private final ChannelReceiveInfo channelReceiveInfo;
 	private final int maxDroppedPacketsAllowed;
+	private final boolean skipGaps;
 	private final PriorityQueue<Packet> queuedPackets;
 
 	private long lastSequenceNumber;
@@ -23,10 +23,11 @@ class ChannelReceiveSequencer
 	private long timeOfFirstQueuedPacket;
 	private long packetsDropped;
 	private long packetsLost;
-	private boolean disableRetransmissions;
+	private boolean retransmissionsDisabled;
 	private int requestManagerFailures;
 
-	public ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo, int maxDroppedPacketsAllowed)
+	public ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo,
+			int maxDroppedPacketsAllowed, boolean skipGaps)
 	{
 		this.selectorThread = selectorThread;
 		this.key = key;
@@ -34,6 +35,7 @@ class ChannelReceiveSequencer
 		this.sourceIp = sourceIp;
 		this.channelReceiveInfo = channelReceiveInfo;
 		this.maxDroppedPacketsAllowed = maxDroppedPacketsAllowed;
+		this.skipGaps = skipGaps;
 		this.queuedPackets = new PriorityQueue<Packet>();
 
 		this.lastSequenceNumber = 0;
@@ -41,7 +43,7 @@ class ChannelReceiveSequencer
 		this.timeOfFirstQueuedPacket = 0;
 		this.packetsDropped = 0;
 		this.packetsLost = 0;
-		this.disableRetransmissions = false;
+		this.retransmissionsDisabled = false;
 		this.requestManagerFailures = 0;
 	}
 
@@ -78,48 +80,56 @@ class ChannelReceiveSequencer
 			{
 				long dropped = this.queuedPackets.peek().getSequenceNumber() - this.lastSequenceNumber - 1;
 
-				// Max drops exceeded
-				if (this.packetsDropped >= this.maxDroppedPacketsAllowed)
+				// Check if retransmissions are turned off by receiver
+				if (this.skipGaps || this.retransmissionsDisabled)
 				{
-					skipReason = PandaErrorCode.PACKET_LOSS_MAX_DROPS_EXCEEDED;
+					skipReason = PandaErrorCode.NONE;
 					this.packetsDropped += dropped;
 				}
-				// Retransmissions is disabled
-				else if (this.disableRetransmissions)
-				{
-					skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_DISABLED;
-					this.packetsDropped += dropped;
-				}
-				// Retransmissions is supported
+				// Retransmissions are supported
 				else if (supportsRetranmissions)
 				{
-					if (this.requestManager != null && System.currentTimeMillis() - this.requestManager.getTimeOfRequest() >= QUEUE_GIVEUP_TIME)
+					// Check if max drops exceeded
+					if (this.packetsDropped >= this.maxDroppedPacketsAllowed)
 					{
-						skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_TIMEOUT;
-						this.requestManager.close(false);
+						skipReason = PandaErrorCode.PACKET_LOSS_MAX_DROPS_EXCEEDED;
+						this.packetsDropped += dropped;
 					}
-					else if (this.requestManagerFailures >= REQUEST_MANAGER_FAILURE_THRESHOLD)
-					{
-						skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_FAILED;
-						this.requestManagerFailures = 0;
-					}
+					// Send retransmission request
 					else
 					{
-						boolean success = this.sendGapRequest(retransmissionPort);
-						skipReason = (success) ? null : PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
-						if (this.requestManagerFailures == 0) this.packetsDropped += dropped;
+						if (this.requestManager != null && System.currentTimeMillis() - this.requestManager.getTimeOfRequest() >= QUEUE_GIVEUP_TIME)
+						{
+							skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_TIMEOUT;
+							this.requestManager.close(false);
+						}
+						else if (this.requestManagerFailures >= REQUEST_MANAGER_FAILURE_THRESHOLD)
+						{
+							skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_FAILED;
+							this.requestManagerFailures = 0;
+						}
+						else
+						{
+							boolean success = this.sendGapRequest(retransmissionPort);
+							skipReason = (success) ? null : PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
+							if (this.requestManagerFailures == 0) this.packetsDropped += dropped;
+						}
 					}
 				}
+				// Retransmissions not supported
 				else
 				{
-					skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_UNSUPPORTED;
+					skipReason = PandaErrorCode.NONE;
 					this.packetsDropped += dropped;
 				}
 			}
 
 			if (skipReason != null)
 			{
-				this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " packetsDropped=" + this.packetsDropped, null);
+				if (skipReason != PandaErrorCode.NONE)
+				{
+					this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " packetsDropped=" + this.packetsDropped, null);
+				}
 				long headSequenceNumber = this.queuedPackets.peek().getSequenceNumber();
 				skipPacketAndDequeue(headSequenceNumber - 1);
 			}
@@ -210,7 +220,7 @@ class ChannelReceiveSequencer
 
 	public void disableRetransmissions()
 	{
-		this.disableRetransmissions = true;
+		this.retransmissionsDisabled = true;
 		this.channelReceiveInfo.deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_DISABLED, "Source=" + this.key, null);
 	}
 

@@ -17,7 +17,7 @@ public class ChannelReceiveInfoTest
 	public void testDataReceivedFromSelf() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
 
 		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.1", 10);
 		ByteBuffer packetBuffer = createPacketBuffer(PandaUtils.PACKET_HEADER_SIZE, 5, 1);
@@ -30,7 +30,7 @@ public class ChannelReceiveInfoTest
 	public void testDataReceivedFromOther() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
 
 		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.2", 10);
 
@@ -49,7 +49,7 @@ public class ChannelReceiveInfoTest
 	public void testDataReceivedPacketHeaderLengthDifferent() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
 
 		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.2", 10);
 

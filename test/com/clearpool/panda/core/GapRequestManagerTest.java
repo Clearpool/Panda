@@ -19,8 +19,8 @@ public class GapRequestManagerTest
 	public void testProcessGapResponseNoFragment() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
 		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
 		
 		gapRequestManager.sendGapRequest(100, 3, 5);
@@ -36,8 +36,8 @@ public class GapRequestManagerTest
 	public void testProcessGapResponseResponseHeaderFragment() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
 		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
 		
 		gapRequestManager.sendGapRequest(100, 3, 5);
@@ -68,8 +68,8 @@ public class GapRequestManagerTest
 	public void testProcessGapResponsePacketHeaderFragment() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
 		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
 		
 		gapRequestManager.sendGapRequest(100, 3, 5);
@@ -100,8 +100,8 @@ public class GapRequestManagerTest
 	public void testProcessGapResponsePacketFragment() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
 		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
 		
 		gapRequestManager.sendGapRequest(100, 3, 5);
@@ -132,8 +132,8 @@ public class GapRequestManagerTest
 	public void testProcessGapResponseNone() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
 		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
 		
 		gapRequestManager.sendGapRequest(100, 3, 5);
@@ -150,8 +150,8 @@ public class GapRequestManagerTest
 	public void testProcessGapResponsePartial() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
 		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
 		
 		gapRequestManager.sendGapRequest(100, 3, 5);

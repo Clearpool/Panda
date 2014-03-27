@@ -40,7 +40,7 @@ public class ReceiverTest
 			{
 				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
-		}, 10000000);
+		}, 10000000, false);
 		adapter.subscribe(TOPIC2, IP, PORT, MULTICASTGROUP, getLocalIp(null), new PandaDataListener() {
 			@Override
 			public void receivedPandaData(String topic, ByteBuffer payload)
@@ -57,7 +57,7 @@ public class ReceiverTest
 			{
 				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
-		}, 10000000);
+		}, 10000000, false);
 	}
 
 	private static String getLocalIp(String ip)

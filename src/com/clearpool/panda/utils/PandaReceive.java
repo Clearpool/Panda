@@ -22,7 +22,7 @@ public class PandaReceive implements PandaDataListener
 	
 	public void start(String topic, String ip, int port, String multicastGroup, String interfaceIp)
 	{
-		this.adapter.subscribe(topic, ip, port, multicastGroup, interfaceIp, this, 100000);
+		this.adapter.subscribe(topic, ip, port, multicastGroup, interfaceIp, this, 100000, true);
 	}
 	
 	@Override

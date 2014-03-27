@@ -101,7 +101,7 @@ public class ReceiverTester
 			{
 				System.err.println(issueCode + "|" + multicastGroup + "|" + message);
 			}
-		}, netRecvBufferSize);
+		}, netRecvBufferSize, false);
 	}
 }
 
