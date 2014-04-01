@@ -207,7 +207,8 @@ class SelectorThread extends Thread
 					}
 					else
 					{
-						LOGGER.log(Level.SEVERE, "handleTcpSelection - gapManager.getGapRequest() is null");
+						// throw to close channel
+						throw new Exception("handleTcpSelection - gapManager.getGapRequest() is null");
 					}
 				}
 				catch (Exception e)
