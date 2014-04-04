@@ -22,11 +22,13 @@ class ChannelReceiveInfo
 	private final Set<PandaDataListener> groupListeners;
 	private final Map<String, ChannelReceiveSequencer> sourceInfos;
 
-	private long packetsProcessed;
-	private long messageProcessed;
+	private long packetsReceived;
+	private long bytesReceived;
+	private long messagesReceived;
 	private long messagesHandled;
 
-	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize, boolean skipGaps)
+	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize,
+			boolean skipGaps)
 	{
 		this.multicastIp = multicastIp;
 		this.multicastPort = multicastPort;
@@ -40,8 +42,9 @@ class ChannelReceiveInfo
 		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this, recvBufferSize);
 		this.skipGaps = skipGaps;
 
-		this.packetsProcessed = 0;
-		this.messageProcessed = 0;
+		this.packetsReceived = 0;
+		this.bytesReceived = 0;
+		this.messagesReceived = 0;
 		this.messagesHandled = 0;
 	}
 
@@ -101,6 +104,8 @@ class ChannelReceiveInfo
 	// Called by selectorThread via FmcChannelReceiveSourceInfo
 	public void parseAndDeliverToListeners(byte messageCount, ByteBuffer packetBuffer)
 	{
+		this.bytesReceived += packetBuffer.remaining();
+
 		// Parse messages and deliver to listeners
 		for (int i = 0; i < messageCount; i++)
 		{
@@ -126,8 +131,8 @@ class ChannelReceiveInfo
 				packetBuffer.position(packetBuffer.position() + messageLength);
 			}
 		}
-		this.messageProcessed += messageCount;
-		this.packetsProcessed++;
+		this.messagesReceived += messageCount;
+		this.packetsReceived++;
 	}
 
 	public void deliverErrorToListeners(PandaErrorCode errorCode, String message, Throwable throwable)
@@ -138,18 +143,28 @@ class ChannelReceiveInfo
 		}
 	}
 
-	long getPacketsProcessed()
+	long getPacketsReceived()
 	{
-		return this.packetsProcessed;
+		return this.packetsReceived;
 	}
 
-	long getMessagesProcessed()
+	long getMessagesReceived()
 	{
-		return this.messageProcessed;
+		return this.messagesReceived;
 	}
 
 	long getMessagesHandled()
 	{
 		return this.messagesHandled;
+	}
+	
+	long getBytesReceived()
+	{
+		return this.bytesReceived;
+	}
+
+	String getMulticastGroup()
+	{
+		return this.multicastGroup;
 	}
 }

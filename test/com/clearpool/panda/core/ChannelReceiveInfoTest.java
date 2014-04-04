@@ -22,8 +22,8 @@ public class ChannelReceiveInfoTest
 		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.1", 10);
 		ByteBuffer packetBuffer = createPacketBuffer(PandaUtils.PACKET_HEADER_SIZE, 5, 1);
 		channelReceiveInfo.dataReceived(sourceAddress, packetBuffer);
-		Assert.assertEquals(0, channelReceiveInfo.getPacketsProcessed());
-		Assert.assertEquals(0, channelReceiveInfo.getMessagesProcessed());
+		Assert.assertEquals(0, channelReceiveInfo.getPacketsReceived());
+		Assert.assertEquals(0, channelReceiveInfo.getMessagesReceived());
 	}
 
 	@Test
@@ -36,13 +36,13 @@ public class ChannelReceiveInfoTest
 
 		ByteBuffer packetBuffer1 = createPacketBuffer(PandaUtils.PACKET_HEADER_SIZE, 5, 1);
 		channelReceiveInfo.dataReceived(sourceAddress, packetBuffer1);
-		Assert.assertEquals(1, channelReceiveInfo.getPacketsProcessed());
-		Assert.assertEquals(5, channelReceiveInfo.getMessagesProcessed());
+		Assert.assertEquals(1, channelReceiveInfo.getPacketsReceived());
+		Assert.assertEquals(5, channelReceiveInfo.getMessagesReceived());
 
 		ByteBuffer packetBuffer2 = createPacketBuffer(PandaUtils.PACKET_HEADER_SIZE, 6, 2);
 		channelReceiveInfo.dataReceived(sourceAddress, packetBuffer2);
-		Assert.assertEquals(2, channelReceiveInfo.getPacketsProcessed());
-		Assert.assertEquals(11, channelReceiveInfo.getMessagesProcessed());
+		Assert.assertEquals(2, channelReceiveInfo.getPacketsReceived());
+		Assert.assertEquals(11, channelReceiveInfo.getMessagesReceived());
 	}
 
 	@Test
@@ -55,8 +55,8 @@ public class ChannelReceiveInfoTest
 
 		ByteBuffer packetBuffer1 = createPacketBuffer(20, 5, 1);
 		channelReceiveInfo.dataReceived(sourceAddress, packetBuffer1);
-		Assert.assertEquals(1, channelReceiveInfo.getPacketsProcessed());
-		Assert.assertEquals(5, channelReceiveInfo.getMessagesProcessed());
+		Assert.assertEquals(1, channelReceiveInfo.getPacketsReceived());
+		Assert.assertEquals(5, channelReceiveInfo.getMessagesReceived());
 	}
 
 	private static ByteBuffer createPacketBuffer(int packetHeaderSize, int messageCount, long sequenceNumber)

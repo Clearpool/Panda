@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import com.clearpool.common.datastractures.Pair;
+import com.codahale.metrics.MetricRegistry;
 
 class Sender
 {
@@ -94,5 +95,19 @@ class Sender
 	public void close()
 	{
 
+	}
+
+	public void recordStats(MetricRegistry metricsRegistry, String prefix)
+	{
+		for (ChannelSendInfo sendInfo : this.channelInfos.values())
+		{
+			long packetsSent = sendInfo.getPacketsSent();
+			long bytesSent = sendInfo.getBytesSent();
+			long packetsResent = sendInfo.getPacketsResent();
+
+			metricsRegistry.meter(prefix + "-PACKETS_SENT-" + sendInfo.getMulticastGroup()).mark(packetsSent);
+			metricsRegistry.meter(prefix + "-BYTES_SENT-" + sendInfo.getMulticastGroup()).mark(bytesSent);
+			metricsRegistry.meter(prefix + "-PACKETS_RESENT-" + sendInfo.getMulticastGroup()).mark(packetsResent);
+		}
 	}
 }

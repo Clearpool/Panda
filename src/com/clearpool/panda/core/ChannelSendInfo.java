@@ -27,6 +27,9 @@ class ChannelSendInfo implements SelectorActionable
 
 	private DatagramChannel channel;
 	private long sequenceNumber;
+	private long packetsSent;
+	private long bytesSent;
+	private long packetsResent;
 
 	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp) throws Exception
 	{
@@ -40,9 +43,10 @@ class ChannelSendInfo implements SelectorActionable
 		this.cacheSize = cacheSize;
 		this.packetCache = (this.cacheSize > 0 ? new PacketCache(this.cacheSize) : null);
 		this.supportsRetransmissions = ((byte) (this.cacheSize > 0 ? 1 : 0));
-
-		this.channel = null;
-		this.sequenceNumber = 0;
+		
+		this.packetsSent = 0;
+		this.bytesSent = 0;
+		this.packetsResent = 0;
 	}
 
 	// Called by app thread
@@ -132,7 +136,12 @@ class ChannelSendInfo implements SelectorActionable
 	{
 		if (this.cacheSize == 0) return null;
 		long lastSequenceNumberRequested = firstSequenceNumberRequested + packetCount - 1L;
-		return this.packetCache.getCachedPackets(firstSequenceNumberRequested, lastSequenceNumberRequested);
+		Pair<List<byte[]>, Long> pair = this.packetCache.getCachedPackets(firstSequenceNumberRequested, lastSequenceNumberRequested);
+		if (pair != null)
+		{
+			this.packetsResent += pair.getA().size();
+		}
+		return pair;
 	}
 
 	public String getMulticastGroup()
@@ -150,10 +159,12 @@ class ChannelSendInfo implements SelectorActionable
 		while (hasOutboundDataRemaining())
 		{
 			byte[] bytes = getNextPacket();
-			//if (this.sequenceNumber % 5L == 0L) return;
+			// if (this.sequenceNumber % 5L == 0L) return;
 			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, this.networkInterface);
 			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_TTL, Integer.valueOf(255));
 			this.channel.send(ByteBuffer.wrap(bytes), this.multicastGroupAddress);
+			this.packetsSent++;
+			this.bytesSent += bytes.length;
 		}
 	}
 
@@ -166,5 +177,20 @@ class ChannelSendInfo implements SelectorActionable
 	int getMessageQueueSize()
 	{
 		return this.messageQueue.size();
+	}
+
+	public long getPacketsSent()
+	{
+		return this.packetsSent;
+	}
+
+	public long getBytesSent()
+	{
+		return this.bytesSent;
+	}
+
+	public long getPacketsResent()
+	{
+		return this.packetsResent;
 	}
 }

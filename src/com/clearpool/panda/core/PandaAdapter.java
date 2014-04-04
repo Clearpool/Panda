@@ -3,14 +3,20 @@ package com.clearpool.panda.core;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.codahale.metrics.MetricRegistry;
 
 //Do not subscribe to same group on two diff network cards in same adapter
 //Do not subscribe to same group on two diff adapters
 public class PandaAdapter
 {
 	private static final Logger LOGGER = Logger.getLogger(PandaAdapter.class.getName());
+	public static final List<PandaAdapter> ALL_PANDA_ADAPTERS = Collections.synchronizedList(new LinkedList<PandaAdapter>());
 
 	private final SelectorThread selectorThread;
 	private final Receiver receiver;
@@ -23,6 +29,7 @@ public class PandaAdapter
 		this.receiver = new Receiver(this.selectorThread, channel.socket().getLocalPort());
 		this.sender = new Sender(this.selectorThread, channel, cacheSize);
 		this.selectorThread.start();
+		ALL_PANDA_ADAPTERS.add(this);
 	}
 
 	private ServerSocketChannel initChannels() throws Exception
@@ -70,5 +77,11 @@ public class PandaAdapter
 	{
 		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(interfaceIp, port);
 		this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize, skipGaps);
+	}
+
+	public void recordStats(MetricRegistry metricsRegistry, String prefix)
+	{
+		this.receiver.recordStats(metricsRegistry, prefix);
+		this.sender.recordStats(metricsRegistry, prefix);
 	}
 }

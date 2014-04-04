@@ -1,9 +1,9 @@
 package com.clearpool.panda.core;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-
+import com.codahale.metrics.MetricRegistry;
 
 class Receiver
 {
@@ -15,7 +15,7 @@ class Receiver
 	{
 		this.selectorThread = selectorThread;
 		this.bindPort = bindPort;
-		this.channelInfos = new HashMap<String, ChannelReceiveInfo>();
+		this.channelInfos = new ConcurrentHashMap<String, ChannelReceiveInfo>();
 	}
 
 	public void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize, boolean skipGaps)
@@ -43,5 +43,21 @@ class Receiver
 			}
 		}
 		return receiveInfo;
+	}
+
+	public void recordStats(MetricRegistry metricsRegistry, String prefix)
+	{
+		for (ChannelReceiveInfo channelInfo : this.channelInfos.values())
+		{
+			long packetsReceived = channelInfo.getPacketsReceived();
+			long bytesReceived = channelInfo.getBytesReceived();
+			long messagesReceived = channelInfo.getMessagesReceived();
+			long messagesHandled = channelInfo.getMessagesHandled();
+
+			metricsRegistry.meter(prefix + "-PACKETS_RECEIVED-" + channelInfo.getMulticastGroup()).mark(packetsReceived);
+			metricsRegistry.meter(prefix + "-BYTES_RECEIVED-" + channelInfo.getMulticastGroup()).mark(bytesReceived);
+			metricsRegistry.meter(prefix + "-MESSAGES_RECEIVED-" + channelInfo.getMulticastGroup()).mark(messagesReceived);
+			metricsRegistry.meter(prefix + "-MESSAGES_HANDLED-" + channelInfo.getMulticastGroup()).mark(messagesHandled);
+		}
 	}
 }
