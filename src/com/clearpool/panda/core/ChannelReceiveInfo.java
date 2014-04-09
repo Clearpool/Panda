@@ -89,9 +89,9 @@ class ChannelReceiveInfo
 		sourceInfo.packetReceived(supportsRetranmissions, incomingSourcePort, sequenceNumber, messageCount, packetBuffer);
 	}
 
-	private ChannelReceiveSequencer getSourceInfo(int incomingPid, String sourceAddress)
+	private ChannelReceiveSequencer getSourceInfo(int sourcePort, String sourceAddress)
 	{
-		String sourceInfoKey = incomingPid + "@" + sourceAddress;
+		String sourceInfoKey = sourcePort + "@" + sourceAddress;
 		ChannelReceiveSequencer sourceInfo = this.sourceInfos.get(sourceInfoKey);
 		if (sourceInfo == null)
 		{
