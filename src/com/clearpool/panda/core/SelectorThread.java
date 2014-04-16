@@ -32,8 +32,6 @@ class SelectorThread extends Thread
 	private final Map<String, DatagramChannel> inDatagramChannels;
 	private final List<SelectorActionable> selectorActionQueue;
 
-	private DatagramChannel outDatagramChannel;
-
 	public SelectorThread() throws IOException
 	{
 		this.selector = Selector.open();
@@ -41,14 +39,6 @@ class SelectorThread extends Thread
 		this.tcpBuffer = ByteBuffer.allocateDirect(PandaUtils.MAX_TCP_SIZE);
 		this.inDatagramChannels = new HashMap<String, DatagramChannel>();
 		this.selectorActionQueue = new LinkedList<>();
-
-		this.outDatagramChannel = null;
-	}
-
-	public void createOutDatagramChannel(int mcBindPort) throws IOException
-	{
-		this.outDatagramChannel = createDatagramChannel();
-		this.outDatagramChannel.bind(new InetSocketAddress(mcBindPort));
 	}
 
 	@Override
@@ -67,7 +57,7 @@ class SelectorThread extends Thread
 				}
 
 				// Service each action
-				serviveEachSelectorAction(activeSelectorActionQueue);
+				serviceEachSelectorAction(activeSelectorActionQueue);
 
 				// Do selection
 				int selectedKeyCount = this.selector.select();
@@ -114,7 +104,7 @@ class SelectorThread extends Thread
 		}
 	}
 
-	private void serviveEachSelectorAction(List<SelectorActionable> activeActionQueue)
+	private void serviceEachSelectorAction(List<SelectorActionable> activeActionQueue)
 	{
 		if (!activeActionQueue.isEmpty())
 		{
@@ -360,7 +350,6 @@ class SelectorThread extends Thread
 	{
 		try
 		{
-			sendInfo.setChannel(this.outDatagramChannel);
 			addToActionQueue(sendInfo);
 			this.selector.wakeup();
 		}

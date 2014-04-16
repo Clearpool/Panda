@@ -24,26 +24,28 @@ class ChannelSendInfo implements SelectorActionable
 	private final int cacheSize;
 	private final PacketCache packetCache;
 	private final byte supportsRetransmissions;
+	private final DatagramChannel channel;
 
-	private DatagramChannel channel;
 	private long sequenceNumber;
 	private long packetsSent;
 	private long bytesSent;
 	private long packetsResent;
 
-	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp) throws Exception
+	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp, DatagramChannel datagramChannel) throws Exception
 	{
 		this.multicastIp = InetAddress.getByName(ip);
 		this.multicastPort = port;
 		this.multicastGroup = multicastGroup;
 		this.multicastGroupAddress = new InetSocketAddress(this.multicastIp, this.multicastPort);
 		this.networkInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(interfaceIp));
+		this.channel = datagramChannel;
+		if (this.channel != null) this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, this.networkInterface);
 		this.topicQueue = new ArrayDeque<String>();
 		this.messageQueue = new ArrayDeque<byte[]>();
 		this.cacheSize = cacheSize;
 		this.packetCache = (this.cacheSize > 0 ? new PacketCache(this.cacheSize) : null);
 		this.supportsRetransmissions = ((byte) (this.cacheSize > 0 ? 1 : 0));
-		
+
 		this.packetsSent = 0;
 		this.bytesSent = 0;
 		this.packetsResent = 0;
@@ -149,19 +151,12 @@ class ChannelSendInfo implements SelectorActionable
 		return this.multicastGroup;
 	}
 
-	public void setChannel(DatagramChannel channel)
-	{
-		this.channel = channel;
-	}
-
 	public void sendToChannel() throws IOException
 	{
 		while (hasOutboundDataRemaining())
 		{
 			byte[] bytes = getNextPacket();
 			// if (this.sequenceNumber % 5L == 0L) return;
-			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, this.networkInterface);
-			this.channel.setOption(StandardSocketOptions.IP_MULTICAST_TTL, Integer.valueOf(255));
 			this.channel.send(ByteBuffer.wrap(bytes), this.multicastGroupAddress);
 			this.packetsSent++;
 			this.bytesSent += bytes.length;

@@ -1,6 +1,11 @@
 package com.clearpool.panda.core;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -17,6 +22,7 @@ class Sender
 	private final static Logger LOGGER = Logger.getLogger(Sender.class.getName());
 
 	private final SelectorThread selectorThread;
+	private final DatagramChannel outDatagramChannel;
 	private final int cacheSize;
 	private final Map<String, ChannelSendInfo> channelInfos;
 
@@ -25,7 +31,28 @@ class Sender
 		this.selectorThread = selectorThread;
 		this.cacheSize = cacheSize;
 		this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_ACCEPT, this);
+		this.outDatagramChannel = createDatagramChannel(channel.socket().getLocalPort());
 		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
+	}
+
+	private static DatagramChannel createDatagramChannel(int port)
+	{
+		while (true)
+		{
+			try
+			{
+				DatagramChannel channel = DatagramChannel.open(StandardProtocolFamily.INET);
+				channel.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
+				channel.setOption(StandardSocketOptions.IP_MULTICAST_TTL, Integer.valueOf(255));
+				channel.configureBlocking(false);
+				channel.bind(new InetSocketAddress(port));
+				return channel;
+			}
+			catch (IOException e)
+			{
+				LOGGER.info(e.getMessage());
+			}
+		}
 	}
 
 	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
@@ -49,7 +76,7 @@ class Sender
 				sendInfo = this.channelInfos.get(multicastGroup);
 				if (sendInfo == null)
 				{
-					sendInfo = new ChannelSendInfo(ip, port, multicastGroup, this.cacheSize, interfaceIp);
+					sendInfo = new ChannelSendInfo(ip, port, multicastGroup, this.cacheSize, interfaceIp, this.outDatagramChannel);
 					this.channelInfos.put(multicastGroup, sendInfo);
 				}
 			}

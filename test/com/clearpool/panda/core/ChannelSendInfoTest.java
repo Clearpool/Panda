@@ -12,7 +12,7 @@ public class ChannelSendInfoTest
 	@Test
 	public void testGetNextPacketSingleMessage() throws Exception
 	{
-		ChannelSendInfo channelSendInfo = new ChannelSendInfo("127.0.0.1", 1, "test:1", 10, "127.0.0.1");
+		ChannelSendInfo channelSendInfo = new ChannelSendInfo("127.0.0.1", 1, "test:1", 10, "127.0.0.1", null);
 
 		// Add 8 byte message to send queue
 		String message = "TEST";
@@ -27,7 +27,7 @@ public class ChannelSendInfoTest
 	@Test
 	public void testGetNextPacketMultipleMessages() throws Exception
 	{
-		ChannelSendInfo channelSendInfo = new ChannelSendInfo("127.0.0.1", 1, "test:1", 10, "127.0.0.1");
+		ChannelSendInfo channelSendInfo = new ChannelSendInfo("127.0.0.1", 1, "test:1", 10, "127.0.0.1", null);
 
 		// Add message to send queue
 		String message = "TEST";
@@ -40,14 +40,15 @@ public class ChannelSendInfoTest
 		channelSendInfo.addMessageToSendQueue(topic2, message2.getBytes());
 
 		byte[] packet = channelSendInfo.getNextPacket();
-		Assert.assertEquals(PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE * 2 + topic.length() + topic2.length() + message.length() + message2.length(), packet.length);
+		Assert.assertEquals(PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE * 2 + topic.length() + topic2.length() + message.length() + message2.length(),
+				packet.length);
 		Assert.assertEquals(0, channelSendInfo.getMessageQueueSize());
 	}
 
 	@Test
 	public void testGetNextPacketWithMessagesRemaining() throws Exception
 	{
-		ChannelSendInfo channelSendInfo = new ChannelSendInfo("127.0.0.1", 1, "test:1", 300, "127.0.0.1");
+		ChannelSendInfo channelSendInfo = new ChannelSendInfo("127.0.0.1", 1, "test:1", 300, "127.0.0.1", null);
 
 		// Add messages to send queue
 		String message = "TEST";
