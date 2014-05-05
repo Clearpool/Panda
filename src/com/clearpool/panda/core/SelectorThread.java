@@ -97,8 +97,7 @@ class SelectorThread extends Thread
 			Iterator<SelectorActionable> actionQueueIterator = this.selectorActionQueue.iterator();
 			while (actionQueueIterator.hasNext())
 			{
-				SelectorActionable action = actionQueueIterator.next();
-				activeActionQueue.add(action);
+				activeActionQueue.add(actionQueueIterator.next());
 				actionQueueIterator.remove();
 			}
 		}
@@ -113,17 +112,18 @@ class SelectorThread extends Thread
 			{
 				SelectorActionable action = activeActionQueueIterator.next();
 				activeActionQueueIterator.remove();
-				if (action.getAction() == SelectorActionable.SEND_MULTICAST)
+				int selectorActionable = action.getAction();
+				if (selectorActionable == SelectorActionable.SEND_MULTICAST)
 				{
-					sendMulticastData(action);
+					sendMulticastData((ChannelSendInfo) action);
 				}
-				else if (action.getAction() == SelectorActionable.REGISTER_MULTICAST_READ)
+				else if (selectorActionable == SelectorActionable.REGISTER_MULTICAST_READ)
 				{
-					registerMulticastChannel(action);
+					registerMulticastChannel((MulticastRegistration) action);
 				}
-				else if (action.getAction() == SelectorActionable.REGISTER_TCP_ACTION)
+				else if (selectorActionable == SelectorActionable.REGISTER_TCP_ACTION)
 				{
-					registerTcpChannel(action);
+					registerTcpChannel((TcpRegistration) action);
 				}
 			}
 		}
@@ -301,9 +301,8 @@ class SelectorThread extends Thread
 		}
 	}
 
-	private static void sendMulticastData(SelectorActionable action)
+	private static void sendMulticastData(ChannelSendInfo sendInfo)
 	{
-		ChannelSendInfo sendInfo = (ChannelSendInfo) action;
 		synchronized (sendInfo)
 		{
 			try
@@ -317,14 +316,13 @@ class SelectorThread extends Thread
 		}
 	}
 
-	private void registerMulticastChannel(SelectorActionable action)
+	private void registerMulticastChannel(MulticastRegistration registration)
 	{
-		MulticastRegistration registration = (MulticastRegistration) action;
 		try
 		{
-			registration.getChannel().register(this.selector, SelectionKey.OP_READ, registration.getAttachment());
-			registration.getChannel().join(InetAddress.getByName(registration.getIp()), registration.getChannel().getOption(StandardSocketOptions.IP_MULTICAST_IF));
-
+			DatagramChannel channel = registration.getChannel();
+			channel.register(this.selector, SelectionKey.OP_READ, registration.getAttachment());
+			channel.join(InetAddress.getByName(registration.getIp()), channel.getOption(StandardSocketOptions.IP_MULTICAST_IF));
 		}
 		catch (Exception e)
 		{
@@ -332,11 +330,10 @@ class SelectorThread extends Thread
 		}
 	}
 
-	private void registerTcpChannel(SelectorActionable action)
+	private void registerTcpChannel(TcpRegistration registration)
 	{
 		try
 		{
-			TcpRegistration registration = (TcpRegistration) action;
 			registration.getChannel().register(this.selector, registration.getInterestOps(), registration.getAttachment());
 		}
 		catch (Exception e)
