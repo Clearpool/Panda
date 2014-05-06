@@ -88,7 +88,7 @@ class ChannelSendInfo implements SelectorActionable
 			buffer.put(topic.getBytes());
 			buffer.putShort((short) bytes.length);
 			buffer.put(bytes);
-			addToPacketQueue(prependedBytes, this.sequenceNumber);
+			addToPacketCache(prependedBytes, this.sequenceNumber);
 			return prependedBytes;
 		}
 
@@ -123,11 +123,11 @@ class ChannelSendInfo implements SelectorActionable
 		packetBuffer.putLong(++this.sequenceNumber);
 		packetBuffer.put(messageCount);
 		packetBuffer.put(packetPayloadBytes, 0, messageBuffer.position());
-		addToPacketQueue(packetBytes, this.sequenceNumber);
+		addToPacketCache(packetBytes, this.sequenceNumber);
 		return packetBytes;
 	}
 
-	private void addToPacketQueue(byte[] packetBytes, long sequenceNum)
+	private void addToPacketCache(byte[] packetBytes, long sequenceNum)
 	{
 		if (this.packetCache == null) return;
 		this.packetCache.add(packetBytes, sequenceNum);
