@@ -103,8 +103,7 @@ class PacketCache
 				packets.add(packet);
 			}
 		}
-		long firstPacketSequenceNumber = getSequenceNumberOfIndex(firstIndex);
-		return new Pair<List<byte[]>, Long>(packets, Long.valueOf(firstPacketSequenceNumber));
+		return new Pair<List<byte[]>, Long>(packets, Long.valueOf(getSequenceNumberOfIndex(firstIndex)));
 	}
 
 	long getSequenceNumberOfIndex(int index)
