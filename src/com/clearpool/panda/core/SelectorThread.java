@@ -276,7 +276,7 @@ class SelectorThread extends Thread
 		}
 	}
 
-	public static void sendMulticastData(ChannelSendDetail channelSendDetail, Queue<SelectorActionable> actionQueue)
+	static void sendMulticastData(ChannelSendDetail channelSendDetail, Queue<SelectorActionable> actionQueue)
 	{
 		SelectorActionable nextSelectorActionable = actionQueue.peek();
 		ChannelSendInfo channelSendInfo = channelSendDetail.getChannelSendInfo();

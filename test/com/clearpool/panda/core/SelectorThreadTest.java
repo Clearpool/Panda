@@ -65,11 +65,13 @@ public class SelectorThreadTest
 			q.offer(new ChannelSendDetail(SENDINFO, topic, message.getBytes()));
 		}
 		SelectorThread.sendMulticastData((ChannelSendDetail) q.poll(), q);
-		assertEquals(PandaUtils.PACKET_HEADER_SIZE + (127 * (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length())), SENDINFO.getMulticastBytes().length);
+		assertEquals(PandaUtils.PACKET_HEADER_SIZE + (Byte.MAX_VALUE * (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length())),
+				SENDINFO.getMulticastBytes().length);
 		assertEquals(173, q.size());
 
 		SelectorThread.sendMulticastData((ChannelSendDetail) q.poll(), q);
-		assertEquals(PandaUtils.PACKET_HEADER_SIZE + (127 * (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length())), SENDINFO.getMulticastBytes().length);
+		assertEquals(PandaUtils.PACKET_HEADER_SIZE + (Byte.MAX_VALUE * (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length())),
+				SENDINFO.getMulticastBytes().length);
 		assertEquals(46, q.size());
 
 		SelectorThread.sendMulticastData((ChannelSendDetail) q.poll(), q);
