@@ -58,15 +58,10 @@ class Sender
 	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
 	{
 		if (bytes.length > PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE) throw new Exception("Message length over size=" + PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
-		ChannelSendInfo sendInfo = getChannelSendInfo(ip, port, multicastGroup, interfaceIp);
-		synchronized (sendInfo)
-		{
-			sendInfo.addMessageToSendQueue(topic, bytes);
-			this.selectorThread.sendToMulticastChannel(sendInfo);
-		}
+		this.selectorThread.sendToMulticastChannel(getChannelSendInfo(ip, port, multicastGroup, interfaceIp), topic, bytes);
 	}
 
-	private ChannelSendInfo getChannelSendInfo(String ip, int port, String multicastGroup, String interfaceIp) throws Exception
+	public ChannelSendInfo getChannelSendInfo(String ip, int port, String multicastGroup, String interfaceIp) throws Exception
 	{
 		ChannelSendInfo sendInfo = this.channelInfos.get(multicastGroup);
 		if (sendInfo == null)
@@ -101,20 +96,22 @@ class Sender
 				ChannelSendInfo sendInfo = this.channelInfos.get(multicastGroup);
 				if (sendInfo != null)
 				{
-					synchronized (sendInfo)
-					{
-						cachedPackets = sendInfo.getCachedPackets(startSequenceNumber, packetCount);
-					}
+					cachedPackets = sendInfo.getCachedPackets(startSequenceNumber, packetCount);
 				}
 				else
 				{
 					LOGGER.severe("Unable to fullfil request because can't find sendinfo for multicastGroup=" + multicastGroup);
 				}
 
-				List<byte[]> packets = cachedPackets == null ? null : cachedPackets.getA();
-				long firstSequenceNumber = cachedPackets == null ? 0 : cachedPackets.getB().longValue();
-				GapResponseManager response = new GapResponseManager(channel, packets, firstSequenceNumber);
-				this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_WRITE, response);
+				if (cachedPackets == null)
+				{
+					this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_WRITE, new GapResponseManager(channel, null, 0));
+				}
+				else
+				{
+					this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_WRITE, new GapResponseManager(channel, cachedPackets.getA(), cachedPackets.getB()
+							.longValue()));
+				}
 			}
 		}
 	}

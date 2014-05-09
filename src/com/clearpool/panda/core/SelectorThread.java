@@ -16,9 +16,11 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +32,7 @@ class SelectorThread extends Thread
 	private final ByteBuffer udpBuffer;
 	private final ByteBuffer tcpBuffer;
 	private final Map<String, DatagramChannel> inDatagramChannels;
-	private final List<SelectorActionable> selectorActionQueue;
+	private final BlockingQueue<SelectorActionable> selectorActionQueue;
 
 	public SelectorThread() throws IOException
 	{
@@ -38,24 +40,18 @@ class SelectorThread extends Thread
 		this.udpBuffer = ByteBuffer.allocateDirect(PandaUtils.MTU_SIZE);
 		this.tcpBuffer = ByteBuffer.allocateDirect(PandaUtils.MAX_TCP_SIZE);
 		this.inDatagramChannels = new HashMap<String, DatagramChannel>();
-		this.selectorActionQueue = new LinkedList<>();
+		this.selectorActionQueue = new ArrayBlockingQueue<SelectorActionable>(PandaUtils.BLOCKING_QUEUE_SIZE);
 	}
 
 	@Override
 	public void run()
 	{
-		final List<SelectorActionable> activeSelectorActionQueue = new LinkedList<>();
-
+		final Queue<SelectorActionable> activeSelectorActionQueue = new LinkedList<>();
 		while (!Thread.currentThread().isInterrupted())
 		{
 			try
 			{
-				// Check for actions
-				synchronized (this.selectorActionQueue)
-				{
-					moveActionQueue(activeSelectorActionQueue);
-				}
-
+				this.selectorActionQueue.drainTo(activeSelectorActionQueue);
 				// Service each action
 				serviceEachSelectorAction(activeSelectorActionQueue);
 
@@ -89,42 +85,22 @@ class SelectorThread extends Thread
 		LOGGER.warning("SelectorThread has been interrupted.  Stopping selection for selector");
 	}
 
-	private void moveActionQueue(List<SelectorActionable> activeActionQueue)
+	private void serviceEachSelectorAction(Queue<SelectorActionable> activeActionQueue)
 	{
-		if (!this.selectorActionQueue.isEmpty())
+		for (SelectorActionable selectorActionable; (selectorActionable = activeActionQueue.poll()) != null;)
 		{
-			// Move to temporary queue
-			Iterator<SelectorActionable> actionQueueIterator = this.selectorActionQueue.iterator();
-			while (actionQueueIterator.hasNext())
+			int action = selectorActionable.getAction();
+			if (action == SelectorActionable.SEND_MULTICAST)
 			{
-				activeActionQueue.add(actionQueueIterator.next());
-				actionQueueIterator.remove();
+				sendMulticastData((ChannelSendDetail) selectorActionable, activeActionQueue);
 			}
-		}
-	}
-
-	private void serviceEachSelectorAction(List<SelectorActionable> activeActionQueue)
-	{
-		if (!activeActionQueue.isEmpty())
-		{
-			Iterator<SelectorActionable> activeActionQueueIterator = activeActionQueue.iterator();
-			while (activeActionQueueIterator.hasNext())
+			else if (action == SelectorActionable.REGISTER_MULTICAST_READ)
 			{
-				SelectorActionable action = activeActionQueueIterator.next();
-				activeActionQueueIterator.remove();
-				int selectorActionable = action.getAction();
-				if (selectorActionable == SelectorActionable.SEND_MULTICAST)
-				{
-					sendMulticastData((ChannelSendInfo) action);
-				}
-				else if (selectorActionable == SelectorActionable.REGISTER_MULTICAST_READ)
-				{
-					registerMulticastChannel((MulticastRegistration) action);
-				}
-				else if (selectorActionable == SelectorActionable.REGISTER_TCP_ACTION)
-				{
-					registerTcpChannel((TcpRegistration) action);
-				}
+				registerMulticastChannel((MulticastRegistration) selectorActionable);
+			}
+			else if (action == SelectorActionable.REGISTER_TCP_ACTION)
+			{
+				registerTcpChannel((TcpRegistration) selectorActionable);
 			}
 		}
 	}
@@ -291,8 +267,7 @@ class SelectorThread extends Thread
 				this.udpBuffer.clear();
 				InetSocketAddress sourceAddress = (InetSocketAddress) ((DatagramChannel) selectedKey.channel()).receive(this.udpBuffer);
 				this.udpBuffer.flip();
-				ChannelReceiveInfo attachment = (ChannelReceiveInfo) selectedKey.attachment();
-				attachment.dataReceived(sourceAddress, this.udpBuffer);
+				((ChannelReceiveInfo) selectedKey.attachment()).dataReceived(sourceAddress, this.udpBuffer);
 			}
 			catch (Exception e)
 			{
@@ -301,18 +276,73 @@ class SelectorThread extends Thread
 		}
 	}
 
-	private static void sendMulticastData(ChannelSendInfo sendInfo)
+	public static void sendMulticastData(ChannelSendDetail channelSendDetail, Queue<SelectorActionable> actionQueue)
 	{
-		synchronized (sendInfo)
+		SelectorActionable nextSelectorActionable = actionQueue.peek();
+		ChannelSendInfo channelSendInfo = channelSendDetail.getChannelSendInfo();
+		String messageTopic = channelSendDetail.getMessageTopic();
+		int messageTopicLength = messageTopic.length();
+		byte[] messageBytes = channelSendDetail.getMessageBytes();
+		int messageBytesLength = messageBytes.length;
+		byte supportsRetransmissions = channelSendInfo.supportsRetransmissions();
+		long sequenceNumber = channelSendInfo.incrementAndGetSequenceNumber();
+		byte messageCount = 1;
+		byte[] messageTopicBytes = messageTopic.getBytes();
+		ByteBuffer multicastBuffer;
+
+		if (nextSelectorActionable == null || nextSelectorActionable.getAction() != SelectorActionable.SEND_MULTICAST
+				|| ((ChannelSendDetail) nextSelectorActionable).getChannelSendInfo() != channelSendInfo)
 		{
-			try
+			multicastBuffer = ByteBuffer.allocate(PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE + messageTopicLength + messageBytesLength);
+			multicastBuffer.put(PandaUtils.PACKET_HEADER_SIZE);
+			multicastBuffer.put(supportsRetransmissions);
+			multicastBuffer.putLong(sequenceNumber);
+			multicastBuffer.put(messageCount);
+			multicastBuffer.put((byte) messageTopicLength);
+			multicastBuffer.put(messageTopicBytes);
+			multicastBuffer.putShort((short) messageBytesLength);
+			multicastBuffer.put(messageBytes);
+		}
+		else
+		{
+			ByteBuffer payloadBuffer = ByteBuffer.allocate(PandaUtils.MAX_PACKET_PAYLOAD_SIZE);
+			payloadBuffer.put((byte) messageTopicLength);
+			payloadBuffer.put(messageTopicBytes);
+			payloadBuffer.putShort((short) messageBytesLength);
+			payloadBuffer.put(messageBytes);
+			while (messageCount < Byte.MAX_VALUE && nextSelectorActionable != null && nextSelectorActionable.getAction() == SelectorActionable.SEND_MULTICAST)
 			{
-				sendInfo.sendToChannel();
+				channelSendDetail = (ChannelSendDetail) nextSelectorActionable;
+				if (channelSendDetail.getChannelSendInfo() != channelSendInfo) break;
+				messageTopic = channelSendDetail.getMessageTopic();
+				messageBytes = channelSendDetail.getMessageBytes();
+				messageTopicLength = messageTopic.length();
+				messageTopicBytes = messageTopic.getBytes();
+				messageBytesLength = messageBytes.length;
+				if (payloadBuffer.remaining() < PandaUtils.MESSAGE_HEADER_FIXED_SIZE + messageTopicLength + messageBytesLength) break;
+				actionQueue.poll();
+				payloadBuffer.put((byte) messageTopicLength);
+				payloadBuffer.put(messageTopicBytes);
+				payloadBuffer.putShort((short) messageBytesLength);
+				payloadBuffer.put(messageBytes);
+				messageCount++;
+				nextSelectorActionable = actionQueue.peek();
 			}
-			catch (Exception e)
-			{
-				LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			}
+			multicastBuffer = ByteBuffer.allocate(PandaUtils.PACKET_HEADER_SIZE + payloadBuffer.position());
+			multicastBuffer.put(PandaUtils.PACKET_HEADER_SIZE);
+			multicastBuffer.put(supportsRetransmissions);
+			multicastBuffer.putLong(sequenceNumber);
+			multicastBuffer.put(messageCount);
+			multicastBuffer.put(payloadBuffer.array(), 0, payloadBuffer.position());
+		}
+		try
+		{
+			multicastBuffer.flip();
+			channelSendInfo.sendToChannel(multicastBuffer);
+		}
+		catch (IOException e)
+		{
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 
@@ -342,13 +372,11 @@ class SelectorThread extends Thread
 		}
 	}
 
-	// Will be called synchronously
-	public void sendToMulticastChannel(ChannelSendInfo sendInfo)
+	public void sendToMulticastChannel(ChannelSendInfo sendInfo, String topic, byte[] bytes)
 	{
 		try
 		{
-			addToActionQueue(sendInfo);
-			this.selector.wakeup();
+			addToActionQueue(new ChannelSendDetail(sendInfo, topic, bytes));
 		}
 		catch (Exception e)
 		{
@@ -375,9 +403,7 @@ class SelectorThread extends Thread
 				}
 				channel.setOption(StandardSocketOptions.SO_RCVBUF, Integer.valueOf(recvBufferSize));
 				this.inDatagramChannels.put(multicastGroup, channel);
-				MulticastRegistration registration = new MulticastRegistration(channel, ip, port, receiverInfo);
-				addToActionQueue(registration);
-				this.selector.wakeup();
+				addToActionQueue(new MulticastRegistration(channel, ip, port, receiverInfo));
 			}
 		}
 		catch (Exception e)
@@ -388,9 +414,7 @@ class SelectorThread extends Thread
 
 	public void registerTcpChannelAction(AbstractSelectableChannel channel, int interestOps, Object attachment)
 	{
-		TcpRegistration registration = new TcpRegistration(channel, interestOps, attachment);
-		addToActionQueue(registration);
-		this.selector.wakeup();
+		addToActionQueue(new TcpRegistration(channel, interestOps, attachment));
 	}
 
 	private static DatagramChannel createDatagramChannel()
@@ -426,9 +450,15 @@ class SelectorThread extends Thread
 
 	private void addToActionQueue(SelectorActionable action)
 	{
-		synchronized (this.selectorActionQueue)
+		try
 		{
-			this.selectorActionQueue.add(action);
+			// TODO: Add timeout?
+			this.selectorActionQueue.put(action);
+			this.selector.wakeup();
+		}
+		catch (InterruptedException e)
+		{
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 }
