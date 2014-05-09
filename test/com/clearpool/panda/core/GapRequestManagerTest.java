@@ -7,11 +7,6 @@ import java.util.LinkedList;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.clearpool.panda.core.ChannelReceiveInfo;
-import com.clearpool.panda.core.ChannelReceiveSequencer;
-import com.clearpool.panda.core.GapRequestManager;
-import com.clearpool.panda.core.PandaUtils;
-
 @SuppressWarnings("static-method")
 public class GapRequestManagerTest
 {

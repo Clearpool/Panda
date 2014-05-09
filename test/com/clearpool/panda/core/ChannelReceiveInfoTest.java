@@ -7,9 +7,6 @@ import java.nio.ByteBuffer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.clearpool.panda.core.ChannelReceiveInfo;
-import com.clearpool.panda.core.PandaUtils;
-
 @SuppressWarnings("static-method")
 public class ChannelReceiveInfoTest
 {
