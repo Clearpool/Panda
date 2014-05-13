@@ -68,7 +68,7 @@ public class SubscribeOnly implements PandaDataListener
 
 	public static void main(String[] args) throws Exception
 	{
-		int cacheSize = Integer.valueOf(args[0]).intValue();
+		int cacheSize = Integer.parseInt(args[0]);
 
 		SubscribeOnly subscriber = new SubscribeOnly(cacheSize);
 		subscriber.start();

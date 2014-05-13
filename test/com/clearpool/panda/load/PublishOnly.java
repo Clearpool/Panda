@@ -84,10 +84,10 @@ public class PublishOnly
 
 	public static void main(String[] args) throws Exception
 	{
-		int cacheSize = Integer.valueOf(args[0]).intValue();
-		int numMessages = Integer.valueOf(args[1]).intValue();
-		int messagesPerMilli = Integer.valueOf(args[2]).intValue();
-		int numThreads = Integer.valueOf(args[3]).intValue();
+		int cacheSize = Integer.parseInt(args[0]);
+		int numMessages = Integer.parseInt(args[1]);
+		int messagesPerMilli = Integer.parseInt(args[2]);
+		int numThreads = Integer.parseInt(args[3]);
 
 		PublishOnly publisher = new PublishOnly(cacheSize, numMessages, messagesPerMilli, numThreads);
 		long start = System.currentTimeMillis();

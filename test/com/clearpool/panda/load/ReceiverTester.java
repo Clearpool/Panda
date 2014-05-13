@@ -159,9 +159,9 @@ class ReceiverWatchdog implements Runnable
 			System.exit(0);
 		}
 
-		int adapterCache = Integer.valueOf(args[0]).intValue();
-		long numOfMessages = Long.valueOf(args[1]).longValue();
-		int netRecvBufferSize = Integer.valueOf(args[2]).intValue();
+		int adapterCache = Integer.parseInt(args[0]);
+		long numOfMessages = Long.parseLong(args[1]);
+		int netRecvBufferSize = Integer.parseInt(args[2]);
 		String localIp = InetAddress.getLocalHost().getHostAddress();
 
 		ReceiverTester rt = new ReceiverTester();

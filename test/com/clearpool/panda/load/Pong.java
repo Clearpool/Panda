@@ -70,8 +70,8 @@ public class Pong implements PandaDataListener
 
 	public static void main(String[] args) throws Exception
 	{
-		int cacheSize = Integer.valueOf(args[0]).intValue();
-		boolean shouldPong = Boolean.valueOf(args[1]).booleanValue();
+		int cacheSize = Integer.parseInt(args[0]);
+		boolean shouldPong = Boolean.parseBoolean(args[1]);
 
 		Pong pong = new Pong(cacheSize, shouldPong);
 		pong.start();

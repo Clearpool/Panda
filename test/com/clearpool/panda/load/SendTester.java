@@ -166,11 +166,11 @@ public class SendTester
 			System.out.println("*** usage -- panda.core.SenderTest2 (int)pandaAdapterCache (int)numOfMessages (int)payloadSize (int)netRecvBufferSize, (int) 1 <= numOfThreads <= 5");
 			System.exit(0);
 		}
-		int adapterCache = Integer.valueOf(args[0]).intValue();
-		int numOfMessages = Integer.valueOf(args[1]).intValue();
-		int payloadSize = Integer.valueOf(args[2]).intValue();
-		int netRecvBufferSize = Integer.valueOf(args[3]).intValue();
-		int numOfThreads = Integer.valueOf(args[4]).intValue();
+		int adapterCache = Integer.parseInt(args[0]);
+		int numOfMessages = Integer.parseInt(args[1]);
+		int payloadSize = Integer.parseInt(args[2]);
+		int netRecvBufferSize = Integer.parseInt(args[3]);
+		int numOfThreads = Integer.parseInt(args[4]);
 		if (numOfThreads < 1 || numOfThreads > 5)
 		{
 			System.out.println("*** Number of threads should be between 1 and 5");

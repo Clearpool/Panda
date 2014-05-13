@@ -144,13 +144,13 @@ public class Ping implements PandaDataListener
 	
 	public static void main(String[] args) throws Exception
 	{
-		int cacheSize = Integer.valueOf(args[0]).intValue();
-		int numMessages = Integer.valueOf(args[1]).intValue();
-		int messagesPerMilli = Integer.valueOf(args[2]).intValue();
-		int ignoreCount = Integer.valueOf(args[3]).intValue();
-		int logRate = Integer.valueOf(args[4]).intValue();
-		int numThreads = Integer.valueOf(args[5]).intValue();
-		boolean shouldSubscribe = Boolean.valueOf(args[6]).booleanValue();
+		int cacheSize = Integer.parseInt(args[0]);
+		int numMessages = Integer.parseInt(args[1]);
+		int messagesPerMilli = Integer.parseInt(args[2]);
+		int ignoreCount = Integer.parseInt(args[3]);
+		int logRate = Integer.parseInt(args[4]);
+		int numThreads = Integer.parseInt(args[5]);
+		boolean shouldSubscribe = Boolean.parseBoolean(args[6]);
 		numMessages+=ignoreCount;
 		
 		Ping ping = new Ping(cacheSize, numMessages, messagesPerMilli, ignoreCount, logRate, numThreads, shouldSubscribe);
