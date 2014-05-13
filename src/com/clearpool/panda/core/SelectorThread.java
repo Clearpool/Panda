@@ -19,8 +19,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,7 +40,7 @@ class SelectorThread extends Thread
 		this.udpBuffer = ByteBuffer.allocateDirect(PandaUtils.MTU_SIZE);
 		this.tcpBuffer = ByteBuffer.allocateDirect(PandaUtils.MAX_TCP_SIZE);
 		this.inDatagramChannels = new HashMap<String, DatagramChannel>();
-		this.selectorActionQueue = new ArrayBlockingQueue<SelectorActionable>(PandaUtils.BLOCKING_QUEUE_SIZE);
+		this.selectorActionQueue = new LinkedBlockingQueue<SelectorActionable>();
 	}
 
 	@Override
@@ -112,8 +112,7 @@ class SelectorThread extends Thread
 		{
 			try
 			{
-				ServerSocketChannel channel = (ServerSocketChannel) selectedKey.channel();
-				SocketChannel socketChannel = channel.accept();
+				SocketChannel socketChannel = ((ServerSocketChannel) selectedKey.channel()).accept();
 				socketChannel.configureBlocking(false);
 				socketChannel.register(this.selector, SelectionKey.OP_READ, selectedKey.attachment());
 			}
@@ -160,12 +159,10 @@ class SelectorThread extends Thread
 			{
 				try
 				{
-					GapRequestManager gapManager = (GapRequestManager) attachment;
-					ByteBuffer outBuffer = gapManager.getGapRequest();
+					ByteBuffer outBuffer = ((GapRequestManager) attachment).getGapRequest();
 					if (outBuffer != null)
 					{
-						SocketChannel channel = (SocketChannel) selectedKey.channel();
-						channel.write(outBuffer);
+						((SocketChannel) selectedKey.channel()).write(outBuffer);
 						if (outBuffer.remaining() == 0)
 						{
 							selectedKey.interestOps(SelectionKey.OP_READ);
@@ -193,16 +190,14 @@ class SelectorThread extends Thread
 			}
 			else if (attachment instanceof GapResponseManager)
 			{
-				GapResponseManager response = (GapResponseManager) attachment;
-				response.sendResponse(selectedKey);
+				((GapResponseManager) attachment).sendResponse(selectedKey);
 			}
 		}
 		else if (selectedKey.isConnectable())
 		{
 			try
 			{
-				SocketChannel channel = (SocketChannel) selectedKey.channel();
-				if (channel.finishConnect())
+				if (((SocketChannel) selectedKey.channel()).finishConnect())
 				{
 					selectedKey.interestOps(SelectionKey.OP_WRITE);
 				}
@@ -403,7 +398,7 @@ class SelectorThread extends Thread
 				}
 				channel.setOption(StandardSocketOptions.SO_RCVBUF, Integer.valueOf(recvBufferSize));
 				this.inDatagramChannels.put(multicastGroup, channel);
-				addToActionQueue(new MulticastRegistration(channel, ip, port, receiverInfo));
+				addToActionQueue(new MulticastRegistration(channel, ip, receiverInfo));
 			}
 		}
 		catch (Exception e)

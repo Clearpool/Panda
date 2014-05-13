@@ -110,7 +110,7 @@ class ChannelReceiveSequencer
 						}
 						else
 						{
-							boolean success = this.sendGapRequest(retransmissionPort);
+							boolean success = sendGapRequest(retransmissionPort);
 							skipReason = (success) ? null : PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
 							if (this.requestManagerFailures == 0) this.packetsDropped += dropped;
 						}

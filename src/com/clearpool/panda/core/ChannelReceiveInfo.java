@@ -85,8 +85,7 @@ class ChannelReceiveInfo
 		}
 
 		// Check for gaps
-		ChannelReceiveSequencer sourceInfo = getSourceInfo(incomingSourcePort, incomingSourceAddress);
-		sourceInfo.packetReceived(supportsRetranmissions, incomingSourcePort, sequenceNumber, messageCount, packetBuffer);
+		getSourceInfo(incomingSourcePort, incomingSourceAddress).packetReceived(supportsRetranmissions, incomingSourcePort, sequenceNumber, messageCount, packetBuffer);
 	}
 
 	private ChannelReceiveSequencer getSourceInfo(int sourcePort, String sourceAddress)

@@ -8,14 +8,12 @@ class MulticastRegistration implements SelectorActionable
 {
 	private final DatagramChannel channel;
 	private final String ip;
-	private final int port;
 	private final Object attachment;
 	
-	public MulticastRegistration(DatagramChannel channel, String ip, int port, Object attachment)
+	public MulticastRegistration(DatagramChannel channel, String ip, Object attachment)
 	{
 		this.channel = channel;
 		this.ip = ip;
-		this.port = port;
 		this.attachment = attachment;
 	}
 
@@ -27,11 +25,6 @@ class MulticastRegistration implements SelectorActionable
 	public String getIp()
 	{
 		return this.ip;
-	}
-
-	public int getPort()
-	{
-		return this.port;
 	}
 
 	public Object getAttachment()
