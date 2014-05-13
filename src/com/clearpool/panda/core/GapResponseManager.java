@@ -19,7 +19,7 @@ class GapResponseManager
 
 	private ByteBuffer previousBuffer;
 
-	public GapResponseManager(SocketChannel channel, List<byte[]> packets, long startSequenceNumber)
+	GapResponseManager(SocketChannel channel, List<byte[]> packets, long startSequenceNumber)
 	{
 		this.channel = channel;
 		this.packets = packets;
@@ -30,7 +30,7 @@ class GapResponseManager
 	}
 
 	// Called by selectorThread
-	public void sendResponse(SelectionKey key)
+	void sendResponse(SelectionKey key)
 	{
 		try
 		{

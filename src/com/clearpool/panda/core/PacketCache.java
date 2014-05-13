@@ -16,7 +16,7 @@ class PacketCache
 	private long headSequenceNumber;
 	private long tailSequenceNumber;
 
-	public PacketCache(int cacheSize)
+	PacketCache(int cacheSize)
 	{
 		this.cacheSize = cacheSize;
 		this.cache = new byte[this.cacheSize][];
@@ -28,7 +28,7 @@ class PacketCache
 		this.tailSequenceNumber = 0;
 	}
 
-	public void add(byte[] packetBytes, long sequenceNumber)
+	void add(byte[] packetBytes, long sequenceNumber)
 	{
 		if (this.elementCount == this.cacheSize)
 		{
@@ -59,7 +59,7 @@ class PacketCache
 		return index % this.cacheSize;
 	}
 
-	public Pair<List<byte[]>, Long> getCachedPackets(long firstSequenceNumberRequested, long lastSequenceNumberRequested)
+	Pair<List<byte[]>, Long> getCachedPackets(long firstSequenceNumberRequested, long lastSequenceNumberRequested)
 	{
 		if (firstSequenceNumberRequested == 0L)
 			return null;

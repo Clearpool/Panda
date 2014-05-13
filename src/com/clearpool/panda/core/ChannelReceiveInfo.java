@@ -27,7 +27,7 @@ class ChannelReceiveInfo
 	private long messagesReceived;
 	private long messagesHandled;
 
-	public ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize,
+	ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize,
 			boolean skipGaps)
 	{
 		this.multicastIp = multicastIp;
@@ -49,7 +49,7 @@ class ChannelReceiveInfo
 	}
 
 	// Called by app thread
-	public void registerTopicListener(String topic, PandaDataListener listener)
+	void registerTopicListener(String topic, PandaDataListener listener)
 	{
 		Set<PandaDataListener> topicListeners = this.topicToListeners.get(topic);
 		if (topicListeners == null)
@@ -62,7 +62,7 @@ class ChannelReceiveInfo
 	}
 
 	// Called by selectorThread
-	public void dataReceived(InetSocketAddress sourceAddress, ByteBuffer packetBuffer)
+	void dataReceived(InetSocketAddress sourceAddress, ByteBuffer packetBuffer)
 	{
 		// Read packet header
 		int packetPosition = packetBuffer.position();
@@ -101,7 +101,7 @@ class ChannelReceiveInfo
 	}
 
 	// Called by selectorThread via FmcChannelReceiveSourceInfo
-	public void parseAndDeliverToListeners(byte messageCount, ByteBuffer packetBuffer)
+	void parseAndDeliverToListeners(byte messageCount, ByteBuffer packetBuffer)
 	{
 		this.bytesReceived += packetBuffer.remaining();
 
@@ -134,7 +134,7 @@ class ChannelReceiveInfo
 		this.packetsReceived++;
 	}
 
-	public void deliverErrorToListeners(PandaErrorCode errorCode, String message, Throwable throwable)
+	void deliverErrorToListeners(PandaErrorCode errorCode, String message, Throwable throwable)
 	{
 		for (PandaDataListener listener : this.groupListeners)
 		{

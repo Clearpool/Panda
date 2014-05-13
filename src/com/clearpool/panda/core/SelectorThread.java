@@ -34,7 +34,7 @@ class SelectorThread extends Thread
 	private final Map<String, DatagramChannel> inDatagramChannels;
 	private final BlockingQueue<SelectorActionable> selectorActionQueue;
 
-	public SelectorThread() throws IOException
+	SelectorThread() throws IOException
 	{
 		this.selector = Selector.open();
 		this.udpBuffer = ByteBuffer.allocateDirect(PandaUtils.MTU_SIZE);
@@ -367,7 +367,7 @@ class SelectorThread extends Thread
 		}
 	}
 
-	public void sendToMulticastChannel(ChannelSendInfo sendInfo, String topic, byte[] bytes)
+	void sendToMulticastChannel(ChannelSendInfo sendInfo, String topic, byte[] bytes)
 	{
 		try
 		{
@@ -380,7 +380,7 @@ class SelectorThread extends Thread
 	}
 
 	// Will be called synchronously
-	public void subscribeToMulticastChannel(String ip, int port, String multicastGroup, String interfaceIp, ChannelReceiveInfo receiverInfo, int recvBufferSize)
+	void subscribeToMulticastChannel(String ip, int port, String multicastGroup, String interfaceIp, ChannelReceiveInfo receiverInfo, int recvBufferSize)
 	{
 		try
 		{
@@ -407,7 +407,7 @@ class SelectorThread extends Thread
 		}
 	}
 
-	public void registerTcpChannelAction(AbstractSelectableChannel channel, int interestOps, Object attachment)
+	void registerTcpChannelAction(AbstractSelectableChannel channel, int interestOps, Object attachment)
 	{
 		addToActionQueue(new TcpRegistration(channel, interestOps, attachment));
 	}

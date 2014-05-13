@@ -27,7 +27,7 @@ class GapRequestManager
 	private int responsePacketCount;
 	private int packetsRemainingToDeliver;
 
-	public GapRequestManager(SelectorThread selectorThread, String multicastGroup, String sourceIp, ChannelReceiveSequencer sequencer)
+	GapRequestManager(SelectorThread selectorThread, String multicastGroup, String sourceIp, ChannelReceiveSequencer sequencer)
 	{
 		this.selectorThread = selectorThread;
 		this.multicastGroup = multicastGroup;
@@ -46,7 +46,7 @@ class GapRequestManager
 		this.packetsRemainingToDeliver = 0;
 	}
 
-	public boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
+	boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
 	{
 		if (this.socketChannel == null)
 		{
@@ -91,13 +91,13 @@ class GapRequestManager
 	}
 
 	// Called by selectorThread
-	public ByteBuffer getGapRequest()
+	ByteBuffer getGapRequest()
 	{
 		return this.request;
 	}
 
 	// Called by selectorThread
-	public void processGapResponse(SocketChannel channel, SelectionKey key, ByteBuffer buffer)
+	void processGapResponse(SocketChannel channel, SelectionKey key, ByteBuffer buffer)
 	{
 		// TODO - what if buffer.length is > remaining? - POSSIBLE scenario = after PACKET_LOSS_RETRANSMISSION_TIMEOUT
 		this.readBuffer.put(buffer); // add to the end of whatever is remaining in bytebuffer
@@ -218,7 +218,7 @@ class GapRequestManager
 		close(successful);
 	}
 
-	public void close(boolean successful)
+	void close(boolean successful)
 	{
 		this.readBuffer.clear();
 		this.socketChannel = null;
@@ -226,18 +226,18 @@ class GapRequestManager
 		this.sequencer.closeRequestManager(successful);
 	}
 
-	public void setDisabled()
+	void setDisabled()
 	{
 		close(false);
 		this.sequencer.disableRetransmissions();
 	}
 
-	public String getMulticastGroup()
+	String getMulticastGroup()
 	{
 		return this.multicastGroup;
 	}
 
-	public long getTimeOfRequest()
+	long getTimeOfRequest()
 	{
 		return this.timeOfRequest;
 	}

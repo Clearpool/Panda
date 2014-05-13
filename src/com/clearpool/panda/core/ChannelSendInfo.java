@@ -28,7 +28,7 @@ class ChannelSendInfo
 	private long bytesSent;
 	private long packetsResent;
 
-	public ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp, DatagramChannel datagramChannel) throws Exception
+	ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp, DatagramChannel datagramChannel) throws Exception
 	{
 		this.multicastIp = InetAddress.getByName(ip);
 		this.multicastPort = port;
@@ -53,7 +53,7 @@ class ChannelSendInfo
 	}
 
 	// Called by selectorThread
-	public Pair<List<byte[]>, Long> getCachedPackets(long firstSequenceNumberRequested, int packetCount)
+	Pair<List<byte[]>, Long> getCachedPackets(long firstSequenceNumberRequested, int packetCount)
 	{
 		if (this.cacheSize == 0) return null;
 		Pair<List<byte[]>, Long> pair = this.packetCache.getCachedPackets(firstSequenceNumberRequested, firstSequenceNumberRequested + packetCount - 1);
@@ -64,12 +64,12 @@ class ChannelSendInfo
 		return pair;
 	}
 
-	public String getMulticastGroup()
+	String getMulticastGroup()
 	{
 		return this.multicastGroup;
 	}
 
-	public void sendToChannel(ByteBuffer buffer) throws IOException
+	void sendToChannel(ByteBuffer buffer) throws IOException
 	{
 		addToPacketCache(buffer.array());
 		this.channel.send(buffer, this.multicastGroupAddress);
@@ -77,27 +77,27 @@ class ChannelSendInfo
 		this.bytesSent += buffer.capacity();
 	}
 
-	public long getPacketsSent()
+	long getPacketsSent()
 	{
 		return this.packetsSent;
 	}
 
-	public long getBytesSent()
+	long getBytesSent()
 	{
 		return this.bytesSent;
 	}
 
-	public long getPacketsResent()
+	long getPacketsResent()
 	{
 		return this.packetsResent;
 	}
 
-	public byte supportsRetransmissions()
+	byte supportsRetransmissions()
 	{
 		return this.supportsRetransmissions;
 	}
 
-	public long incrementAndGetSequenceNumber()
+	long incrementAndGetSequenceNumber()
 	{
 		return ++this.sequenceNumber;
 	}

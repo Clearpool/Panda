@@ -26,7 +26,7 @@ class ChannelReceiveSequencer
 	private boolean retransmissionsDisabled;
 	private int requestManagerFailures;
 
-	public ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo,
+	ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo,
 			int maxDroppedPacketsAllowed, boolean skipGaps)
 	{
 		this.selectorThread = selectorThread;
@@ -48,7 +48,7 @@ class ChannelReceiveSequencer
 	}
 
 	// Called by selectorThread
-	public void packetReceived(boolean supportsRetranmissions, int retransmissionPort, long sequenceNumber, byte messageCount, ByteBuffer packetBuffer)
+	void packetReceived(boolean supportsRetranmissions, int retransmissionPort, long sequenceNumber, byte messageCount, ByteBuffer packetBuffer)
 	{
 		if (sequenceNumber == this.lastSequenceNumber + 1 || this.lastSequenceNumber == 0)
 		{
@@ -198,7 +198,7 @@ class ChannelReceiveSequencer
 		return false;
 	}
 
-	public void skipPacketAndDequeue(long sequenceNumber)
+	void skipPacketAndDequeue(long sequenceNumber)
 	{
 		long skipped = sequenceNumber - this.lastSequenceNumber;
 		this.packetsLost += skipped;
@@ -207,24 +207,24 @@ class ChannelReceiveSequencer
 	}
 
 	// Called by selectorThread
-	public ChannelReceiveInfo getChannelReceiveInfo()
+	ChannelReceiveInfo getChannelReceiveInfo()
 	{
 		return this.channelReceiveInfo;
 	}
 
-	public void closeRequestManager(boolean successful)
+	void closeRequestManager(boolean successful)
 	{
 		this.requestManager = null;
 		this.requestManagerFailures = (successful) ? 0 : this.requestManagerFailures + 1;
 	}
 
-	public void disableRetransmissions()
+	void disableRetransmissions()
 	{
 		this.retransmissionsDisabled = true;
 		this.channelReceiveInfo.deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_DISABLED, "Source=" + this.key, null);
 	}
 
-	public String getKey()
+	String getKey()
 	{
 		return this.key;
 	}

@@ -26,7 +26,7 @@ class Sender
 	private final int cacheSize;
 	private final Map<String, ChannelSendInfo> channelInfos;
 
-	public Sender(SelectorThread selectorThread, ServerSocketChannel channel, int cacheSize) throws Exception
+	Sender(SelectorThread selectorThread, ServerSocketChannel channel, int cacheSize) throws Exception
 	{
 		this.selectorThread = selectorThread;
 		this.cacheSize = cacheSize;
@@ -55,13 +55,13 @@ class Sender
 		}
 	}
 
-	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
+	void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
 	{
 		if (bytes.length > PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE) throw new Exception("Message length over size=" + PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
 		this.selectorThread.sendToMulticastChannel(getChannelSendInfo(ip, port, multicastGroup, interfaceIp), topic, bytes);
 	}
 
-	public ChannelSendInfo getChannelSendInfo(String ip, int port, String multicastGroup, String interfaceIp) throws Exception
+	private ChannelSendInfo getChannelSendInfo(String ip, int port, String multicastGroup, String interfaceIp) throws Exception
 	{
 		ChannelSendInfo sendInfo = this.channelInfos.get(multicastGroup);
 		if (sendInfo == null)
@@ -79,7 +79,7 @@ class Sender
 		return sendInfo;
 	}
 
-	public void processGapRequest(SocketChannel channel, ByteBuffer tcpBuffer)
+	void processGapRequest(SocketChannel channel, ByteBuffer tcpBuffer)
 	{
 		if (tcpBuffer.remaining() >= PandaUtils.RETRANSMISSION_REQUEST_HEADER_SIZE)
 		{
@@ -116,12 +116,12 @@ class Sender
 		}
 	}
 
-	public void close()
+	void close()
 	{
 
 	}
 
-	public void recordStats(MetricRegistry metricsRegistry, String prefix)
+	void recordStats(MetricRegistry metricsRegistry, String prefix)
 	{
 		for (ChannelSendInfo sendInfo : this.channelInfos.values())
 		{

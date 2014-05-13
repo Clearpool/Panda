@@ -11,14 +11,14 @@ class Receiver
 	private final int bindPort;
 	private final Map<String, ChannelReceiveInfo> channelInfos;
 
-	public Receiver(SelectorThread selectorThread, int bindPort)
+	Receiver(SelectorThread selectorThread, int bindPort)
 	{
 		this.selectorThread = selectorThread;
 		this.bindPort = bindPort;
 		this.channelInfos = new ConcurrentHashMap<String, ChannelReceiveInfo>();
 	}
 
-	public void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize, boolean skipGaps)
+	void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize, boolean skipGaps)
 	{
 		ChannelReceiveInfo receiveInfo = getChannelReceiverInfo(ip, port, multicastGroup, interfaceIp, recvBufferSize, skipGaps);
 		synchronized (receiveInfo)
@@ -45,7 +45,7 @@ class Receiver
 		return receiveInfo;
 	}
 
-	public void recordStats(MetricRegistry metricsRegistry, String prefix)
+	void recordStats(MetricRegistry metricsRegistry, String prefix)
 	{
 		for (ChannelReceiveInfo channelInfo : this.channelInfos.values())
 		{

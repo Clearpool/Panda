@@ -6,24 +6,24 @@ class Packet implements Comparable<Packet>
 	private final byte messageCount;
 	private final byte[] bytes;
 	
-	public Packet(long sequenceNumber, byte messageCount, byte[] bytes)
+	Packet(long sequenceNumber, byte messageCount, byte[] bytes)
 	{
 		this.sequenceNumber = sequenceNumber;
 		this.messageCount = messageCount;
 		this.bytes = bytes;
 	}
 
-	public long getSequenceNumber()
+	long getSequenceNumber()
 	{
 		return this.sequenceNumber;
 	}
 
-	public byte getMessageCount()
+	byte getMessageCount()
 	{
 		return this.messageCount;
 	}
 
-	public byte[] getBytes()
+	byte[] getBytes()
 	{
 		return this.bytes;
 	}
