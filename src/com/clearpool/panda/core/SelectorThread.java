@@ -163,9 +163,10 @@ class SelectorThread extends Thread
 					ByteBuffer gapRequest = grm.getGapRequest();
 					if (gapRequest != null)
 					{
-						LOGGER.log(Level.INFO, "Sending GapRequest to " + grm.getMulticastGroup() + " for " + grm.getPacketCountRequested()
+						SocketChannel channel = (SocketChannel) selectedKey.channel();
+						LOGGER.log(Level.INFO, "Sending GapRequest to " + channel.getRemoteAddress() + " with multicastGroup " + grm.getMulticastGroup() + " for " + grm.getPacketCountRequested()
 								+ " packets starting with sequenceNumber " + grm.getFirstSequenceNumberRequested());
-						((SocketChannel) selectedKey.channel()).write(gapRequest);
+						channel.write(gapRequest);
 						if (gapRequest.remaining() == 0)
 						{
 							selectedKey.interestOps(SelectionKey.OP_READ);
