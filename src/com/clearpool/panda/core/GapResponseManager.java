@@ -44,13 +44,11 @@ class GapResponseManager
 			// Send Header
 			if (this.packets == null || this.packets.size() == this.totalPackets)
 			{
-				byte[] bytes = new byte[PandaUtils.RETRANSMISSION_RESPONSE_HEADER_SIZE];
-				ByteBuffer buffer = ByteBuffer.wrap(bytes);
+				ByteBuffer buffer = ByteBuffer.allocate(PandaUtils.RETRANSMISSION_RESPONSE_HEADER_SIZE);
 				buffer.putLong(this.startSequenceNumber);
 				buffer.putInt(this.totalPackets);
 				buffer.rewind();
-				boolean allWritten = writeBufferToChannel(buffer);
-				if (!allWritten) return;
+				if (!writeBufferToChannel(buffer)) return;
 			}
 
 			// Send Response
@@ -67,13 +65,11 @@ class GapResponseManager
 					{
 						LOGGER.severe("Sending Negative/Zero Packet Length In Gap Response - ReadBuffer Bytes - " + new String(packetBytes));
 					}
-					byte[] bytes = new byte[PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE + packetLength];
-					ByteBuffer buffer = ByteBuffer.wrap(bytes);
+					ByteBuffer buffer = ByteBuffer.allocate(PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE + packetLength);
 					buffer.putInt(packetBytes.length);
 					buffer.put(packetBytes);
 					buffer.rewind();
-					boolean allWritten = writeBufferToChannel(buffer);
-					if (!allWritten) return;
+					if (!writeBufferToChannel(buffer)) return;
 				}
 			}
 

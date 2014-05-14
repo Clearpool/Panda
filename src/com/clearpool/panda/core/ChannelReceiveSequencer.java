@@ -110,8 +110,7 @@ class ChannelReceiveSequencer
 						}
 						else
 						{
-							boolean success = sendGapRequest(retransmissionPort);
-							skipReason = (success) ? null : PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
+							skipReason = (sendGapRequest(retransmissionPort)) ? null : PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
 							if (this.requestManagerFailures == 0) this.packetsDropped += dropped;
 						}
 					}
@@ -130,8 +129,7 @@ class ChannelReceiveSequencer
 				{
 					this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " packetsDropped=" + this.packetsDropped, null);
 				}
-				long headSequenceNumber = this.queuedPackets.peek().getSequenceNumber();
-				skipPacketAndDequeue(headSequenceNumber - 1);
+				skipPacketAndDequeue(this.queuedPackets.peek().getSequenceNumber() - 1);
 			}
 		}
 	}
@@ -172,8 +170,7 @@ class ChannelReceiveSequencer
 		if (headPacket.getSequenceNumber() > this.lastSequenceNumber + 1)
 		{
 			this.requestManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
-			int packetCount = (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1);
-			return this.requestManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, packetCount);
+			return this.requestManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1));
 		}
 		return false;
 	}
@@ -182,8 +179,7 @@ class ChannelReceiveSequencer
 	{
 		byte[] bytes = new byte[packetBuffer.remaining()];
 		packetBuffer.get(bytes);
-		Packet packet = new Packet(sequenceNumber, messageCount, bytes);
-		this.queuedPackets.add(packet);
+		this.queuedPackets.add(new Packet(sequenceNumber, messageCount, bytes));
 		if (this.queuedPackets.size() == 1)
 		{
 			this.timeOfFirstQueuedPacket = System.currentTimeMillis();
@@ -200,8 +196,7 @@ class ChannelReceiveSequencer
 
 	void skipPacketAndDequeue(long sequenceNumber)
 	{
-		long skipped = sequenceNumber - this.lastSequenceNumber;
-		this.packetsLost += skipped;
+		this.packetsLost += sequenceNumber - this.lastSequenceNumber;
 		this.lastSequenceNumber = sequenceNumber;
 		dequeueQueuedPackets();
 	}

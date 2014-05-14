@@ -75,8 +75,7 @@ class GapRequestManager
 
 	private ByteBuffer createGapRequest(long firstSequenceNumber, int packetCount)
 	{
-		byte[] bytes = new byte[PandaUtils.RETRANSMISSION_REQUEST_HEADER_SIZE + this.multicastGroup.length()];
-		ByteBuffer buffer = ByteBuffer.wrap(bytes);
+		ByteBuffer buffer = ByteBuffer.allocate(PandaUtils.RETRANSMISSION_REQUEST_HEADER_SIZE + this.multicastGroup.length());
 		buffer.putLong(firstSequenceNumber);
 		buffer.putInt(packetCount);
 		buffer.put((byte) this.multicastGroup.length());
