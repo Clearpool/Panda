@@ -159,11 +159,14 @@ class SelectorThread extends Thread
 			{
 				try
 				{
-					ByteBuffer outBuffer = ((GapRequestManager) attachment).getGapRequest();
-					if (outBuffer != null)
+					GapRequestManager grm = (GapRequestManager) attachment;
+					ByteBuffer gapRequest = grm.getGapRequest();
+					if (gapRequest != null)
 					{
-						((SocketChannel) selectedKey.channel()).write(outBuffer);
-						if (outBuffer.remaining() == 0)
+						LOGGER.log(Level.INFO, "Sending GapRequest to " + grm.getMulticastGroup() + " for " + grm.getPacketCountRequested()
+								+ " packets starting with sequenceNumber " + grm.getFirstSequenceNumberRequested());
+						((SocketChannel) selectedKey.channel()).write(gapRequest);
+						if (gapRequest.remaining() == 0)
 						{
 							selectedKey.interestOps(SelectionKey.OP_READ);
 						}
