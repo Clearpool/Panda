@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class GapRequestManager
@@ -197,6 +198,8 @@ class GapRequestManager
 					return;
 				}
 			}
+
+			LOGGER.log(Level.FINER, "Received GapResponse for " + this.responsePacketCount + " packets starting with sequenceNumber " + this.responseFirstSequenceNumber);
 
 			if (this.packetsRemainingToDeliver == 0)
 			{

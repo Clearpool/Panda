@@ -164,7 +164,7 @@ class SelectorThread extends Thread
 					if (gapRequest != null)
 					{
 						SocketChannel channel = (SocketChannel) selectedKey.channel();
-						LOGGER.log(Level.INFO, "Sending GapRequest to " + channel.getRemoteAddress() + " with multicastGroup " + grm.getMulticastGroup() + " for " + grm.getPacketCountRequested()
+						LOGGER.log(Level.FINER, "Sending GapRequest to " + channel.getRemoteAddress() + " with multicastGroup " + grm.getMulticastGroup() + " for " + grm.getPacketCountRequested()
 								+ " packets starting with sequenceNumber " + grm.getFirstSequenceNumberRequested());
 						channel.write(gapRequest);
 						if (gapRequest.remaining() == 0)

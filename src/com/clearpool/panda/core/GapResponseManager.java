@@ -6,6 +6,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class GapResponseManager
@@ -72,6 +73,9 @@ class GapResponseManager
 					if (!writeBufferToChannel(buffer)) return;
 				}
 			}
+
+			LOGGER.log(Level.FINER, "Sent GapResponse to " + this.channel.getLocalAddress() + " for " + this.totalPackets + " packets starting with sequenceNumber "
+					+ this.startSequenceNumber);
 
 			// Close channel when all responses have been written or if no responses ever existed
 			if (this.packets == null || this.packets.size() == 0)
