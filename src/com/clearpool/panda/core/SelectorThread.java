@@ -451,7 +451,6 @@ class SelectorThread extends Thread
 	{
 		try
 		{
-			// TODO: Add timeout?
 			this.selectorActionQueue.put(action);
 			this.selector.wakeup();
 		}
