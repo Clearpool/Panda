@@ -52,8 +52,8 @@ class GapRequestManager
 		if (this.socketChannel == null)
 		{
 			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
-			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 			this.request = createGapRequest(firstSequenceNumber, packetCount);
+			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 		}
 		return true;
 	}
