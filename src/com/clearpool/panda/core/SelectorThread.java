@@ -37,7 +37,7 @@ class SelectorThread extends Thread
 	SelectorThread() throws IOException
 	{
 		this.selector = Selector.open();
-		this.udpBuffer = ByteBuffer.allocateDirect(PandaUtils.MTU_SIZE);
+		this.udpBuffer = ByteBuffer.allocateDirect(PandaUtils.MAX_UDP_SIZE);
 		this.tcpBuffer = ByteBuffer.allocateDirect(PandaUtils.MAX_TCP_SIZE);
 		this.inDatagramChannels = new HashMap<String, DatagramChannel>();
 		this.selectorActionQueue = new LinkedBlockingQueue<SelectorActionable>();
@@ -164,8 +164,9 @@ class SelectorThread extends Thread
 					if (gapRequest != null)
 					{
 						SocketChannel channel = (SocketChannel) selectedKey.channel();
-						LOGGER.log(Level.FINER, "Sending GapRequest to " + channel.getRemoteAddress() + " with multicastGroup " + grm.getMulticastGroup() + " for " + grm.getPacketCountRequested()
-								+ " packets starting with sequenceNumber " + grm.getFirstSequenceNumberRequested());
+						LOGGER.log(Level.FINER,
+								"Sending GapRequest to " + channel.getRemoteAddress() + " with multicastGroup " + grm.getMulticastGroup() + " for " + grm.getPacketCountRequested()
+										+ " packets starting with sequenceNumber " + grm.getFirstSequenceNumberRequested());
 						channel.write(gapRequest);
 						if (gapRequest.remaining() == 0)
 						{

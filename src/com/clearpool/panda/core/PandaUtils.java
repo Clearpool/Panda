@@ -4,6 +4,7 @@ public class PandaUtils
 {
 	// Sizes
 	static final int MTU_SIZE = 1500;
+	static final int MAX_UDP_SIZE = 65535;
 	static final int MAX_TCP_SIZE = 65535;
 	static final byte PACKET_HEADER_SIZE = 11;
 	static final int MESSAGE_HEADER_FIXED_SIZE = 3; // topicId - 1 bytes, message length - 2 bytes
