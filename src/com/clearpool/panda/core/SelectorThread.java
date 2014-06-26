@@ -290,8 +290,8 @@ class SelectorThread extends Thread
 		byte[] messageTopicBytes = messageTopic.getBytes();
 		ByteBuffer multicastBuffer;
 
-		if (nextSelectorActionable == null || nextSelectorActionable.getAction() != SelectorActionable.SEND_MULTICAST
-				|| ((ChannelSendDetail) nextSelectorActionable).getChannelSendInfo() != channelSendInfo)
+		if (messageBytesLength > PandaUtils.PANDA_PACKET_MESSAGE_PAYLOAD_SIZE || nextSelectorActionable == null
+				|| nextSelectorActionable.getAction() != SelectorActionable.SEND_MULTICAST || ((ChannelSendDetail) nextSelectorActionable).getChannelSendInfo() != channelSendInfo)
 		{
 			multicastBuffer = ByteBuffer.allocate(PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE + messageTopicLength + messageBytesLength);
 			multicastBuffer.put(PandaUtils.PACKET_HEADER_SIZE);
@@ -305,7 +305,7 @@ class SelectorThread extends Thread
 		}
 		else
 		{
-			ByteBuffer payloadBuffer = ByteBuffer.allocate(PandaUtils.MAX_PACKET_PAYLOAD_SIZE);
+			ByteBuffer payloadBuffer = ByteBuffer.allocate(PandaUtils.PANDA_PACKET_PAYLOAD_SIZE);
 			payloadBuffer.put((byte) messageTopicLength);
 			payloadBuffer.put(messageTopicBytes);
 			payloadBuffer.putShort((short) messageBytesLength);

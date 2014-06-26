@@ -57,7 +57,7 @@ class Sender
 
 	void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
 	{
-		if (bytes.length > PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE) throw new Exception("Message length over size=" + PandaUtils.MAX_MESSAGE_PAYLOAD_SIZE + " not allowed.");
+		if (bytes.length > PandaUtils.MAX_UDP_MESSAGE_PAYLOAD_SIZE) throw new Exception("Message length over size=" + PandaUtils.MAX_UDP_MESSAGE_PAYLOAD_SIZE + " not allowed.");
 		this.selectorThread.sendToMulticastChannel(getChannelSendInfo(ip, port, multicastGroup, interfaceIp), topic, bytes);
 	}
 
