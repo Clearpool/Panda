@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import com.clearpool.common.datastractures.Pair;
 import com.codahale.metrics.MetricRegistry;
 
 class Sender

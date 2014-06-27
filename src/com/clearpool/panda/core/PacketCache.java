@@ -3,13 +3,11 @@ package com.clearpool.panda.core;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.clearpool.common.datastractures.Pair;
-
 class PacketCache
 {
 	private final int cacheSize;
 	private final byte[][] cache;
-	
+
 	private int elementCount;
 	private int headIndex;
 	private int tailIndex;
@@ -54,27 +52,21 @@ class PacketCache
 
 	private int getIndex(int index)
 	{
-		if (index < 0)
-			return index + this.cacheSize;
+		if (index < 0) return index + this.cacheSize;
 		return index % this.cacheSize;
 	}
 
 	Pair<List<byte[]>, Long> getCachedPackets(long firstSequenceNumberRequested, long lastSequenceNumberRequested)
 	{
-		if (firstSequenceNumberRequested == 0L)
-			return null;
-		if (lastSequenceNumberRequested == 0L)
-			return null;
+		if (firstSequenceNumberRequested == 0L) return null;
+		if (lastSequenceNumberRequested == 0L) return null;
 
 		int distanceFirstFromHead = (int) (firstSequenceNumberRequested - this.headSequenceNumber);
 		int distanceLastFromTail = (int) (this.tailSequenceNumber - lastSequenceNumberRequested);
 
-		if ((lastSequenceNumberRequested < this.headSequenceNumber) || (firstSequenceNumberRequested > this.tailSequenceNumber))
-			return null;
-		if (distanceFirstFromHead >= this.elementCount)
-			return null;
-		if (distanceLastFromTail >= this.elementCount)
-			return null;
+		if ((lastSequenceNumberRequested < this.headSequenceNumber) || (firstSequenceNumberRequested > this.tailSequenceNumber)) return null;
+		if (distanceFirstFromHead >= this.elementCount) return null;
+		if (distanceLastFromTail >= this.elementCount) return null;
 		int firstIndex = getIndex(this.headIndex + (distanceFirstFromHead < 0 ? 0 : distanceFirstFromHead));
 		int lastIndex = getIndex(this.tailIndex - (distanceLastFromTail < 0 ? 0 : distanceLastFromTail));
 
@@ -108,16 +100,12 @@ class PacketCache
 
 	long getSequenceNumberOfIndex(int index)
 	{
-		if ((this.elementCount < this.cacheSize) && (index > this.elementCount - 1))
-			return 0L;
-		if (index == this.headIndex)
-			return this.headSequenceNumber;
-		if (index == this.tailIndex)
-			return this.tailSequenceNumber;
+		if ((this.elementCount < this.cacheSize) && (index > this.elementCount - 1)) return 0L;
+		if (index == this.headIndex) return this.headSequenceNumber;
+		if (index == this.tailIndex) return this.tailSequenceNumber;
 
 		int distanceFromHead = index - this.headIndex;
-		if (distanceFromHead < 0)
-			return this.headSequenceNumber + this.cacheSize + distanceFromHead;
+		if (distanceFromHead < 0) return this.headSequenceNumber + this.cacheSize + distanceFromHead;
 		return this.headSequenceNumber + distanceFromHead;
 	}
 }

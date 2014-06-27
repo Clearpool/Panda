@@ -5,8 +5,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.clearpool.common.datastractures.Pair;
-
 @SuppressWarnings("static-method")
 public class PacketCacheTest
 {
