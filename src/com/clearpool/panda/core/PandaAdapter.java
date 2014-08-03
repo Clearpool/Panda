@@ -21,7 +21,6 @@ public class PandaAdapter
 	private final Receiver receiver;
 	private final Sender sender;
 
-	// TODO - add name to PandaAdapter
 	public PandaAdapter(int cacheSize) throws Exception
 	{
 		this.selectorThread = new SelectorThread();
