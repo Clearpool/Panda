@@ -9,7 +9,7 @@ class Receiver
 {
 	private final SelectorThread selectorThread;
 	private final int bindPort;
-	private final Map<String, ChannelReceiveInfo> channelInfos;
+	final Map<String, ChannelReceiveInfo> channelInfos;
 
 	Receiver(SelectorThread selectorThread, int bindPort)
 	{
