@@ -1,6 +1,9 @@
 package com.clearpool.panda.core;
 
 import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
+import java.net.StandardSocketOptions;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -24,28 +27,40 @@ public class PandaAdapter
 	public PandaAdapter(int cacheSize) throws Exception
 	{
 		this.selectorThread = new SelectorThread();
-		ServerSocketChannel channel = initChannels();
-		this.receiver = new Receiver(this.selectorThread, channel.socket().getLocalPort());
-		this.sender = new Sender(this.selectorThread, channel, cacheSize);
+		Pair<ServerSocketChannel, DatagramChannel> channelSocketPair = initChannelPair();
+		this.receiver = new Receiver(this.selectorThread, channelSocketPair.getA().socket().getLocalPort());
+		this.sender = new Sender(this.selectorThread, channelSocketPair.getA(), channelSocketPair.getB(), cacheSize);
 		this.selectorThread.start();
 		ALL_PANDA_ADAPTERS.add(this);
 	}
 
-	private static ServerSocketChannel initChannels() throws Exception
+	private static Pair<ServerSocketChannel, DatagramChannel> initChannelPair() throws Exception
 	{
-		try
+		while (true)
 		{
-			ServerSocketChannel channel = ServerSocketChannel.open();
-			channel.configureBlocking(false);
-			channel.bind(new InetSocketAddress(0));
-			LOGGER.info("Binding on port " + channel.socket().getLocalPort());
-			return channel;
+			try
+			{
+				// Create TCP Channel
+				ServerSocketChannel tcpChannel = ServerSocketChannel.open();
+				tcpChannel.configureBlocking(false);
+				tcpChannel.bind(new InetSocketAddress(0));
+				LOGGER.info("Binding on port " + tcpChannel.socket().getLocalPort());
+
+				// Create UDP Channel
+				DatagramChannel udpChannel = DatagramChannel.open(StandardProtocolFamily.INET);
+				udpChannel.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
+				udpChannel.setOption(StandardSocketOptions.IP_MULTICAST_TTL, Integer.valueOf(255));
+				udpChannel.configureBlocking(false);
+				udpChannel.bind(new InetSocketAddress(tcpChannel.socket().getLocalPort()));
+
+				return new Pair<ServerSocketChannel, DatagramChannel>(tcpChannel, udpChannel);
+			}
+			catch (Exception e)
+			{
+				LOGGER.log(Level.SEVERE, e.getMessage(), e);
+				Thread.sleep(1);
+			}
 		}
-		catch (Exception e)
-		{
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
-		return null;
 	}
 
 	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
