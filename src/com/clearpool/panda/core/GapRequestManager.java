@@ -51,7 +51,6 @@ class GapRequestManager
 	{
 		if (this.socketChannel == null)
 		{
-			LOGGER.info("Requesting " + packetCount + " packets starting with " + firstSequenceNumber + " from " + this.multicastGroup); // TODO remove
 			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
 			this.request = createGapRequest(firstSequenceNumber, packetCount);
 			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
@@ -119,7 +118,6 @@ class GapRequestManager
 					this.responseHeaderReceived = true;
 
 					this.packetsRemainingToDeliver = this.responsePacketCount;
-					LOGGER.info("Received " + this.responsePacketCount + " packets starting with " + startSequenceNumber + " from " + this.multicastGroup); // TODO remove
 
 					// Potentially skip packets if request is not filled
 					if (this.responsePacketCount == 0)
