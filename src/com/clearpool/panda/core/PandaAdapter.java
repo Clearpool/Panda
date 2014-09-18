@@ -76,7 +76,6 @@ public class PandaAdapter
 		this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize, skipGaps);
 	}
 
-	// TODO - prefix should be adaptername
 	public void recordStats(MetricRegistry metricsRegistry, String prefix)
 	{
 		this.receiver.recordStats(metricsRegistry, prefix);

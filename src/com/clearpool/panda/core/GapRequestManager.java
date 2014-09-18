@@ -99,7 +99,6 @@ class GapRequestManager
 	// Called by selectorThread
 	void processGapResponse(SocketChannel channel, SelectionKey key, ByteBuffer buffer)
 	{
-		// TODO - what if buffer.length is > remaining? - POSSIBLE scenario = after PACKET_LOSS_RETRANSMISSION_TIMEOUT
 		this.readBuffer.put(buffer); // add to the end of whatever is remaining in bytebuffer
 		this.readBuffer.flip();
 		try
