@@ -1,9 +1,9 @@
 package com.clearpool.panda.core;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.concurrent.ConcurrentHashMap;
 
 class ChannelReceiveSequencer
 {
@@ -29,7 +29,7 @@ class ChannelReceiveSequencer
 	private int requestManagerFailures;
 	private int numOfRetransmissionRequests;
 
-	private final Map<PandaErrorCode, Integer> requestGiveUpsByErrorCode;
+	private final Map<PandaErrorCode, MutableInteger> requestGiveUpsByErrorCode;
 
 	ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo, int maxDroppedPacketsAllowed,
 			boolean skipGaps)
@@ -52,7 +52,7 @@ class ChannelReceiveSequencer
 		this.requestManagerFailures = 0;
 		this.numOfRetransmissionRequests = 0;
 
-		this.requestGiveUpsByErrorCode = new ConcurrentHashMap<PandaErrorCode, Integer>();
+		this.requestGiveUpsByErrorCode = new HashMap<PandaErrorCode, MutableInteger>();
 	}
 
 	// Called by selectorThread
@@ -231,9 +231,13 @@ class ChannelReceiveSequencer
 
 	void incrememntGiveupByErrorCode(PandaErrorCode errCode)
 	{
-		Integer giveUp = this.requestGiveUpsByErrorCode.get(errCode);
-		int newValue = giveUp == null ? 1 : giveUp.intValue() + 1;
-		this.requestGiveUpsByErrorCode.put(errCode, new Integer(newValue));
+		MutableInteger giveUp = this.requestGiveUpsByErrorCode.get(errCode);
+		if (giveUp == null)
+		{
+			giveUp = new MutableInteger();
+			this.requestGiveUpsByErrorCode.put(errCode, giveUp);
+		}
+		giveUp.incrementAndGet();
 	}
 
 	String getKey()
@@ -283,8 +287,8 @@ class ChannelReceiveSequencer
 
 	int getRequestGiveUps(PandaErrorCode errCode)
 	{
-		Integer giveUps = this.requestGiveUpsByErrorCode.get(errCode);
-		return (giveUps == null ? 0 : giveUps.intValue());
+		MutableInteger giveUps = this.requestGiveUpsByErrorCode.get(errCode);
+		return (giveUps == null ? 0 : giveUps.getValue());
 	}
 
 	boolean getRetransmissionsDisabled()

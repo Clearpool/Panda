@@ -9,7 +9,7 @@ class Receiver
 {
 	private final SelectorThread selectorThread;
 	private final int bindPort;
-	final Map<String, ChannelReceiveInfo> channelInfos;
+	private final Map<String, ChannelReceiveInfo> channelInfos;
 
 	Receiver(SelectorThread selectorThread, int bindPort)
 	{
@@ -59,5 +59,10 @@ class Receiver
 			metricsRegistry.meter(prefix + "-MESSAGES_RECEIVED-" + channelInfo.getMulticastGroup()).mark(messagesReceived);
 			metricsRegistry.meter(prefix + "-MESSAGES_HANDLED-" + channelInfo.getMulticastGroup()).mark(messagesHandled);
 		}
+	}
+
+	Map<String, ChannelReceiveInfo> getChannelReceiveInfos()
+	{
+		return this.channelInfos;
 	}
 }

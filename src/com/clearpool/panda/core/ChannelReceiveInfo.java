@@ -20,7 +20,7 @@ class ChannelReceiveInfo
 	private final boolean skipGaps;
 	private final Map<String, Set<PandaDataListener>> topicToListeners;
 	private final Set<PandaDataListener> groupListeners;
-	final Map<String, ChannelReceiveSequencer> sourceInfos;
+	private final Map<String, ChannelReceiveSequencer> sourceInfos;
 
 	private long packetsReceived;
 	private long bytesReceived;
@@ -165,5 +165,10 @@ class ChannelReceiveInfo
 	String getMulticastGroup()
 	{
 		return this.multicastGroup;
+	}
+
+	Map<String, ChannelReceiveSequencer> getSourceInfos()
+	{
+		return this.sourceInfos;
 	}
 }

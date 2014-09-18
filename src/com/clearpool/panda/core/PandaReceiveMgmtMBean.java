@@ -11,10 +11,10 @@ public class PandaReceiveMgmtMBean
 		List<String> packetsDropped = new LinkedList<>();
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 			{
-				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getPacketsDropped() > 0)
@@ -35,10 +35,10 @@ public class PandaReceiveMgmtMBean
 		List<String> packetsLost = new LinkedList<>();
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 			{
-				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getPacketsLost() > 0)
@@ -59,10 +59,10 @@ public class PandaReceiveMgmtMBean
 		List<String> queueSize = new LinkedList<>();
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 			{
-				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					String[] source = sourceInfo.getKey().split("@");
@@ -80,10 +80,10 @@ public class PandaReceiveMgmtMBean
 		List<String> retransmissionFailures = new LinkedList<>();
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 			{
-				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getRetransmissionFailures() > 0)
@@ -104,10 +104,10 @@ public class PandaReceiveMgmtMBean
 		List<String> retransRequestNum = new LinkedList<>();
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 			{
-				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getNumOfRetransmissionRequests() > 0)
@@ -130,10 +130,10 @@ public class PandaReceiveMgmtMBean
 		{
 			for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 			{
-				Receiver receiver = adapter.receiver;
-				for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+				Receiver receiver = adapter.getReceiver();
+				for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 				{
-					for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+					for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 					{
 						ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 						int giveUps = sequencer.getRequestGiveUps(errCode);
@@ -156,10 +156,10 @@ public class PandaReceiveMgmtMBean
 		List<String> retransDisabled = new LinkedList<>();
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 			{
-				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getRetransmissionsDisabled())
@@ -181,11 +181,11 @@ public class PandaReceiveMgmtMBean
 
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			ChannelReceiveInfo receiveInfo = receiver.channelInfos.get(multicastGroup);
+			Receiver receiver = adapter.getReceiver();
+			ChannelReceiveInfo receiveInfo = receiver.getChannelReceiveInfos().get(multicastGroup);
 			if (receiveInfo != null)
 			{
-				ChannelReceiveSequencer sequencer = receiveInfo.sourceInfos.get(port + "@" + sourceIp);
+				ChannelReceiveSequencer sequencer = receiveInfo.getSourceInfos().get(port + "@" + sourceIp);
 				if (sequencer != null)
 				{
 					sequencer.setRetransmissionsDisabled(retransmissionsDisabled);
@@ -198,10 +198,10 @@ public class PandaReceiveMgmtMBean
 	{
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 			{
-				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getRetransmissionsDisabled())
@@ -220,11 +220,11 @@ public class PandaReceiveMgmtMBean
 
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			ChannelReceiveInfo receiveInfo = receiver.channelInfos.get(multicastGroup);
+			Receiver receiver = adapter.getReceiver();
+			ChannelReceiveInfo receiveInfo = receiver.getChannelReceiveInfos().get(multicastGroup);
 			if (receiveInfo != null)
 			{
-				ChannelReceiveSequencer sequencer = receiveInfo.sourceInfos.get(port + "@" + sourceIp);
+				ChannelReceiveSequencer sequencer = receiveInfo.getSourceInfos().get(port + "@" + sourceIp);
 				if (sequencer != null)
 				{
 					sequencer.resetPacketsDropped();
@@ -237,10 +237,10 @@ public class PandaReceiveMgmtMBean
 	{
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
 		{
-			Receiver receiver = adapter.receiver;
-			for (ChannelReceiveInfo receiveInfo : receiver.channelInfos.values())
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
 			{
-				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.sourceInfos.entrySet())
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getPacketsDropped() >= sequencer.getMaxDroppedPacketsAllowed())

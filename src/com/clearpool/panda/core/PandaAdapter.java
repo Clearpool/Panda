@@ -21,7 +21,7 @@ public class PandaAdapter
 	public static final List<PandaAdapter> ALL_PANDA_ADAPTERS = Collections.synchronizedList(new LinkedList<PandaAdapter>());
 
 	private final SelectorThread selectorThread;
-	final Receiver receiver;
+	private final Receiver receiver;
 	private final Sender sender;
 
 	public PandaAdapter(int cacheSize) throws Exception
@@ -80,5 +80,10 @@ public class PandaAdapter
 	{
 		this.receiver.recordStats(metricsRegistry, prefix);
 		this.sender.recordStats(metricsRegistry, prefix);
+	}
+
+	Receiver getReceiver()
+	{
+		return this.receiver;
 	}
 }
