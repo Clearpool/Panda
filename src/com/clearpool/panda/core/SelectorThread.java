@@ -173,9 +173,11 @@ class SelectorThread extends Thread
 							selectedKey.interestOps(SelectionKey.OP_READ);
 						}
 					}
+					// This should never be null - Log more info for debugging purposes
 					else
 					{
 						// throw to close channel
+						LOGGER.severe("[DEBUG] selectedKey.interestOps=" + selectedKey.interestOps() + ",selectionKey.channel.isOpen=" + selectedKey.channel().isOpen());
 						throw new Exception("handleTcpSelection - gapManager.getGapRequest() is null");
 					}
 				}

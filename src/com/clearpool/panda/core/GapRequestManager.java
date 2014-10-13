@@ -168,7 +168,6 @@ class GapRequestManager
 						}
 					}
 					else
-					// TODO - Remove the Logger once the issue is resolved
 					{
 						// Log readBuffer
 						this.readBuffer.rewind();

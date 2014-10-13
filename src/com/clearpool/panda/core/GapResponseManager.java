@@ -62,9 +62,9 @@ class GapResponseManager
 					byte[] packetBytes = responseIterator.next();
 					responseIterator.remove();
 					int packetLength = packetBytes.length;
-					if (packetLength <= 0) // TODO - Remove this If{} once the issue is resolved
+					if (packetLength <= 0)
 					{
-						LOGGER.severe("Sending Negative/Zero Packet Length In Gap Response - ReadBuffer Bytes - " + new String(packetBytes));
+						LOGGER.severe("[DEBUG] Sending Negative/Zero Packet Length In Gap Response - ReadBuffer Bytes - " + new String(packetBytes));
 					}
 					ByteBuffer buffer = ByteBuffer.allocate(PandaUtils.RETRANSMISSION_RESPONSE_PACKET_HEADER_SIZE + packetLength);
 					buffer.putInt(packetBytes.length);
