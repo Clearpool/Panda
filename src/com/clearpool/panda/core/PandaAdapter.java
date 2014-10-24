@@ -6,8 +6,9 @@ import java.net.StandardSocketOptions;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,20 +19,27 @@ import com.codahale.metrics.MetricRegistry;
 public class PandaAdapter
 {
 	private static final Logger LOGGER = Logger.getLogger(PandaAdapter.class.getName());
-	public static final List<PandaAdapter> ALL_PANDA_ADAPTERS = Collections.synchronizedList(new LinkedList<PandaAdapter>());
+	public static final Map<String, PandaAdapter> ALL_PANDA_ADAPTERS = Collections.synchronizedMap(new HashMap<String, PandaAdapter>());
 
+	private final String name;
 	private final SelectorThread selectorThread;
 	private final Receiver receiver;
 	private final Sender sender;
 
 	public PandaAdapter(int cacheSize) throws Exception
 	{
+		this(UUID.randomUUID().toString(), cacheSize);
+	}
+
+	public PandaAdapter(String name, int cacheSize) throws Exception
+	{
+		this.name = name;
 		this.selectorThread = new SelectorThread();
 		Pair<ServerSocketChannel, DatagramChannel> channelSocketPair = initChannelPair();
 		this.receiver = new Receiver(this.selectorThread, channelSocketPair.getA().socket().getLocalPort());
 		this.sender = new Sender(this.selectorThread, channelSocketPair.getA(), channelSocketPair.getB(), cacheSize);
 		this.selectorThread.start();
-		ALL_PANDA_ADAPTERS.add(this);
+		registerPandaAdapter();
 	}
 
 	private static Pair<ServerSocketChannel, DatagramChannel> initChannelPair() throws Exception
@@ -63,6 +71,11 @@ public class PandaAdapter
 		}
 	}
 
+	private void registerPandaAdapter()
+	{
+		ALL_PANDA_ADAPTERS.put(this.name, this);
+	}
+
 	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
 	{
 		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(interfaceIp, port);
@@ -76,10 +89,10 @@ public class PandaAdapter
 		this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize, skipGaps);
 	}
 
-	public void recordStats(MetricRegistry metricsRegistry, String prefix)
+	public void recordStats(MetricRegistry metricsRegistry)
 	{
-		this.receiver.recordStats(metricsRegistry, prefix);
-		this.sender.recordStats(metricsRegistry, prefix);
+		this.receiver.recordStats(metricsRegistry, this.name);
+		this.sender.recordStats(metricsRegistry, this.name);
 	}
 
 	Receiver getReceiver()

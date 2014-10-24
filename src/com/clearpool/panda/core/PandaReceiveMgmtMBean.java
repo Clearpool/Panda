@@ -9,7 +9,7 @@ public class PandaReceiveMgmtMBean
 	public static String[] getPacketsDropped()
 	{
 		List<String> packetsDropped = new LinkedList<>();
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
@@ -33,7 +33,7 @@ public class PandaReceiveMgmtMBean
 	public static String[] getPacketsLost()
 	{
 		List<String> packetsLost = new LinkedList<>();
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
@@ -57,7 +57,7 @@ public class PandaReceiveMgmtMBean
 	public static String[] getQueueSize()
 	{
 		List<String> queueSize = new LinkedList<>();
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
@@ -78,7 +78,7 @@ public class PandaReceiveMgmtMBean
 	public static String[] getRetransmissionFailures()
 	{
 		List<String> retransmissionFailures = new LinkedList<>();
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
@@ -102,7 +102,7 @@ public class PandaReceiveMgmtMBean
 	public static String[] getNumOfRetransmissionRequests()
 	{
 		List<String> retransRequestNum = new LinkedList<>();
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
@@ -128,7 +128,7 @@ public class PandaReceiveMgmtMBean
 		List<String> requestGiveUps = new LinkedList<>();
 		for (PandaErrorCode errCode : PandaErrorCode.values())
 		{
-			for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+			for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 			{
 				Receiver receiver = adapter.getReceiver();
 				for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
@@ -154,7 +154,7 @@ public class PandaReceiveMgmtMBean
 	public static String[] getRetransmissionsDisabledfConnections()
 	{
 		List<String> retransDisabled = new LinkedList<>();
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
@@ -179,7 +179,7 @@ public class PandaReceiveMgmtMBean
 		if (multicastGroup == null || multicastGroup.isEmpty()) return;
 		if (sourceIp == null || sourceIp.isEmpty()) return;
 
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			ChannelReceiveInfo receiveInfo = receiver.getChannelReceiveInfos().get(multicastGroup);
@@ -196,7 +196,7 @@ public class PandaReceiveMgmtMBean
 
 	public static void setRetransmissionsDisabledForAllSequencers()
 	{
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
@@ -218,7 +218,7 @@ public class PandaReceiveMgmtMBean
 		if (multicastGroup == null || multicastGroup.isEmpty()) return;
 		if (sourceIp == null || sourceIp.isEmpty()) return;
 
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			ChannelReceiveInfo receiveInfo = receiver.getChannelReceiveInfos().get(multicastGroup);
@@ -235,7 +235,7 @@ public class PandaReceiveMgmtMBean
 
 	public static void resetPacketsDroppedIfExceededLimit()
 	{
-		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS)
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
 			Receiver receiver = adapter.getReceiver();
 			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
