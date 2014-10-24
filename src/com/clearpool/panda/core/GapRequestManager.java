@@ -197,7 +197,10 @@ class GapRequestManager
 				}
 			}
 
-			LOGGER.log(Level.FINER, "Received GapResponse for " + this.responsePacketCount + " packets starting with sequenceNumber " + this.responseFirstSequenceNumber);
+			if (LOGGER.getLevel() == Level.FINE)
+			{
+				LOGGER.log(Level.FINE, "Received GapResponse for " + this.responsePacketCount + " packets starting with sequenceNumber " + this.responseFirstSequenceNumber);
+			}
 
 			if (this.packetsRemainingToDeliver == 0)
 			{
