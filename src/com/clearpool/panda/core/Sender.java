@@ -1,5 +1,12 @@
 package com.clearpool.panda.core;
 
+<<<<<<< HEAD
+=======
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
+import java.net.StandardSocketOptions;
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
@@ -21,6 +28,7 @@ class Sender
 	private final int cacheSize;
 	private final Map<String, ChannelSendInfo> channelInfos;
 
+<<<<<<< HEAD
 	Sender(SelectorThread selectorThread, ServerSocketChannel tcpChannel, DatagramChannel udpChannel, int cacheSize) throws Exception
 	{
 		this.selectorThread = selectorThread;
@@ -30,6 +38,37 @@ class Sender
 		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
 	}
 
+=======
+	Sender(SelectorThread selectorThread, ServerSocketChannel channel, int cacheSize) throws Exception
+	{
+		this.selectorThread = selectorThread;
+		this.cacheSize = cacheSize;
+		this.selectorThread.registerTcpChannelAction(channel, SelectionKey.OP_ACCEPT, this);
+		this.outDatagramChannel = createDatagramChannel(channel.socket().getLocalPort());
+		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
+	}
+
+	private static DatagramChannel createDatagramChannel(int port)
+	{
+		while (true)
+		{
+			try
+			{
+				DatagramChannel channel = DatagramChannel.open(StandardProtocolFamily.INET);
+				channel.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
+				channel.setOption(StandardSocketOptions.IP_MULTICAST_TTL, Integer.valueOf(255));
+				channel.configureBlocking(false);
+				channel.bind(new InetSocketAddress(port));
+				return channel;
+			}
+			catch (IOException e)
+			{
+				LOGGER.info(e.getMessage());
+			}
+		}
+	}
+
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
 	{
 		if (bytes.length > PandaUtils.MAX_UDP_MESSAGE_PAYLOAD_SIZE) throw new Exception("Message length over size=" + PandaUtils.MAX_UDP_MESSAGE_PAYLOAD_SIZE + " not allowed.");

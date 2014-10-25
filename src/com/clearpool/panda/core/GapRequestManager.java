@@ -99,6 +99,10 @@ class GapRequestManager
 	// Called by selectorThread
 	void processGapResponse(SocketChannel channel, SelectionKey key, ByteBuffer buffer)
 	{
+<<<<<<< HEAD
+=======
+		// TODO - what if buffer.length is > remaining? - POSSIBLE scenario = after PACKET_LOSS_RETRANSMISSION_TIMEOUT
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 		this.readBuffer.put(buffer); // add to the end of whatever is remaining in bytebuffer
 		this.readBuffer.flip();
 		try
@@ -168,6 +172,10 @@ class GapRequestManager
 						}
 					}
 					else
+<<<<<<< HEAD
+=======
+					// TODO - Remove the Logger once the issue is resolved
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 					{
 						// Log readBuffer
 						this.readBuffer.rewind();
@@ -197,10 +205,14 @@ class GapRequestManager
 				}
 			}
 
+<<<<<<< HEAD
 			if (LOGGER.getLevel() == Level.FINE)
 			{
 				LOGGER.log(Level.FINE, "Received GapResponse for " + this.responsePacketCount + " packets starting with sequenceNumber " + this.responseFirstSequenceNumber);
 			}
+=======
+			LOGGER.log(Level.FINER, "Received GapResponse for " + this.responsePacketCount + " packets starting with sequenceNumber " + this.responseFirstSequenceNumber);
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 
 			if (this.packetsRemainingToDeliver == 0)
 			{

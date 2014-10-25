@@ -164,6 +164,7 @@ class SelectorThread extends Thread
 					if (gapRequest != null)
 					{
 						SocketChannel channel = (SocketChannel) selectedKey.channel();
+<<<<<<< HEAD
 						if (LOGGER.getLevel() == Level.FINE)
 						{
 							LOGGER.log(
@@ -171,12 +172,18 @@ class SelectorThread extends Thread
 									"Sending GapRequest to " + channel.getRemoteAddress() + " with multicastGroup " + grm.getMulticastGroup() + " for "
 											+ grm.getPacketCountRequested() + " packets starting with sequenceNumber " + grm.getFirstSequenceNumberRequested());
 						}
+=======
+						LOGGER.log(Level.FINER,
+								"Sending GapRequest to " + channel.getRemoteAddress() + " with multicastGroup " + grm.getMulticastGroup() + " for " + grm.getPacketCountRequested()
+										+ " packets starting with sequenceNumber " + grm.getFirstSequenceNumberRequested());
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 						channel.write(gapRequest);
 						if (gapRequest.remaining() == 0)
 						{
 							selectedKey.interestOps(SelectionKey.OP_READ);
 						}
 					}
+<<<<<<< HEAD
 					// This happens when the request times out
 					else
 					{
@@ -189,6 +196,12 @@ class SelectorThread extends Thread
 							LOGGER.log(Level.SEVERE, e1.getMessage(), e1);
 						}
 						selectedKey.cancel();
+=======
+					else
+					{
+						// throw to close channel
+						throw new Exception("handleTcpSelection - gapManager.getGapRequest() is null");
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 					}
 				}
 				catch (Exception e)

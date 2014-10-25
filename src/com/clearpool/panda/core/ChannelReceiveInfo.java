@@ -156,7 +156,11 @@ class ChannelReceiveInfo
 	{
 		return this.messagesHandled;
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	long getBytesReceived()
 	{
 		return this.bytesReceived;
@@ -166,9 +170,12 @@ class ChannelReceiveInfo
 	{
 		return this.multicastGroup;
 	}
+<<<<<<< HEAD
 
 	Map<String, ChannelReceiveSequencer> getSourceInfos()
 	{
 		return this.sourceInfos;
 	}
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 }

@@ -1,6 +1,7 @@
 package com.clearpool.panda.core;
 
 import java.net.InetSocketAddress;
+<<<<<<< HEAD
 import java.net.StandardProtocolFamily;
 import java.net.StandardSocketOptions;
 import java.nio.channels.DatagramChannel;
@@ -9,6 +10,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+=======
+import java.nio.channels.ServerSocketChannel;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,15 +26,21 @@ import com.codahale.metrics.MetricRegistry;
 public class PandaAdapter
 {
 	private static final Logger LOGGER = Logger.getLogger(PandaAdapter.class.getName());
+<<<<<<< HEAD
 	public static final Map<String, PandaAdapter> ALL_PANDA_ADAPTERS = Collections.synchronizedMap(new HashMap<String, PandaAdapter>());
 
 	private final String name;
+=======
+	public static final List<PandaAdapter> ALL_PANDA_ADAPTERS = Collections.synchronizedList(new LinkedList<PandaAdapter>());
+
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	private final SelectorThread selectorThread;
 	private final Receiver receiver;
 	private final Sender sender;
 
 	public PandaAdapter(int cacheSize) throws Exception
 	{
+<<<<<<< HEAD
 		this(UUID.randomUUID().toString(), cacheSize);
 	}
 
@@ -74,6 +87,31 @@ public class PandaAdapter
 	private void registerPandaAdapter()
 	{
 		ALL_PANDA_ADAPTERS.put(this.name, this);
+=======
+		this.selectorThread = new SelectorThread();
+		ServerSocketChannel channel = initChannels();
+		this.receiver = new Receiver(this.selectorThread, channel.socket().getLocalPort());
+		this.sender = new Sender(this.selectorThread, channel, cacheSize);
+		this.selectorThread.start();
+		ALL_PANDA_ADAPTERS.add(this);
+	}
+
+	private static ServerSocketChannel initChannels() throws Exception
+	{
+		try
+		{
+			ServerSocketChannel channel = ServerSocketChannel.open();
+			channel.configureBlocking(false);
+			channel.bind(new InetSocketAddress(0));
+			LOGGER.info("Binding on port " + channel.socket().getLocalPort());
+			return channel;
+		}
+		catch (Exception e)
+		{
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+		return null;
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	}
 
 	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
@@ -89,6 +127,7 @@ public class PandaAdapter
 		this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize, skipGaps);
 	}
 
+<<<<<<< HEAD
 	public void recordStats(MetricRegistry metricsRegistry)
 	{
 		this.receiver.recordStats(metricsRegistry, this.name);
@@ -98,5 +137,11 @@ public class PandaAdapter
 	Receiver getReceiver()
 	{
 		return this.receiver;
+=======
+	public void recordStats(MetricRegistry metricsRegistry, String prefix)
+	{
+		this.receiver.recordStats(metricsRegistry, prefix);
+		this.sender.recordStats(metricsRegistry, prefix);
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	}
 }

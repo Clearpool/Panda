@@ -60,9 +60,12 @@ class Receiver
 			metricsRegistry.meter(prefix + "-MESSAGES_HANDLED-" + channelInfo.getMulticastGroup()).mark(messagesHandled);
 		}
 	}
+<<<<<<< HEAD
 
 	Map<String, ChannelReceiveInfo> getChannelReceiveInfos()
 	{
 		return this.channelInfos;
 	}
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 }

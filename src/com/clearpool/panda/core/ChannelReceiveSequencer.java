@@ -1,8 +1,11 @@
 package com.clearpool.panda.core;
 
 import java.nio.ByteBuffer;
+<<<<<<< HEAD
 import java.util.HashMap;
 import java.util.Map;
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 import java.util.PriorityQueue;
 
 class ChannelReceiveSequencer
@@ -27,12 +30,18 @@ class ChannelReceiveSequencer
 	private long packetsLost;
 	private boolean retransmissionsDisabled;
 	private int requestManagerFailures;
+<<<<<<< HEAD
 	private int numOfRetransmissionRequests;
 
 	private final Map<PandaErrorCode, MutableInteger> requestGiveUpsByErrorCode;
 
 	ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo, int maxDroppedPacketsAllowed,
 			boolean skipGaps)
+=======
+
+	ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo,
+			int maxDroppedPacketsAllowed, boolean skipGaps)
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	{
 		this.selectorThread = selectorThread;
 		this.key = key;
@@ -50,9 +59,12 @@ class ChannelReceiveSequencer
 		this.packetsLost = 0;
 		this.retransmissionsDisabled = false;
 		this.requestManagerFailures = 0;
+<<<<<<< HEAD
 		this.numOfRetransmissionRequests = 0;
 
 		this.requestGiveUpsByErrorCode = new HashMap<PandaErrorCode, MutableInteger>();
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	}
 
 	// Called by selectorThread
@@ -133,7 +145,10 @@ class ChannelReceiveSequencer
 
 			if (skipReason != null)
 			{
+<<<<<<< HEAD
 				incrememntGiveupByErrorCode(skipReason);
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 				if (skipReason != PandaErrorCode.NONE)
 				{
 					this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " packetsDropped=" + this.packetsDropped, null);
@@ -179,7 +194,10 @@ class ChannelReceiveSequencer
 		if (headPacket.getSequenceNumber() > this.lastSequenceNumber + 1)
 		{
 			this.requestManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
+<<<<<<< HEAD
 			++this.numOfRetransmissionRequests;
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 			return this.requestManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1));
 		}
 		return false;
@@ -229,6 +247,7 @@ class ChannelReceiveSequencer
 		this.channelReceiveInfo.deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_DISABLED, "Source=" + this.key, null);
 	}
 
+<<<<<<< HEAD
 	void incrememntGiveupByErrorCode(PandaErrorCode errCode)
 	{
 		MutableInteger giveUp = this.requestGiveUpsByErrorCode.get(errCode);
@@ -240,6 +259,8 @@ class ChannelReceiveSequencer
 		giveUp.incrementAndGet();
 	}
 
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	String getKey()
 	{
 		return this.key;
@@ -265,15 +286,19 @@ class ChannelReceiveSequencer
 		return this.packetsDropped;
 	}
 
+<<<<<<< HEAD
 	void resetPacketsDropped()
 	{
 		this.packetsDropped = 0;
 	}
 
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	long getPacketsLost()
 	{
 		return this.packetsLost;
 	}
+<<<<<<< HEAD
 
 	int getRetransmissionFailures()
 	{
@@ -306,4 +331,6 @@ class ChannelReceiveSequencer
 		return this.maxDroppedPacketsAllowed;
 	}
 
+=======
+>>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 }
