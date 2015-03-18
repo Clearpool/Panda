@@ -3,6 +3,7 @@ package com.clearpool.panda.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -136,6 +137,30 @@ public class SelectorThreadTest
 
 		SelectorThread.sendMulticastData((ChannelSendDetail) q.poll(), q);
 		assertEquals(PandaUtils.PACKET_HEADER_SIZE + (46 * (PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + message.length())), SENDINFO.getMulticastBytes().length);
+		assertEquals(0, q.size());
+	}
+
+	@Test
+	public void testSendMulticastPacketJira3960()
+	{
+		/**
+		 * http://jira.fusionts.corp/browse/CLEAR-3960 - BufferOverflowException in Panda SelectorThread
+		 */
+		Queue<SelectorActionable> q = new LinkedList<SelectorActionable>();
+		String topic = "TOPIC";
+		byte[] messageBytes = new byte[PandaUtils.PANDA_PACKET_MESSAGE_PAYLOAD_SIZE];
+		Arrays.fill(messageBytes, "a".getBytes()[0]);
+		q.offer(new ChannelSendDetail(SENDINFO, topic, messageBytes));
+		q.offer(new ChannelSendDetail(SENDINFO, topic, messageBytes));
+
+		SelectorThread.sendMulticastData((ChannelSendDetail) q.poll(), q);
+		assertEquals(PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + PandaUtils.PANDA_PACKET_MESSAGE_PAYLOAD_SIZE,
+				SENDINFO.getMulticastBytes().length);
+		assertEquals(1, q.size());
+
+		SelectorThread.sendMulticastData((ChannelSendDetail) q.poll(), q);
+		assertEquals(PandaUtils.PACKET_HEADER_SIZE + PandaUtils.MESSAGE_HEADER_FIXED_SIZE + topic.length() + PandaUtils.PANDA_PACKET_MESSAGE_PAYLOAD_SIZE,
+				SENDINFO.getMulticastBytes().length);
 		assertEquals(0, q.size());
 	}
 }

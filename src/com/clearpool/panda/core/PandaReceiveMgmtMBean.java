@@ -19,9 +19,7 @@ public class PandaReceiveMgmtMBean
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getPacketsDropped() > 0)
 					{
-						String[] source = sourceInfo.getKey().split("@");
-						packetsDropped.add("Packets Dropped " + sequencer.getPacketsDropped() + " from " + source[1] + ":" + source[0] + " - Multicast Group = "
-								+ receiveInfo.getMulticastGroup());
+						packetsDropped.add("Source=" + sourceInfo.getKey() + " + Group=" + receiveInfo.getMulticastGroup() + " - " + sequencer.getPacketsDropped());
 					}
 				}
 			}
@@ -43,9 +41,7 @@ public class PandaReceiveMgmtMBean
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getPacketsLost() > 0)
 					{
-						String[] source = sourceInfo.getKey().split("@");
-						packetsLost.add("Packets Lost " + sequencer.getPacketsLost() + " from " + source[1] + ":" + source[0] + " - Multicast Group = "
-								+ receiveInfo.getMulticastGroup());
+						packetsLost.add("Source=" + sourceInfo.getKey() + " + Group=" + receiveInfo.getMulticastGroup() + " - " + sequencer.getPacketsLost());
 					}
 				}
 			}
@@ -65,14 +61,31 @@ public class PandaReceiveMgmtMBean
 				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
 				{
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
-					String[] source = sourceInfo.getKey().split("@");
-					queueSize.add("Receive Queue Size " + sequencer.getQueueSize() + " for " + source[1] + ":" + source[0] + " - Multicast Group = "
-							+ receiveInfo.getMulticastGroup());
+					queueSize.add("Source=" + sourceInfo.getKey() + " + Group=" + receiveInfo.getMulticastGroup() + " - " + sequencer.getQueueSize());
 				}
 			}
 		}
 		String[] ret = new String[queueSize.size()];
 		return queueSize.toArray(ret);
+	}
+
+	public static String[] getLastSequenceNumbers()
+	{
+		List<String> lastSequenceNumbers = new LinkedList<>();
+		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
+		{
+			Receiver receiver = adapter.getReceiver();
+			for (ChannelReceiveInfo receiveInfo : receiver.getChannelReceiveInfos().values())
+			{
+				for (Entry<String, ChannelReceiveSequencer> sourceInfo : receiveInfo.getSourceInfos().entrySet())
+				{
+					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
+					lastSequenceNumbers.add("Source=" + sourceInfo.getKey() + " + Group=" + receiveInfo.getMulticastGroup() + " - " + sequencer.getLastSequenceNumber());
+				}
+			}
+		}
+		String[] ret = new String[lastSequenceNumbers.size()];
+		return lastSequenceNumbers.toArray(ret);
 	}
 
 	public static String[] getRetransmissionFailures()
@@ -88,9 +101,7 @@ public class PandaReceiveMgmtMBean
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getRetransmissionFailures() > 0)
 					{
-						String[] source = sourceInfo.getKey().split("@");
-						retransmissionFailures.add("Retransmission Failures " + sequencer.getRetransmissionFailures() + " to " + source[1] + ":" + source[0]
-								+ " - Multicast Group = " + receiveInfo.getMulticastGroup());
+						retransmissionFailures.add("Source=" + sourceInfo.getKey() + " + Group=" + receiveInfo.getMulticastGroup() + " - " + sequencer.getRetransmissionFailures());
 					}
 				}
 			}
@@ -112,9 +123,7 @@ public class PandaReceiveMgmtMBean
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getNumOfRetransmissionRequests() > 0)
 					{
-						String[] source = sourceInfo.getKey().split("@");
-						retransRequestNum.add("Retransmission Requests " + sequencer.getNumOfRetransmissionRequests() + " to " + source[1] + ":" + source[0]
-								+ " - Multicast Group = " + receiveInfo.getMulticastGroup());
+						retransRequestNum.add("Source=" + sourceInfo.getKey() + " + Group=" + receiveInfo.getMulticastGroup() + " - " + sequencer.getNumOfRetransmissionRequests());
 					}
 				}
 			}
@@ -139,9 +148,7 @@ public class PandaReceiveMgmtMBean
 						int giveUps = sequencer.getRequestGiveUps(errCode);
 						if (giveUps > 0)
 						{
-							String[] source = sourceInfo.getKey().split("@");
-							requestGiveUps.add("Retransmission Attempt Giveups due to PandaErrorCode " + errCode.name() + " - " + giveUps + " to " + source[1] + ":" + source[0]
-									+ " - Multicast Group = " + receiveInfo.getMulticastGroup());
+							requestGiveUps.add("Source=" + sourceInfo.getKey() + " + Group=" + receiveInfo.getMulticastGroup() + " - " + errCode.name() + "=" + giveUps);
 						}
 					}
 				}
@@ -164,8 +171,7 @@ public class PandaReceiveMgmtMBean
 					ChannelReceiveSequencer sequencer = sourceInfo.getValue();
 					if (sequencer.getRetransmissionsDisabled())
 					{
-						String[] source = sourceInfo.getKey().split("@");
-						retransDisabled.add("Retransmission disabled to " + source[1] + ":" + source[0] + " - Multicast Group = " + receiveInfo.getMulticastGroup());
+						retransDisabled.add("Source=" + sourceInfo.getKey() + " + Group=" + receiveInfo.getMulticastGroup());
 					}
 				}
 			}
@@ -174,10 +180,10 @@ public class PandaReceiveMgmtMBean
 		return retransDisabled.toArray(ret);
 	}
 
-	public static void setRetransmissionsDisabled(String multicastGroup, String sourceIp, int port, boolean retransmissionsDisabled)
+	public static void setRetransmissionsDisabled(String multicastGroup, String source, boolean retransmissionsDisabled)
 	{
 		if (multicastGroup == null || multicastGroup.isEmpty()) return;
-		if (sourceIp == null || sourceIp.isEmpty()) return;
+		if (source == null || source.isEmpty()) return;
 
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
@@ -185,7 +191,7 @@ public class PandaReceiveMgmtMBean
 			ChannelReceiveInfo receiveInfo = receiver.getChannelReceiveInfos().get(multicastGroup);
 			if (receiveInfo != null)
 			{
-				ChannelReceiveSequencer sequencer = receiveInfo.getSourceInfos().get(port + "@" + sourceIp);
+				ChannelReceiveSequencer sequencer = receiveInfo.getSourceInfos().get(source);
 				if (sequencer != null)
 				{
 					sequencer.setRetransmissionsDisabled(retransmissionsDisabled);
@@ -213,10 +219,10 @@ public class PandaReceiveMgmtMBean
 		}
 	}
 
-	public static void resetPacketsDropped(String multicastGroup, String sourceIp, int port)
+	public static void resetPacketsDropped(String multicastGroup, String source)
 	{
 		if (multicastGroup == null || multicastGroup.isEmpty()) return;
-		if (sourceIp == null || sourceIp.isEmpty()) return;
+		if (source == null || source.isEmpty()) return;
 
 		for (PandaAdapter adapter : PandaAdapter.ALL_PANDA_ADAPTERS.values())
 		{
@@ -224,7 +230,7 @@ public class PandaReceiveMgmtMBean
 			ChannelReceiveInfo receiveInfo = receiver.getChannelReceiveInfos().get(multicastGroup);
 			if (receiveInfo != null)
 			{
-				ChannelReceiveSequencer sequencer = receiveInfo.getSourceInfos().get(port + "@" + sourceIp);
+				ChannelReceiveSequencer sequencer = receiveInfo.getSourceInfos().get(source);
 				if (sequencer != null)
 				{
 					sequencer.resetPacketsDropped();

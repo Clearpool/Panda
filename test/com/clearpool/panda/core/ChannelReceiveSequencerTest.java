@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.junit.Assert;
-
 import org.junit.Test;
 
 @SuppressWarnings("static-method")
@@ -62,6 +61,7 @@ public class ChannelReceiveSequencerTest
 		// [23,23] - Will cause threshold to be crossed
 		sequencer.packetReceived(true, 100, 23, (byte) 3, createPacket(3));
 		Assert.assertEquals(21, sequencer.getQueueSize());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
 		Assert.assertNotNull(sequencer.getGapRequestManager());
 		Assert.assertEquals(1, sequencer.getLastSequenceNumber());
 		Assert.assertEquals(sequencer.getGapRequestManager().getFirstSequenceNumberRequested(), 2);
@@ -70,6 +70,7 @@ public class ChannelReceiveSequencerTest
 		// [24,24] - Add to queue while recovering
 		sequencer.packetReceived(true, 100, 24, (byte) 3, createPacket(3));
 		Assert.assertEquals(22, sequencer.getQueueSize());
+		Assert.assertEquals(1, sequencer.getPacketsDropped());
 		Assert.assertEquals(sequencer.getGapRequestManager().getFirstSequenceNumberRequested(), 2);
 		Assert.assertEquals(sequencer.getGapRequestManager().getPacketCountRequested(), 1);
 		long timeOfRequest = sequencer.getGapRequestManager().getTimeOfRequest();

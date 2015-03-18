@@ -47,13 +47,15 @@ class GapRequestManager
 		this.packetsRemainingToDeliver = 0;
 	}
 
-	boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount)
+	boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount, long time)
 	{
 		if (this.socketChannel == null)
 		{
-			this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
-			this.request = createGapRequest(firstSequenceNumber, packetCount);
-			this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
+			if (this.selectorThread.shouldMakeConnections()) this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
+			this.request = createGapRequest(firstSequenceNumber, packetCount, time);
+			LOGGER.info("REQUESTING GAP - |Source=" + retransmissionPort + "@" + this.sourceIp + "|Group=" + this.multicastGroup + "|firstSequenceNumber=" + firstSequenceNumber
+					+ "|packetCount=" + packetCount + "|id=" + hashCode());
+			if (this.selectorThread.shouldMakeConnections()) this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 		}
 		return true;
 	}
@@ -74,7 +76,7 @@ class GapRequestManager
 		return null;
 	}
 
-	private ByteBuffer createGapRequest(long firstSequenceNumber, int packetCount)
+	private ByteBuffer createGapRequest(long firstSequenceNumber, int packetCount, long time)
 	{
 		ByteBuffer buffer = ByteBuffer.allocate(PandaUtils.RETRANSMISSION_REQUEST_HEADER_SIZE + this.multicastGroup.length());
 		buffer.putLong(firstSequenceNumber);
@@ -83,7 +85,7 @@ class GapRequestManager
 		buffer.put(this.multicastGroup.getBytes());
 		buffer.rewind();
 
-		this.timeOfRequest = System.currentTimeMillis();
+		this.timeOfRequest = time;
 		this.firstSequenceNumberRequested = firstSequenceNumber;
 		this.packetCountRequested = packetCount;
 
@@ -99,10 +101,6 @@ class GapRequestManager
 	// Called by selectorThread
 	void processGapResponse(SocketChannel channel, SelectionKey key, ByteBuffer buffer)
 	{
-<<<<<<< HEAD
-=======
-		// TODO - what if buffer.length is > remaining? - POSSIBLE scenario = after PACKET_LOSS_RETRANSMISSION_TIMEOUT
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 		this.readBuffer.put(buffer); // add to the end of whatever is remaining in bytebuffer
 		this.readBuffer.flip();
 		try
@@ -121,6 +119,8 @@ class GapRequestManager
 					this.responseHeaderReceived = true;
 
 					this.packetsRemainingToDeliver = this.responsePacketCount;
+					LOGGER.info("PROCESSING GAP - |SourceIp=" + this.sourceIp + "|Group=" + this.multicastGroup + "|responseFirstSequenceNumber=" + startSequenceNumber
+							+ "|responsePacketCount=" + totalPackets + "|id=" + hashCode());
 
 					// Potentially skip packets if request is not filled
 					if (this.responsePacketCount == 0)
@@ -172,10 +172,6 @@ class GapRequestManager
 						}
 					}
 					else
-<<<<<<< HEAD
-=======
-					// TODO - Remove the Logger once the issue is resolved
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 					{
 						// Log readBuffer
 						this.readBuffer.rewind();
@@ -205,14 +201,10 @@ class GapRequestManager
 				}
 			}
 
-<<<<<<< HEAD
 			if (LOGGER.getLevel() == Level.FINE)
 			{
 				LOGGER.log(Level.FINE, "Received GapResponse for " + this.responsePacketCount + " packets starting with sequenceNumber " + this.responseFirstSequenceNumber);
 			}
-=======
-			LOGGER.log(Level.FINER, "Received GapResponse for " + this.responsePacketCount + " packets starting with sequenceNumber " + this.responseFirstSequenceNumber);
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 
 			if (this.packetsRemainingToDeliver == 0)
 			{

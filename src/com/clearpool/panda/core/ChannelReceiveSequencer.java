@@ -1,11 +1,8 @@
 package com.clearpool.panda.core;
 
 import java.nio.ByteBuffer;
-<<<<<<< HEAD
 import java.util.HashMap;
 import java.util.Map;
-=======
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 import java.util.PriorityQueue;
 
 class ChannelReceiveSequencer
@@ -30,18 +27,12 @@ class ChannelReceiveSequencer
 	private long packetsLost;
 	private boolean retransmissionsDisabled;
 	private int requestManagerFailures;
-<<<<<<< HEAD
 	private int numOfRetransmissionRequests;
 
 	private final Map<PandaErrorCode, MutableInteger> requestGiveUpsByErrorCode;
 
 	ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo, int maxDroppedPacketsAllowed,
 			boolean skipGaps)
-=======
-
-	ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo,
-			int maxDroppedPacketsAllowed, boolean skipGaps)
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	{
 		this.selectorThread = selectorThread;
 		this.key = key;
@@ -59,12 +50,9 @@ class ChannelReceiveSequencer
 		this.packetsLost = 0;
 		this.retransmissionsDisabled = false;
 		this.requestManagerFailures = 0;
-<<<<<<< HEAD
 		this.numOfRetransmissionRequests = 0;
 
 		this.requestGiveUpsByErrorCode = new HashMap<PandaErrorCode, MutableInteger>();
-=======
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	}
 
 	// Called by selectorThread
@@ -94,9 +82,10 @@ class ChannelReceiveSequencer
 		}
 		else
 		{
-			addPacketToQueue(sequenceNumber, messageCount, packetBuffer);
+			long time = System.currentTimeMillis();
+			addPacketToQueue(sequenceNumber, messageCount, packetBuffer, time);
 			PandaErrorCode skipReason = null;
-			if (shouldDeclareDrop())
+			if (shouldDeclareDrop(time))
 			{
 				long dropped = this.queuedPackets.peek().getSequenceNumber() - this.lastSequenceNumber - 1;
 
@@ -118,7 +107,7 @@ class ChannelReceiveSequencer
 					// Send retransmission request
 					else
 					{
-						if (this.requestManager != null && System.currentTimeMillis() - this.requestManager.getTimeOfRequest() >= QUEUE_GIVEUP_TIME)
+						if (this.requestManager != null && time - this.requestManager.getTimeOfRequest() >= QUEUE_GIVEUP_TIME)
 						{
 							skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_TIMEOUT;
 							this.requestManager.close(false);
@@ -128,9 +117,13 @@ class ChannelReceiveSequencer
 							skipReason = PandaErrorCode.PACKET_LOSS_RETRANSMISSION_FAILED;
 							this.requestManagerFailures = 0;
 						}
-						else
+						else if (this.requestManager == null)
 						{
-							skipReason = (sendGapRequest(retransmissionPort)) ? null : PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
+							boolean successfullySentGapRequest = sendGapRequest(retransmissionPort, time);
+							if (!successfullySentGapRequest)
+							{
+								skipReason = PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
+							}
 							if (this.requestManagerFailures == 0) this.packetsDropped += dropped;
 						}
 					}
@@ -145,10 +138,7 @@ class ChannelReceiveSequencer
 
 			if (skipReason != null)
 			{
-<<<<<<< HEAD
 				incrememntGiveupByErrorCode(skipReason);
-=======
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 				if (skipReason != PandaErrorCode.NONE)
 				{
 					this.channelReceiveInfo.deliverErrorToListeners(skipReason, "Source=" + this.key + " packetsDropped=" + this.packetsDropped, null);
@@ -186,39 +176,43 @@ class ChannelReceiveSequencer
 		}
 	}
 
-	private boolean sendGapRequest(int retransmissionPort)
+	private boolean sendGapRequest(int retransmissionPort, long time)
 	{
-		if (this.requestManager != null) return true;
-
 		Packet headPacket = this.queuedPackets.peek();
 		if (headPacket.getSequenceNumber() > this.lastSequenceNumber + 1)
 		{
 			this.requestManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
-<<<<<<< HEAD
 			++this.numOfRetransmissionRequests;
-=======
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
-			return this.requestManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1));
+			return this.requestManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1), time);
 		}
 		return false;
 	}
 
-	private void addPacketToQueue(long sequenceNumber, byte messageCount, ByteBuffer packetBuffer)
+	private void addPacketToQueue(long sequenceNumber, byte messageCount, ByteBuffer packetBuffer, long time)
 	{
 		byte[] bytes = new byte[packetBuffer.remaining()];
 		packetBuffer.get(bytes);
 		this.queuedPackets.add(new Packet(sequenceNumber, messageCount, bytes));
 		if (this.queuedPackets.size() == 1)
 		{
-			this.timeOfFirstQueuedPacket = System.currentTimeMillis();
+			this.timeOfFirstQueuedPacket = time;
 		}
 	}
 
-	private boolean shouldDeclareDrop()
+	private boolean shouldDeclareDrop(long time)
 	{
-		if (this.packetsDropped >= this.maxDroppedPacketsAllowed) return true;
-		if (this.queuedPackets.size() > OUT_OF_ORDER_PACKET_THRESHOLD) return true;
-		if (System.currentTimeMillis() - this.timeOfFirstQueuedPacket >= QUEUE_GIVEUP_TIME) return true;
+		if (this.packetsDropped >= this.maxDroppedPacketsAllowed)
+		{
+			return true;
+		}
+		if (this.queuedPackets.size() > OUT_OF_ORDER_PACKET_THRESHOLD)
+		{
+			return true;
+		}
+		if (time - this.timeOfFirstQueuedPacket >= QUEUE_GIVEUP_TIME)
+		{
+			return true;
+		}
 		return false;
 	}
 
@@ -247,7 +241,6 @@ class ChannelReceiveSequencer
 		this.channelReceiveInfo.deliverErrorToListeners(PandaErrorCode.RETRANSMISSION_DISABLED, "Source=" + this.key, null);
 	}
 
-<<<<<<< HEAD
 	void incrememntGiveupByErrorCode(PandaErrorCode errCode)
 	{
 		MutableInteger giveUp = this.requestGiveUpsByErrorCode.get(errCode);
@@ -259,8 +252,6 @@ class ChannelReceiveSequencer
 		giveUp.incrementAndGet();
 	}
 
-=======
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	String getKey()
 	{
 		return this.key;
@@ -286,19 +277,15 @@ class ChannelReceiveSequencer
 		return this.packetsDropped;
 	}
 
-<<<<<<< HEAD
 	void resetPacketsDropped()
 	{
 		this.packetsDropped = 0;
 	}
 
-=======
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 	long getPacketsLost()
 	{
 		return this.packetsLost;
 	}
-<<<<<<< HEAD
 
 	int getRetransmissionFailures()
 	{
@@ -331,6 +318,4 @@ class ChannelReceiveSequencer
 		return this.maxDroppedPacketsAllowed;
 	}
 
-=======
->>>>>>> dac1a1946521bffdeb7503d0dcdfe7edabe0ce74
 }

@@ -8,7 +8,7 @@ public class TestSelectorThread extends SelectorThread
 
 	public TestSelectorThread() throws IOException
 	{
-		
+
 	}
 
 	@Override
@@ -21,5 +21,11 @@ public class TestSelectorThread extends SelectorThread
 	public void registerTcpChannelAction(AbstractSelectableChannel channel, int interestOps, Object attachment)
 	{
 
+	}
+
+	@Override
+	public boolean shouldMakeConnections()
+	{
+		return false;
 	}
 }

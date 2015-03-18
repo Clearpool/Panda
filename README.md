@@ -19,5 +19,3 @@ Details
 * Receiver will wait 20 packets or 2 seconds, whichever comes first, for sending a gap request.  This is to handle out of order packets.
 * Receiver will establish a connection to the sender for each request it needs.
 * Receiver will only send one request at a time per channel per sender.
-
-
