@@ -16,6 +16,5 @@ Details
 =======
 * Sender determines how many messages to queue in case any receiver misses data
 * Sender can choose not to queue any data, in which case, the receiver would not attempt a gap request.
-* Receiver will wait 20 packets or 2 seconds, whichever comes first, for sending a gap request.  This is to handle out of order packets.
 * Receiver will establish a connection to the sender for each request it needs.
 * Receiver will only send one request at a time per channel per sender.
