@@ -1,5 +1,6 @@
 package com.clearpool.panda.core;
 
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +15,7 @@ class ChannelReceiveSequencer
 	private final SelectorThread selectorThread;
 	private final String key;
 	private final String multicastGroup;
-	private final String sourceIp;
+	private final InetSocketAddress sourceAddress;
 	private final ChannelReceiveInfo channelReceiveInfo;
 	private final int maxDroppedPacketsAllowed;
 	private final boolean skipGaps;
@@ -31,13 +32,13 @@ class ChannelReceiveSequencer
 
 	private final Map<PandaErrorCode, MutableInteger> requestGiveUpsByErrorCode;
 
-	ChannelReceiveSequencer(SelectorThread selectorThread, String key, String multicastGroup, String sourceIp, ChannelReceiveInfo channelReceiveInfo, int maxDroppedPacketsAllowed,
-			boolean skipGaps)
+	ChannelReceiveSequencer(SelectorThread selectorThread, String multicastGroup, InetSocketAddress sourceAddress, ChannelReceiveInfo channelReceiveInfo,
+			int maxDroppedPacketsAllowed, boolean skipGaps)
 	{
 		this.selectorThread = selectorThread;
-		this.key = key;
+		this.key = PandaUtils.getAddressString(sourceAddress);
 		this.multicastGroup = multicastGroup;
-		this.sourceIp = sourceIp;
+		this.sourceAddress = sourceAddress;
 		this.channelReceiveInfo = channelReceiveInfo;
 		this.maxDroppedPacketsAllowed = maxDroppedPacketsAllowed;
 		this.skipGaps = skipGaps;
@@ -56,7 +57,7 @@ class ChannelReceiveSequencer
 	}
 
 	// Called by selectorThread
-	void packetReceived(boolean supportsRetranmissions, int retransmissionPort, long sequenceNumber, byte messageCount, ByteBuffer packetBuffer)
+	void packetReceived(boolean supportsRetranmissions, long sequenceNumber, byte messageCount, ByteBuffer packetBuffer)
 	{
 		if (sequenceNumber == this.lastSequenceNumber + 1 || this.lastSequenceNumber == 0)
 		{
@@ -119,7 +120,7 @@ class ChannelReceiveSequencer
 						}
 						else if (this.requestManager == null)
 						{
-							boolean successfullySentGapRequest = sendGapRequest(retransmissionPort, time);
+							boolean successfullySentGapRequest = sendGapRequest(time);
 							if (!successfullySentGapRequest)
 							{
 								skipReason = PandaErrorCode.PACKET_LOSS_UNABLE_TO_HANDLE_GAP;
@@ -176,14 +177,14 @@ class ChannelReceiveSequencer
 		}
 	}
 
-	private boolean sendGapRequest(int retransmissionPort, long time)
+	private boolean sendGapRequest(long time)
 	{
 		Packet headPacket = this.queuedPackets.peek();
 		if (headPacket.getSequenceNumber() > this.lastSequenceNumber + 1)
 		{
-			this.requestManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.sourceIp, this);
+			this.requestManager = new GapRequestManager(this.selectorThread, this.multicastGroup, this.key, this.sourceAddress, this);
 			++this.numOfRetransmissionRequests;
-			return this.requestManager.sendGapRequest(retransmissionPort, this.lastSequenceNumber + 1, (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1), time);
+			return this.requestManager.sendGapRequest(this.lastSequenceNumber + 1, (int) (headPacket.getSequenceNumber() - this.lastSequenceNumber - 1), time);
 		}
 		return false;
 	}

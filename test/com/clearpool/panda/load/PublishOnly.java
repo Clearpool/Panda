@@ -37,14 +37,14 @@ public class PublishOnly
 
 	private void start() throws Exception
 	{
-		final String localIp = InetAddress.getLocalHost().getHostAddress();
+		final InetAddress localIp = InetAddress.getLocalHost();
 
 		for (int i = 0; i < this.numThreads; i++)
 		{
-			final int messageCount = (this.numMessages % this.numThreads == 0) ? this.numMessages / this.numThreads : (i == 0) ? (this.numMessages / this.numThreads) + (this.numMessages % this.numThreads)
-					: (this.numMessages / this.numThreads);
-			final int messagesPerMil = (this.messagesPerMilli % this.numThreads == 0) ? this.messagesPerMilli / this.numThreads : (i == 0) ? (this.messagesPerMilli / this.numThreads) + (this.messagesPerMilli % this.numThreads)
-					: (this.messagesPerMilli / this.numThreads);
+			final int messageCount = (this.numMessages % this.numThreads == 0) ? this.numMessages / this.numThreads : (i == 0) ? (this.numMessages / this.numThreads)
+					+ (this.numMessages % this.numThreads) : (this.numMessages / this.numThreads);
+			final int messagesPerMil = (this.messagesPerMilli % this.numThreads == 0) ? this.messagesPerMilli / this.numThreads
+					: (i == 0) ? (this.messagesPerMilli / this.numThreads) + (this.messagesPerMilli % this.numThreads) : (this.messagesPerMilli / this.numThreads);
 			final int index = i;
 			Thread thread = new Thread(new Runnable() {
 

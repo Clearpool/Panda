@@ -1,5 +1,8 @@
 package com.clearpool.panda.core;
 
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -20,24 +23,27 @@ class ChannelSendInfo
 	private final PacketCache packetCache;
 	private final byte supportsRetransmissions;
 	private final DatagramChannel channel;
+	private final TObjectIntMap<String> topicSentCounter;
 
 	private long sequenceNumber;
 	private long packetsSent;
 	private long bytesSent;
 	private long packetsResent;
 
-	ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, String interfaceIp, DatagramChannel datagramChannel) throws Exception
+	ChannelSendInfo(String ip, int port, String multicastGroup, int cacheSize, InetAddress interfaceIp, DatagramChannel datagramChannel, PandaProperties properties)
+			throws Exception
 	{
 		this.multicastIp = InetAddress.getByName(ip);
 		this.multicastPort = port;
 		this.multicastGroup = multicastGroup;
 		this.multicastGroupAddress = new InetSocketAddress(this.multicastIp, this.multicastPort);
-		this.networkInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(interfaceIp));
+		this.networkInterface = NetworkInterface.getByInetAddress(interfaceIp);
 		this.channel = datagramChannel;
 		if (this.channel != null) this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, this.networkInterface);
 		this.cacheSize = cacheSize;
 		this.packetCache = (this.cacheSize > 0 ? new PacketCache(this.cacheSize) : null);
 		this.supportsRetransmissions = ((byte) (this.cacheSize > 0 ? 1 : 0));
+		this.topicSentCounter = properties.getBooleanProperty(PandaProperties.MAINTAIN_DETAILED_STATS, false) ? new TObjectIntHashMap<String>() : null;
 
 		this.packetsSent = 0;
 		this.bytesSent = 0;
@@ -60,6 +66,11 @@ class ChannelSendInfo
 			this.packetsResent += pair.getA().size();
 		}
 		return pair;
+	}
+
+	public void updateTopicStats(String topic)
+	{
+		if (this.topicSentCounter != null) this.topicSentCounter.adjustOrPutValue(topic, 1, 1);
 	}
 
 	String getMulticastGroup()
@@ -99,4 +110,10 @@ class ChannelSendInfo
 	{
 		return ++this.sequenceNumber;
 	}
+
+	TObjectIntMap<String> getTopicSentCounters()
+	{
+		return this.topicSentCounter;
+	}
+
 }

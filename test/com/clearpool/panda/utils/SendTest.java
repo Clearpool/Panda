@@ -11,7 +11,7 @@ public class SendTest
 	private static final String IP = "239.9.9.10";
 	private static final int PORT = 9002;
 	private static final String MULTICASTGROUP = IP + ":" + PORT;
-	private static final String LOCAL_IP = getLocalIp();
+	private static final InetAddress LOCAL_IP = getLocalIp();
 
 	public static void main(String[] args) throws Exception
 	{
@@ -34,11 +34,11 @@ public class SendTest
 		}
 	}
 
-	private static String getLocalIp()
+	private static InetAddress getLocalIp()
 	{
 		try
 		{
-			return InetAddress.getLocalHost().getHostAddress();
+			return InetAddress.getLocalHost();
 		}
 		catch (UnknownHostException e)
 		{

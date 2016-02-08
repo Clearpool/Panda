@@ -8,9 +8,8 @@ import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
 import com.clearpool.panda.core.PandaUtils;
 
-
 public class SendTester
-{	
+{
 	private static final String TOPIC = "TEST_TOPIC";
 	private static final String IP = "239.9.9.10";
 	private static final int PORT = 9002;
@@ -27,7 +26,8 @@ public class SendTester
 	long latencyAccumulator = 0;
 
 	// 24 <= dataSize <= Utils.MAX_MESSAGE_PAYLOAD_SIZE
-	public void sendSequencedMessages(int cacheSize, int dataSize, final long numOfMessages, int netRecvBufferSize, int numOfSenderThreads, final String localIp) throws Exception
+	public void sendSequencedMessages(int cacheSize, int dataSize, final long numOfMessages, int netRecvBufferSize, int numOfSenderThreads, final InetAddress localIp)
+			throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 
@@ -37,8 +37,9 @@ public class SendTester
 			private int messagesTillLastSec;
 
 			@Override
-			public void receivedPandaData(String topic, ByteBuffer payload)
+			public void receivedPandaData(String topic, byte[] bytes)
 			{
+				ByteBuffer payload = ByteBuffer.wrap(bytes);
 				this.currentTime = System.currentTimeMillis();
 				SendTester.this.messageSeqNum = payload.getLong(8);
 				long packetSentTimeStamp = payload.getLong(16);
@@ -58,7 +59,8 @@ public class SendTester
 				if (this.currentTime > this.recdThisSecondTimeStamp + 1000)
 				{
 					this.recdThisSecondTimeStamp = this.currentTime;
-					System.out.println("--- Recd. " + (SendTester.this.returnedMessageCount - this.messagesTillLastSec) + " Messages In The Last Second. Total Messages Recd. " + SendTester.this.returnedMessageCount);
+					System.out.println("--- Recd. " + (SendTester.this.returnedMessageCount - this.messagesTillLastSec) + " Messages In The Last Second. Total Messages Recd. "
+							+ SendTester.this.returnedMessageCount);
 					this.messagesTillLastSec = SendTester.this.returnedMessageCount;
 				}
 
@@ -91,14 +93,16 @@ public class SendTester
 
 		Thread.sleep(10000); // Give enough time for the receiving part of sender
 
-		System.out.println("*** Recd. " + SendTester.this.returnedMessageCount + " Messages In " + (this.endRecvTimeStamp - SendTester.this.startedRecvTimeStamp) + " Milliseconds");
-		System.out.println("*** Messages Lost = " + (numOfMessages - SendTester.this.returnedMessageCount) + " (" + (100 * (float) (numOfMessages - SendTester.this.returnedMessageCount) / numOfMessages) + " %)");
-		System.out.println("*** Min Round-Trip Latency : " + SendTester.this.minRTLatency + " Milliseconds -- Max Round-Trip Latency : " + SendTester.this.maxRTLatency + " Milliseconds -- Average Round-Trip Latency : "
-				+ ((float) SendTester.this.latencyAccumulator / SendTester.this.returnedMessageCount) + " Milliseconds\n");
+		System.out
+				.println("*** Recd. " + SendTester.this.returnedMessageCount + " Messages In " + (this.endRecvTimeStamp - SendTester.this.startedRecvTimeStamp) + " Milliseconds");
+		System.out.println("*** Messages Lost = " + (numOfMessages - SendTester.this.returnedMessageCount) + " ("
+				+ (100 * (float) (numOfMessages - SendTester.this.returnedMessageCount) / numOfMessages) + " %)");
+		System.out.println("*** Min Round-Trip Latency : " + SendTester.this.minRTLatency + " Milliseconds -- Max Round-Trip Latency : " + SendTester.this.maxRTLatency
+				+ " Milliseconds -- Average Round-Trip Latency : " + ((float) SendTester.this.latencyAccumulator / SendTester.this.returnedMessageCount) + " Milliseconds\n");
 
 	}
 
-	public static void runSender(PandaAdapter adapter, String localIp, int dataSize, long numOfMessages, int senderThreadNum) throws Exception
+	public static void runSender(PandaAdapter adapter, InetAddress localIp, int dataSize, long numOfMessages, int senderThreadNum) throws Exception
 	{
 		long seqNumber = 0;
 		long mssgPerSecCounter = 0;
@@ -123,7 +127,8 @@ public class SendTester
 				Thread.sleep(1);
 			}
 		}
-		System.out.println("*** Sender Thread " + senderThreadNum + " Sent " + numOfMessages + " Messages In " + (System.currentTimeMillis() - startSendTimeStamp) + " Milliseconds");
+		System.out.println("*** Sender Thread " + senderThreadNum + " Sent " + numOfMessages + " Messages In " + (System.currentTimeMillis() - startSendTimeStamp)
+				+ " Milliseconds");
 
 	}
 
@@ -133,9 +138,9 @@ public class SendTester
 		int packetSize;
 		long numOfMssgs;
 		int thisThreadNum;
-		String localIp;
+		InetAddress localIp;
 
-		public SenderThread(PandaAdapter adapter, int dataSize, long numOfMessages, int senderThreadNum, String localIp)
+		public SenderThread(PandaAdapter adapter, int dataSize, long numOfMessages, int senderThreadNum, InetAddress localIp)
 		{
 			this.pandaAdapter = adapter;
 			this.packetSize = dataSize;
@@ -163,7 +168,8 @@ public class SendTester
 	{
 		if (args.length != 6)
 		{
-			System.out.println("*** usage -- panda.core.SenderTest2 (int)pandaAdapterCache (int)numOfMessages (int)payloadSize (int)netRecvBufferSize, (int) 1 <= numOfThreads <= 5");
+			System.out
+					.println("*** usage -- panda.core.SenderTest2 (int)pandaAdapterCache (int)numOfMessages (int)payloadSize (int)netRecvBufferSize, (int) 1 <= numOfThreads <= 5");
 			System.exit(0);
 		}
 		int adapterCache = Integer.parseInt(args[0]);
@@ -177,7 +183,7 @@ public class SendTester
 			System.exit(0);
 		}
 
-		String localIp = InetAddress.getLocalHost().getHostAddress();
+		InetAddress localIp = InetAddress.getLocalHost();
 
 		SendTester st = new SendTester();
 		st.sendSequencedMessages(adapterCache, payloadSize, numOfMessages, netRecvBufferSize, numOfThreads, localIp);

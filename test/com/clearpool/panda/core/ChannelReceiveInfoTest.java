@@ -1,22 +1,41 @@
 package com.clearpool.panda.core;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-@SuppressWarnings("static-method")
 public class ChannelReceiveInfoTest
 {
+	private InetAddress LOCAL_IP;
+	private PandaProperties PROPS;
+
+	@Before
+	public void before()
+	{
+		try
+		{
+			this.LOCAL_IP = InetAddress.getByName("127.0.0.1");
+			this.PROPS = new PandaProperties();
+		}
+		catch (Exception e)
+		{
+			this.LOCAL_IP = null;
+			this.PROPS= null;
+		}
+	}
+
 	@Test
 	public void testDataReceivedFromSelf() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
 
-		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.1", 10);
+		InetSocketAddress sourceAddress = new InetSocketAddress(this.LOCAL_IP, 10);
 		ByteBuffer packetBuffer = createPacketBuffer(PandaUtils.PACKET_HEADER_SIZE, 5, 1);
 		channelReceiveInfo.dataReceived(sourceAddress, packetBuffer);
 		Assert.assertEquals(0, channelReceiveInfo.getPacketsReceived());
@@ -27,7 +46,7 @@ public class ChannelReceiveInfoTest
 	public void testDataReceivedFromOther() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
 
 		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.2", 10);
 
@@ -46,7 +65,7 @@ public class ChannelReceiveInfoTest
 	public void testDataReceivedPacketHeaderLengthDifferent() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
 
 		InetSocketAddress sourceAddress = new InetSocketAddress("127.0.0.2", 10);
 

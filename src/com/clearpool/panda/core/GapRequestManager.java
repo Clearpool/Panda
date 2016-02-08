@@ -14,7 +14,8 @@ class GapRequestManager
 
 	private final SelectorThread selectorThread;
 	private final String multicastGroup;
-	private final String sourceIp;
+	private final String sourceKey;
+	private final InetSocketAddress sourceAddress;
 	private final ChannelReceiveSequencer sequencer;
 	private final ByteBuffer readBuffer;
 
@@ -28,11 +29,12 @@ class GapRequestManager
 	private int responsePacketCount;
 	private int packetsRemainingToDeliver;
 
-	GapRequestManager(SelectorThread selectorThread, String multicastGroup, String sourceIp, ChannelReceiveSequencer sequencer)
+	GapRequestManager(SelectorThread selectorThread, String multicastGroup, String sourceKey, InetSocketAddress sourceAddress, ChannelReceiveSequencer sequencer)
 	{
 		this.selectorThread = selectorThread;
 		this.multicastGroup = multicastGroup;
-		this.sourceIp = sourceIp;
+		this.sourceKey = sourceKey;
+		this.sourceAddress = sourceAddress;
 		this.sequencer = sequencer;
 		this.readBuffer = ByteBuffer.allocateDirect(2 * PandaUtils.MAX_TCP_SIZE);
 
@@ -47,26 +49,26 @@ class GapRequestManager
 		this.packetsRemainingToDeliver = 0;
 	}
 
-	boolean sendGapRequest(int retransmissionPort, long firstSequenceNumber, int packetCount, long time)
+	boolean sendGapRequest(long firstSequenceNumber, int packetCount, long time)
 	{
 		if (this.socketChannel == null)
 		{
-			if (this.selectorThread.shouldMakeConnections()) this.socketChannel = getSocketChannel(this.sourceIp, retransmissionPort);
+			if (this.selectorThread.shouldMakeConnections()) this.socketChannel = getSocketChannel();
 			this.request = createGapRequest(firstSequenceNumber, packetCount, time);
-			LOGGER.info("REQUESTING GAP - |Source=" + retransmissionPort + "@" + this.sourceIp + "|Group=" + this.multicastGroup + "|firstSequenceNumber=" + firstSequenceNumber
-					+ "|packetCount=" + packetCount + "|id=" + hashCode());
+			LOGGER.info("REQUESTING GAP - |Source=" + this.sourceKey + "|Group=" + this.multicastGroup + "|firstSequenceNumber=" + firstSequenceNumber + "|packetCount="
+					+ packetCount + "|id=" + hashCode());
 			if (this.selectorThread.shouldMakeConnections()) this.selectorThread.registerTcpChannelAction(this.socketChannel, SelectionKey.OP_CONNECT, this);
 		}
 		return true;
 	}
 
-	private SocketChannel getSocketChannel(String remoteHost, int remotePort)
+	private SocketChannel getSocketChannel()
 	{
 		try
 		{
 			SocketChannel channel = SocketChannel.open();
 			channel.configureBlocking(false);
-			channel.connect(new InetSocketAddress(remoteHost, remotePort));
+			channel.connect(this.sourceAddress);
 			return channel;
 		}
 		catch (Exception e)
@@ -119,7 +121,7 @@ class GapRequestManager
 					this.responseHeaderReceived = true;
 
 					this.packetsRemainingToDeliver = this.responsePacketCount;
-					LOGGER.info("PROCESSING GAP - |SourceIp=" + this.sourceIp + "|Group=" + this.multicastGroup + "|responseFirstSequenceNumber=" + startSequenceNumber
+					LOGGER.info("PROCESSING GAP - |SourceKey=" + this.sourceKey + "|Group=" + this.multicastGroup + "|responseFirstSequenceNumber=" + startSequenceNumber
 							+ "|responsePacketCount=" + totalPackets + "|id=" + hashCode());
 
 					// Potentially skip packets if request is not filled

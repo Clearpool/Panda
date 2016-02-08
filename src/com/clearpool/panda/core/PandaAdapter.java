@@ -1,5 +1,6 @@
 package com.clearpool.panda.core;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardProtocolFamily;
 import java.net.StandardSocketOptions;
@@ -27,16 +28,17 @@ public class PandaAdapter
 
 	public PandaAdapter(int cacheSize) throws Exception
 	{
-		this(UUID.randomUUID().toString(), cacheSize);
+		this(UUID.randomUUID().toString(), cacheSize, null);
 	}
 
-	public PandaAdapter(String name, int cacheSize) throws Exception
+	public PandaAdapter(String name, int cacheSize, PandaProperties properties) throws Exception
 	{
 		this.name = name;
-		this.selectorThread = new SelectorThread();
+		properties = (properties == null) ? new PandaProperties() : properties;
+		this.selectorThread = new SelectorThread(properties);
 		Pair<ServerSocketChannel, DatagramChannel> channelSocketPair = initChannelPair(this.name);
-		this.receiver = new Receiver(this.selectorThread, channelSocketPair.getA().socket().getLocalPort());
-		this.sender = new Sender(this.selectorThread, channelSocketPair.getA(), channelSocketPair.getB(), cacheSize);
+		this.receiver = new Receiver(this.selectorThread, channelSocketPair.getA().socket().getLocalPort(), properties);
+		this.sender = new Sender(this.selectorThread, channelSocketPair.getA(), channelSocketPair.getB(), cacheSize, properties);
 		this.selectorThread.start();
 		registerPandaAdapter();
 	}
@@ -76,17 +78,18 @@ public class PandaAdapter
 		ALL_PANDA_ADAPTERS.put(this.name, this);
 	}
 
-	public void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
+	public void send(String topic, String ip, int port, String multicastGroup, InetAddress interfaceIp, byte[] bytes) throws Exception
 	{
-		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(interfaceIp, port);
+		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(ip, port);
 		this.sender.send(topic, ip, port, multicastGroup, interfaceIp, bytes);
 	}
 
 	// Skipping will only work at the ip/port level.
-	public void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize, boolean skipGaps)
+	public PandaDataListener subscribe(String topic, String ip, int port, String multicastGroup, InetAddress interfaceIp, PandaDataListener listener, int recvBufferSize,
+			boolean skipGaps)
 	{
-		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(interfaceIp, port);
-		this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize, skipGaps);
+		if (multicastGroup == null) multicastGroup = PandaUtils.getMulticastGroup(ip, port);
+		return this.receiver.subscribe(topic, ip, port, multicastGroup, interfaceIp, listener, recvBufferSize, skipGaps);
 	}
 
 	public void recordStats(MetricRegistry metricsRegistry)
