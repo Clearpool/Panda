@@ -3,6 +3,7 @@ package com.clearpool.panda.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -21,7 +22,8 @@ public class SelectorThreadTest
 	{
 		try
 		{
-			return new TestChannelSendInfo("127.0.0.1", 0, "127.0.0.1:0", 0, "127.0.0.1", null);
+			InetAddress localIp = InetAddress.getByName("127.0.0.1");
+			return new TestChannelSendInfo("127.0.0.1", 0, "127.0.0.1:0", 0, localIp, null);
 		}
 		catch (Exception e)
 		{

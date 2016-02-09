@@ -1,24 +1,50 @@
 package com.clearpool.panda.core;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-@SuppressWarnings("static-method")
 public class GapRequestManagerTest
 {
+	private InetAddress LOCAL_IP;
+	private InetSocketAddress SOURCE_ADDRESS;
+	private String SOURCE_KEY;
+	private PandaProperties PROPS;
+
+	@Before
+	public void before()
+	{
+		try
+		{
+			this.LOCAL_IP = InetAddress.getByName("127.0.0.1");
+			this.SOURCE_ADDRESS = new InetSocketAddress(this.LOCAL_IP, 34533);
+			this.SOURCE_KEY = PandaUtils.getAddressString(this.SOURCE_ADDRESS);
+			this.PROPS = new PandaProperties();
+		}
+		catch (Exception e)
+		{
+			this.LOCAL_IP = null;
+			this.SOURCE_ADDRESS = null;
+			this.SOURCE_KEY = null;
+			this.PROPS = null;
+		}
+	}
+
 	@Test
 	public void testProcessGapResponseNoFragment() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
-		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "1.1.1.1:1", this.SOURCE_ADDRESS, channelReceiveInfo, 1000, false);
+		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", this.SOURCE_KEY, this.SOURCE_ADDRESS, sequencer);
 
-		gapRequestManager.sendGapRequest(100, 3, 5, 1);
+		gapRequestManager.sendGapRequest(3, 5, 1);
 		ByteBuffer response = createResponse(3, 5);
 		gapRequestManager.processGapResponse(null, null, response);
 		Assert.assertTrue(gapRequestManager.isResponseHeaderReceived());
@@ -31,11 +57,11 @@ public class GapRequestManagerTest
 	public void testProcessGapResponseResponseHeaderFragment() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
-		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "1.1.1.1:1", this.SOURCE_ADDRESS, channelReceiveInfo, 1000, false);
+		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", this.SOURCE_KEY, this.SOURCE_ADDRESS, sequencer);
 
-		gapRequestManager.sendGapRequest(100, 3, 5, 1);
+		gapRequestManager.sendGapRequest(3, 5, 1);
 		ByteBuffer response = createResponse(3, 5);
 
 		ByteBuffer response1 = ByteBuffer.allocate(2);
@@ -69,11 +95,11 @@ public class GapRequestManagerTest
 	public void testProcessGapResponsePacketHeaderFragment() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
-		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "1.1.1.1:1", this.SOURCE_ADDRESS, channelReceiveInfo, 1000, false);
+		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", this.SOURCE_KEY, this.SOURCE_ADDRESS, sequencer);
 
-		gapRequestManager.sendGapRequest(100, 3, 5, 1);
+		gapRequestManager.sendGapRequest(3, 5, 1);
 		ByteBuffer response = createResponse(3, 5);
 
 		ByteBuffer response1 = ByteBuffer.allocate(14);
@@ -107,11 +133,11 @@ public class GapRequestManagerTest
 	public void testProcessGapResponsePacketFragment() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
-		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "1.1.1.1:1", this.SOURCE_ADDRESS, channelReceiveInfo, 1000, false);
+		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", this.SOURCE_KEY, this.SOURCE_ADDRESS, sequencer);
 
-		gapRequestManager.sendGapRequest(100, 3, 5, 1);
+		gapRequestManager.sendGapRequest(3, 5, 1);
 		ByteBuffer response = createResponse(3, 5);
 
 		ByteBuffer response1 = ByteBuffer.allocate(83);
@@ -145,11 +171,11 @@ public class GapRequestManagerTest
 	public void testProcessGapResponseNone() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
-		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "1.1.1.1:1", this.SOURCE_ADDRESS, channelReceiveInfo, 1000, false);
+		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", this.SOURCE_KEY, this.SOURCE_ADDRESS, sequencer);
 
-		gapRequestManager.sendGapRequest(100, 3, 5, 1);
+		gapRequestManager.sendGapRequest(3, 5, 1);
 		ByteBuffer response = createResponse(0, 0);
 
 		gapRequestManager.processGapResponse(null, null, response);
@@ -163,11 +189,11 @@ public class GapRequestManagerTest
 	public void testProcessGapResponsePartial() throws IOException
 	{
 		TestSelectorThread selectorThread = new TestSelectorThread();
-		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", "127.0.0.1", 10, selectorThread, 10000, false);
-		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "key", "1.1.1.1:1", "127.0.0.2", channelReceiveInfo, 1000, false);
-		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", "127.0.0.1", sequencer);
+		ChannelReceiveInfo channelReceiveInfo = new ChannelReceiveInfo("1.1.1.1", 1, "1.1.1.1:1", this.LOCAL_IP, 10, selectorThread, 10000, false, this.PROPS);
+		ChannelReceiveSequencer sequencer = new ChannelReceiveSequencer(selectorThread, "1.1.1.1:1", this.SOURCE_ADDRESS, channelReceiveInfo, 1000, false);
+		GapRequestManager gapRequestManager = new GapRequestManager(selectorThread, "1.1.1.1:1", this.SOURCE_KEY, this.SOURCE_ADDRESS, sequencer);
 
-		gapRequestManager.sendGapRequest(100, 3, 5, 1);
+		gapRequestManager.sendGapRequest(3, 5, 1);
 		ByteBuffer response = createResponse(6, 2);
 
 		gapRequestManager.processGapResponse(null, null, response);

@@ -14,7 +14,7 @@ public class ReceiverTester
 	private static final String IP = "239.9.9.10";
 	private static final int PORT = 9002;
 	static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
-			
+
 	private long highestSeqNumber = 0;
 	private long latestMessageCount = 0;
 
@@ -38,7 +38,7 @@ public class ReceiverTester
 		return this.latestMessageCount;
 	}
 
-	public void subscribeToSequencedMessages(int cacheSize, final long numOfMessages, int netRecvBufferSize, final String localIp) throws Exception
+	public void subscribeToSequencedMessages(int cacheSize, final long numOfMessages, int netRecvBufferSize, final InetAddress localIp) throws Exception
 	{
 		final PandaAdapter adapter = new PandaAdapter(cacheSize);
 		final ReceiverWatchdog wd = new ReceiverWatchdog(3000, 250, this, numOfMessages);
@@ -57,9 +57,10 @@ public class ReceiverTester
 			private long endRecvTimeStamp;
 
 			@Override
-			public void receivedPandaData(String incomingTopic, ByteBuffer payload)
+			public void receivedPandaData(String incomingTopic, byte[] bytes)
 			{
 				wd.restart();
+				ByteBuffer payload = ByteBuffer.wrap(bytes);
 				this.messageSeqNum = payload.getLong(8);
 				this.highestRecdSeqNum = Math.max(this.highestRecdSeqNum, this.messageSeqNum);
 				++this.messageCount;
@@ -75,7 +76,9 @@ public class ReceiverTester
 				if ((this.currentTime = System.currentTimeMillis()) > this.recdThisSecondTimeStamp + 1000)
 				{
 					this.recdThisSecondTimeStamp = this.currentTime;
-					if (this.messageCount <= numOfMessages) System.out.println("--- Recd. " + (this.messageCount - this.messagesTillLastSec) + " Messages In The Last Second. Total Messages Recd. " + this.messageCount);
+					if (this.messageCount <= numOfMessages)
+						System.out.println("--- Recd. " + (this.messageCount - this.messagesTillLastSec) + " Messages In The Last Second. Total Messages Recd. "
+								+ this.messageCount);
 					this.messagesTillLastSec = this.messageCount;
 				}
 
@@ -144,8 +147,10 @@ class ReceiverWatchdog implements Runnable
 			}
 			if (System.currentTimeMillis() > (this.timeStamp + this.resetTimeMillis))
 			{
-				System.out.println("*** Recd. " + this.recvTester.getLatestMessageCount() + " Messages From Sender"/* . Last Recd. Sender Seq. # " + this.recvTester.getHighestSeqNum() */);
-				System.out.println("*** Messages Lost " + (this.numOfMssgs - this.recvTester.getLatestMessageCount()) + " (" + (100 * (float) (this.numOfMssgs - this.recvTester.getLatestMessageCount()) / this.numOfMssgs) + " %)");
+				System.out
+						.println("*** Recd. " + this.recvTester.getLatestMessageCount() + " Messages From Sender"/* . Last Recd. Sender Seq. # " + this.recvTester.getHighestSeqNum() */);
+				System.out.println("*** Messages Lost " + (this.numOfMssgs - this.recvTester.getLatestMessageCount()) + " ("
+						+ (100 * (float) (this.numOfMssgs - this.recvTester.getLatestMessageCount()) / this.numOfMssgs) + " %)");
 				System.exit(0);
 			}
 		}
@@ -162,7 +167,7 @@ class ReceiverWatchdog implements Runnable
 		int adapterCache = Integer.parseInt(args[0]);
 		long numOfMessages = Long.parseLong(args[1]);
 		int netRecvBufferSize = Integer.parseInt(args[2]);
-		String localIp = InetAddress.getLocalHost().getHostAddress();
+		InetAddress localIp = InetAddress.getLocalHost();
 
 		ReceiverTester rt = new ReceiverTester();
 		rt.subscribeToSequencedMessages(adapterCache, numOfMessages, netRecvBufferSize, localIp);

@@ -1,5 +1,6 @@
 package com.clearpool.panda.core;
 
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,24 +11,26 @@ class Receiver
 	private final SelectorThread selectorThread;
 	private final int bindPort;
 	private final Map<String, ChannelReceiveInfo> channelInfos;
+	private final PandaProperties properties;
 
-	Receiver(SelectorThread selectorThread, int bindPort)
+	Receiver(SelectorThread selectorThread, int bindPort, PandaProperties properties)
 	{
 		this.selectorThread = selectorThread;
 		this.bindPort = bindPort;
 		this.channelInfos = new ConcurrentHashMap<String, ChannelReceiveInfo>();
+		this.properties = properties;
 	}
 
-	void subscribe(String topic, String ip, int port, String multicastGroup, String interfaceIp, PandaDataListener listener, int recvBufferSize, boolean skipGaps)
+	PandaDataListener subscribe(String topic, String ip, int port, String multicastGroup, InetAddress interfaceIp, PandaDataListener listener, int recvBufferSize, boolean skipGaps)
 	{
 		ChannelReceiveInfo receiveInfo = getChannelReceiverInfo(ip, port, multicastGroup, interfaceIp, recvBufferSize, skipGaps);
 		synchronized (receiveInfo)
 		{
-			receiveInfo.registerTopicListener(topic, listener);
+			return receiveInfo.registerTopicListener(topic, listener);
 		}
 	}
 
-	private ChannelReceiveInfo getChannelReceiverInfo(String multicastIp, int multicastPort, String multicastGroup, String interfaceIp, int recvBufferSize, boolean skipGaps)
+	private ChannelReceiveInfo getChannelReceiverInfo(String multicastIp, int multicastPort, String multicastGroup, InetAddress interfaceIp, int recvBufferSize, boolean skipGaps)
 	{
 		ChannelReceiveInfo receiveInfo = this.channelInfos.get(multicastGroup);
 		if (receiveInfo == null)
@@ -37,7 +40,8 @@ class Receiver
 				receiveInfo = this.channelInfos.get(multicastGroup);
 				if (receiveInfo == null)
 				{
-					receiveInfo = new ChannelReceiveInfo(multicastIp, multicastPort, multicastGroup, interfaceIp, this.bindPort, this.selectorThread, recvBufferSize, skipGaps);
+					receiveInfo = new ChannelReceiveInfo(multicastIp, multicastPort, multicastGroup, interfaceIp, this.bindPort, this.selectorThread, recvBufferSize, skipGaps,
+							this.properties);
 					this.channelInfos.put(multicastGroup, receiveInfo);
 				}
 			}
@@ -54,10 +58,22 @@ class Receiver
 			long messagesReceived = channelInfo.getMessagesReceived();
 			long messagesHandled = channelInfo.getMessagesHandled();
 
-			metricsRegistry.meter(prefix + "-PACKETS_RECEIVED-" + channelInfo.getMulticastGroup()).mark(packetsReceived);
-			metricsRegistry.meter(prefix + "-BYTES_RECEIVED-" + channelInfo.getMulticastGroup()).mark(bytesReceived);
-			metricsRegistry.meter(prefix + "-MESSAGES_RECEIVED-" + channelInfo.getMulticastGroup()).mark(messagesReceived);
-			metricsRegistry.meter(prefix + "-MESSAGES_HANDLED-" + channelInfo.getMulticastGroup()).mark(messagesHandled);
+			PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-PACKETS_RECEIVED-" + channelInfo.getMulticastGroup()), packetsReceived);
+			PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-BYTES_RECEIVED-" + channelInfo.getMulticastGroup()), bytesReceived);
+			PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-MESSAGES_RECEIVED-" + channelInfo.getMulticastGroup()), messagesReceived);
+			PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-MESSAGES_HANDLED-" + channelInfo.getMulticastGroup()), messagesHandled);
+
+			for (Object topicReceived : channelInfo.getTopicReceivedCounters().keys())
+			{
+				int topicReceivedCount = channelInfo.getTopicReceivedCounters().get(topicReceived);
+				PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-TOPIC_RECEIVED-" + topicReceived + "-" + channelInfo.getMulticastGroup()), topicReceivedCount);
+			}
+
+			for (Object topicHandled : channelInfo.getTopicHandledCounters().keys())
+			{
+				int topicHandledCount = channelInfo.getTopicHandledCounters().get(topicHandled);
+				PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-TOPIC_HANDLED-" + topicHandled + "-" + channelInfo.getMulticastGroup()), topicHandledCount);
+			}
 		}
 	}
 

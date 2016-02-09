@@ -1,7 +1,6 @@
 package com.clearpool.panda.load;
 
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -19,7 +18,7 @@ public class SubscribeOnly implements PandaDataListener
 	private static final int RECV_BUFFER_SIZE = 10000000;
 
 	private final PandaAdapter adapter;
-	private final String localIp;
+	private final InetAddress localIp;
 
 	private int messagesReceived;
 	private long timeLastReceived;
@@ -28,7 +27,7 @@ public class SubscribeOnly implements PandaDataListener
 	public SubscribeOnly(int cacheSize) throws Exception
 	{
 		this.adapter = new PandaAdapter(cacheSize);
-		this.localIp = InetAddress.getLocalHost().getHostAddress();
+		this.localIp = InetAddress.getLocalHost();
 	}
 
 	private void start() throws Exception
@@ -43,7 +42,7 @@ public class SubscribeOnly implements PandaDataListener
 	}
 
 	@Override
-	public void receivedPandaData(String topic, ByteBuffer arg1)
+	public void receivedPandaData(String topic, byte[] arg1)
 	{
 		try
 		{

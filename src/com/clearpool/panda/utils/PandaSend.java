@@ -18,7 +18,7 @@ public class PandaSend
 			String ip = args[0];
 			int port = Integer.parseInt(args[1]);
 			String topic = args[2];
-			String interfaceIp = InetAddress.getLocalHost().getHostAddress();
+			InetAddress interfaceIp = InetAddress.getLocalHost();
 			String data = args[3];
 
 			PandaAdapter adapter = new PandaAdapter(0);

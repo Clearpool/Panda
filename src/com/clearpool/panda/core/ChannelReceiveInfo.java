@@ -1,5 +1,9 @@
 package com.clearpool.panda.core;
 
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -14,21 +18,24 @@ class ChannelReceiveInfo
 	private final String multicastIp;
 	private final int multicastPort;
 	private final String multicastGroup;
-	private final String localIp;
+	private final InetAddress localIp;
 	private final int bindPort;
 	private final SelectorThread selectorThread;
 	private final boolean skipGaps;
-	private final Map<String, Set<PandaDataListener>> topicToListeners;
+	private final Map<String, PandaDataListener> topicToListener;
 	private final Set<PandaDataListener> groupListeners;
-	private final Map<String, ChannelReceiveSequencer> sourceInfos;
+	private final Map<InetSocketAddress, ChannelReceiveSequencer> sourceInfos;
+	private final TObjectIntMap<String> topicReceivedCounter;
+	private final TObjectIntMap<String> topicHandledCounter;
+	private final char[] tempTopicArray;
 
 	private long packetsReceived;
 	private long bytesReceived;
 	private long messagesReceived;
 	private long messagesHandled;
 
-	ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, String localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize,
-			boolean skipGaps)
+	ChannelReceiveInfo(String multicastIp, int multicastPort, String multicastGroup, InetAddress localIp, int bindPort, SelectorThread selectorThread, int recvBufferSize,
+			boolean skipGaps, PandaProperties properties)
 	{
 		this.multicastIp = multicastIp;
 		this.multicastPort = multicastPort;
@@ -36,29 +43,21 @@ class ChannelReceiveInfo
 		this.localIp = localIp;
 		this.bindPort = bindPort;
 		this.selectorThread = selectorThread;
-		this.topicToListeners = new HashMap<String, Set<PandaDataListener>>();
+		this.topicToListener = new HashMap<String, PandaDataListener>();
 		this.groupListeners = new HashSet<PandaDataListener>();
-		this.sourceInfos = new HashMap<String, ChannelReceiveSequencer>();
-		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this, recvBufferSize);
+		this.sourceInfos = new HashMap<InetSocketAddress, ChannelReceiveSequencer>();
 		this.skipGaps = skipGaps;
+		this.topicReceivedCounter = properties.getBooleanProperty(PandaProperties.MAINTAIN_DETAILED_STATS, false) ? new TObjectIntHashMap<String>() : null;
+		this.topicHandledCounter = properties.getBooleanProperty(PandaProperties.MAINTAIN_DETAILED_STATS, false) ? new TObjectIntHashMap<String>() : null;
+		this.tempTopicArray = new char[255];
 
-		this.packetsReceived = 0;
-		this.bytesReceived = 0;
-		this.messagesReceived = 0;
-		this.messagesHandled = 0;
+		this.selectorThread.subscribeToMulticastChannel(this.multicastIp, this.multicastPort, this.multicastGroup, this.localIp, this, recvBufferSize);
 	}
 
 	// Called by app thread
-	void registerTopicListener(String topic, PandaDataListener listener)
+	PandaDataListener registerTopicListener(String topic, PandaDataListener listener)
 	{
-		Set<PandaDataListener> topicListeners = this.topicToListeners.get(topic);
-		if (topicListeners == null)
-		{
-			topicListeners = new HashSet<PandaDataListener>();
-			this.topicToListeners.put(topic, topicListeners);
-		}
-		topicListeners.add(listener);
-		this.groupListeners.add(listener);
+		return this.topicToListener.put(topic, listener);
 	}
 
 	// Called by selectorThread
@@ -69,7 +68,7 @@ class ChannelReceiveInfo
 		byte packetHeaderLength = packetBuffer.get();
 
 		// Discard any packets originated by this process
-		String incomingSourceAddress = sourceAddress.getAddress().getHostAddress();
+		InetAddress incomingSourceAddress = sourceAddress.getAddress();
 		int incomingSourcePort = sourceAddress.getPort();
 		if (incomingSourcePort == this.bindPort && incomingSourceAddress.equals(this.localIp)) return;
 
@@ -85,17 +84,16 @@ class ChannelReceiveInfo
 		}
 
 		// Check for gaps
-		getSourceInfo(incomingSourcePort, incomingSourceAddress).packetReceived(supportsRetranmissions, incomingSourcePort, sequenceNumber, messageCount, packetBuffer);
+		getSourceInfo(sourceAddress).packetReceived(supportsRetranmissions, sequenceNumber, messageCount, packetBuffer);
 	}
 
-	private ChannelReceiveSequencer getSourceInfo(int sourcePort, String sourceAddress)
+	private ChannelReceiveSequencer getSourceInfo(InetSocketAddress sourceAddress)
 	{
-		String sourceInfoKey = sourcePort + "@" + sourceAddress;
-		ChannelReceiveSequencer sourceInfo = this.sourceInfos.get(sourceInfoKey);
+		ChannelReceiveSequencer sourceInfo = this.sourceInfos.get(sourceAddress);
 		if (sourceInfo == null)
 		{
-			sourceInfo = new ChannelReceiveSequencer(this.selectorThread, sourceInfoKey, this.multicastGroup, sourceAddress, this, MAX_SOURCE_DROP_THRESHOLD, this.skipGaps);
-			this.sourceInfos.put(sourceInfoKey, sourceInfo);
+			sourceInfo = new ChannelReceiveSequencer(this.selectorThread, this.multicastGroup, sourceAddress, this, MAX_SOURCE_DROP_THRESHOLD, this.skipGaps);
+			this.sourceInfos.put(sourceAddress, sourceInfo);
 		}
 		return sourceInfo;
 	}
@@ -108,27 +106,33 @@ class ChannelReceiveInfo
 		// Parse messages and deliver to listeners
 		for (int i = 0; i < messageCount; i++)
 		{
+			// Parse Topic
 			byte incomingTopicLength = packetBuffer.get();
-			byte[] incomingTopicBytes = new byte[incomingTopicLength];
-			packetBuffer.get(incomingTopicBytes);
-			String incomingTopic = new String(incomingTopicBytes);
+			for (int t = 0; t < incomingTopicLength; t++)
+			{
+				this.tempTopicArray[t] = (char) packetBuffer.get();
+			}
+			String incomingTopic = new String(this.tempTopicArray, 0, incomingTopicLength);
+
+			// Parse Message + Deliver a new copy to each listener
 			short messageLength = packetBuffer.getShort();
-			Set<PandaDataListener> listeners = this.topicToListeners.get(incomingTopic);
+			PandaDataListener listeners = this.topicToListener.get(incomingTopic);
 			if (listeners != null)
 			{
 				byte[] messageBytes = new byte[messageLength];
 				packetBuffer.get(messageBytes);
-				ByteBuffer messageBuffer = ByteBuffer.wrap(messageBytes);
-				for (PandaDataListener listener : listeners)
+				// for (PandaDataListener listener : listeners)
 				{
-					listener.receivedPandaData(incomingTopic, messageBuffer);
+					listeners.receivedPandaData(incomingTopic, messageBytes);
 				}
 				this.messagesHandled++;
+				if (this.topicHandledCounter != null) this.topicHandledCounter.adjustOrPutValue(incomingTopic, 1, 1);
 			}
 			else
 			{
 				packetBuffer.position(packetBuffer.position() + messageLength);
 			}
+			if (this.topicReceivedCounter != null) this.topicReceivedCounter.adjustOrPutValue(incomingTopic, 1, 1);
 		}
 		this.messagesReceived += messageCount;
 		this.packetsReceived++;
@@ -167,8 +171,19 @@ class ChannelReceiveInfo
 		return this.multicastGroup;
 	}
 
-	Map<String, ChannelReceiveSequencer> getSourceInfos()
+	Map<InetSocketAddress, ChannelReceiveSequencer> getSourceInfos()
 	{
 		return this.sourceInfos;
 	}
+
+	TObjectIntMap<String> getTopicReceivedCounters()
+	{
+		return this.topicReceivedCounter;
+	}
+
+	TObjectIntMap<String> getTopicHandledCounters()
+	{
+		return this.topicHandledCounter;
+	}
+
 }

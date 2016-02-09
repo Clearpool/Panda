@@ -1,5 +1,6 @@
 package com.clearpool.panda.core;
 
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
@@ -20,23 +21,27 @@ class Sender
 	private final DatagramChannel outDatagramChannel;
 	private final int cacheSize;
 	private final Map<String, ChannelSendInfo> channelInfos;
+	private final PandaProperties properties;
 
-	Sender(SelectorThread selectorThread, ServerSocketChannel tcpChannel, DatagramChannel udpChannel, int cacheSize) throws Exception
+	Sender(SelectorThread selectorThread, ServerSocketChannel tcpChannel, DatagramChannel udpChannel, int cacheSize, PandaProperties properties) throws Exception
 	{
 		this.selectorThread = selectorThread;
 		this.cacheSize = cacheSize;
 		this.selectorThread.registerTcpChannelAction(tcpChannel, SelectionKey.OP_ACCEPT, this);
 		this.outDatagramChannel = udpChannel;
 		this.channelInfos = new ConcurrentHashMap<String, ChannelSendInfo>();
+		this.properties = properties;
 	}
 
-	void send(String topic, String ip, int port, String multicastGroup, String interfaceIp, byte[] bytes) throws Exception
+	void send(String topic, String ip, int port, String multicastGroup, InetAddress interfaceIp, byte[] bytes) throws Exception
 	{
-		if (bytes.length > PandaUtils.MAX_UDP_MESSAGE_PAYLOAD_SIZE) throw new Exception("Message length over size=" + PandaUtils.MAX_UDP_MESSAGE_PAYLOAD_SIZE + " not allowed.");
-		this.selectorThread.sendToMulticastChannel(getChannelSendInfo(ip, port, multicastGroup, interfaceIp), topic, bytes);
+		if (bytes.length > PandaUtils.MAX_PANDA_MESSAGE_SIZE) throw new Exception("Message length over size=" + PandaUtils.MAX_PANDA_MESSAGE_SIZE + " not allowed");
+		ChannelSendInfo channelInfo = getChannelSendInfo(ip, port, multicastGroup, interfaceIp);
+		this.selectorThread.sendToMulticastChannel(channelInfo, topic, bytes);
+		channelInfo.updateTopicStats(topic);
 	}
 
-	private ChannelSendInfo getChannelSendInfo(String ip, int port, String multicastGroup, String interfaceIp) throws Exception
+	private ChannelSendInfo getChannelSendInfo(String ip, int port, String multicastGroup, InetAddress interfaceIp) throws Exception
 	{
 		ChannelSendInfo sendInfo = this.channelInfos.get(multicastGroup);
 		if (sendInfo == null)
@@ -46,7 +51,7 @@ class Sender
 				sendInfo = this.channelInfos.get(multicastGroup);
 				if (sendInfo == null)
 				{
-					sendInfo = new ChannelSendInfo(ip, port, multicastGroup, this.cacheSize, interfaceIp, this.outDatagramChannel);
+					sendInfo = new ChannelSendInfo(ip, port, multicastGroup, this.cacheSize, interfaceIp, this.outDatagramChannel, this.properties);
 					this.channelInfos.put(multicastGroup, sendInfo);
 				}
 			}
@@ -109,9 +114,15 @@ class Sender
 			long bytesSent = sendInfo.getBytesSent();
 			long packetsResent = sendInfo.getPacketsResent();
 
-			metricsRegistry.meter(prefix + "-PACKETS_SENT-" + sendInfo.getMulticastGroup()).mark(packetsSent);
-			metricsRegistry.meter(prefix + "-BYTES_SENT-" + sendInfo.getMulticastGroup()).mark(bytesSent);
-			metricsRegistry.meter(prefix + "-PACKETS_RESENT-" + sendInfo.getMulticastGroup()).mark(packetsResent);
+			PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-PACKETS_SENT-" + sendInfo.getMulticastGroup()), packetsSent);
+			PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-BYTES_SENT-" + sendInfo.getMulticastGroup()), bytesSent);
+			PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-PACKETS_RESENT-" + sendInfo.getMulticastGroup()), packetsResent);
+
+			for (Object topicSent : sendInfo.getTopicSentCounters().keys())
+			{
+				int topicSentCount = sendInfo.getTopicSentCounters().get(topicSent);
+				PandaUtils.updateMeterAsCounter(metricsRegistry.meter(prefix + "-TOPIC_SENT-" + topicSent + "-" + sendInfo.getMulticastGroup()), topicSentCount);
+			}
 		}
 	}
 }

@@ -13,14 +13,12 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,31 +30,40 @@ class SelectorThread extends Thread
 	private final ByteBuffer udpBuffer;
 	private final ByteBuffer tcpBuffer;
 	private final Map<String, DatagramChannel> inDatagramChannels;
-	private final BlockingQueue<SelectorActionable> selectorActionQueue;
+	private final ConcurrentLockFreeQueue<SelectorActionable> selectorActionQueue;
+	private final long pegStartTime;
+	private final long pegEndTime;
 
-	SelectorThread() throws IOException
+	SelectorThread(PandaProperties properties) throws IOException
 	{
 		this.selector = Selector.open();
 		this.udpBuffer = ByteBuffer.allocateDirect(PandaUtils.MAX_UDP_SIZE);
 		this.tcpBuffer = ByteBuffer.allocateDirect(PandaUtils.MAX_TCP_SIZE);
 		this.inDatagramChannels = new HashMap<String, DatagramChannel>();
-		this.selectorActionQueue = new LinkedBlockingQueue<SelectorActionable>();
+		this.selectorActionQueue = new ConcurrentLockFreeQueue<SelectorActionable>();
+		this.pegStartTime = properties.getLongProperty(PandaProperties.PEG_SELECTOR_START_TIME, 0);
+		this.pegEndTime = properties.getLongProperty(PandaProperties.PEG_SELECTOR_END_TIME, 0);
 	}
 
 	@Override
 	public void run()
 	{
-		final Queue<SelectorActionable> activeSelectorActionQueue = new LinkedList<>();
+		final Queue<SelectorActionable> activeSelectorActionQueue = new ArrayDeque<SelectorActionable>(1024);
 		while (!Thread.currentThread().isInterrupted())
 		{
 			try
 			{
-				this.selectorActionQueue.drainTo(activeSelectorActionQueue);
-				// Service each action
+				// Pull all actions + Service them
+				SelectorActionable next = this.selectorActionQueue.take();
+				while (next != null)
+				{
+					activeSelectorActionQueue.add(next);
+					next = this.selectorActionQueue.take();
+				}
 				serviceEachSelectorAction(activeSelectorActionQueue);
 
 				// Do selection
-				int selectedKeyCount = this.selector.select();
+				int selectedKeyCount = select();
 				if (selectedKeyCount > 0)
 				{
 					Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
@@ -85,9 +92,45 @@ class SelectorThread extends Thread
 		LOGGER.warning("SelectorThread has been interrupted.  Stopping selection for selector");
 	}
 
+	private int select() throws IOException
+	{
+		if (shouldPegCpu())
+		{
+			return this.selector.selectNow();
+		}
+		return this.selector.select();
+	}
+
+	private boolean shouldPegCpu()
+	{
+		// Never pegging
+		if (this.pegStartTime == 0)
+		{
+			return false;
+		}
+
+		long now = System.currentTimeMillis();
+
+		// Candidate for pegging - Before peg start time
+		if (now < this.pegStartTime)
+		{
+			return false;
+		}
+
+		// Candidate for pegging - After peg start time, but before end time
+		if (this.pegEndTime == 0 || now <= this.pegEndTime)
+		{
+			return true;
+		}
+
+		// Candidate for pegging - After peg start time, and after end time
+		return false;
+	}
+
 	private void serviceEachSelectorAction(Queue<SelectorActionable> activeActionQueue)
 	{
-		for (SelectorActionable selectorActionable; (selectorActionable = activeActionQueue.poll()) != null;)
+		SelectorActionable selectorActionable = activeActionQueue.poll();
+		while (selectorActionable != null)
 		{
 			int action = selectorActionable.getAction();
 			if (action == SelectorActionable.SEND_MULTICAST)
@@ -102,6 +145,7 @@ class SelectorThread extends Thread
 			{
 				registerTcpChannel((TcpRegistration) selectorActionable);
 			}
+			selectorActionable = activeActionQueue.poll();
 		}
 	}
 
@@ -397,7 +441,7 @@ class SelectorThread extends Thread
 	}
 
 	// Will be called synchronously
-	void subscribeToMulticastChannel(String ip, int port, String multicastGroup, String interfaceIp, ChannelReceiveInfo receiverInfo, int recvBufferSize)
+	void subscribeToMulticastChannel(String ip, int port, String multicastGroup, InetAddress interfaceIp, ChannelReceiveInfo receiverInfo, int recvBufferSize)
 	{
 		try
 		{
@@ -445,12 +489,12 @@ class SelectorThread extends Thread
 		return null;
 	}
 
-	private static DatagramChannel createDatagramChannel(String interfaceIp)
+	private static DatagramChannel createDatagramChannel(InetAddress interfaceIp)
 	{
 		try
 		{
 			DatagramChannel channel = createDatagramChannel();
-			channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, NetworkInterface.getByInetAddress(InetAddress.getByName(interfaceIp)));
+			channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, NetworkInterface.getByInetAddress(interfaceIp));
 			return channel;
 		}
 		catch (Exception e)
@@ -462,15 +506,8 @@ class SelectorThread extends Thread
 
 	private void addToActionQueue(SelectorActionable action)
 	{
-		try
-		{
-			this.selectorActionQueue.put(action);
-			this.selector.wakeup();
-		}
-		catch (InterruptedException e)
-		{
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
+		this.selectorActionQueue.offer(action);
+		if (!shouldPegCpu()) this.selector.wakeup();
 	}
 
 	@SuppressWarnings("static-method")

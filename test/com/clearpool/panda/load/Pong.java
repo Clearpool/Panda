@@ -1,13 +1,11 @@
 package com.clearpool.panda.load;
 
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
 
 import com.clearpool.panda.core.PandaAdapter;
 import com.clearpool.panda.core.PandaDataListener;
 import com.clearpool.panda.core.PandaErrorCode;
 import com.clearpool.panda.core.PandaUtils;
-
 
 public class Pong implements PandaDataListener
 {
@@ -15,11 +13,11 @@ public class Pong implements PandaDataListener
 	private static final String IP = "239.9.9.10";
 	private static final int PORT = 9002;
 	private static final String MULTICASTGROUP = PandaUtils.getMulticastGroup(IP, PORT);
-	
+
 	private static final int RECV_BUFFER_SIZE = 10000000;
 
 	private final PandaAdapter adapter;
-	private final String localIp;
+	private final InetAddress localIp;
 	private final boolean shouldPong;
 
 	private int messagesReceived;
@@ -29,7 +27,7 @@ public class Pong implements PandaDataListener
 	public Pong(int cacheSize, boolean shouldPong) throws Exception
 	{
 		this.adapter = new PandaAdapter(cacheSize);
-		this.localIp = InetAddress.getLocalHost().getHostAddress();
+		this.localIp = InetAddress.getLocalHost();
 		this.shouldPong = shouldPong;
 	}
 
@@ -44,7 +42,7 @@ public class Pong implements PandaDataListener
 	}
 
 	@Override
-	public void receivedPandaData(String topic, ByteBuffer arg1)
+	public void receivedPandaData(String topic, byte[] arg1)
 	{
 		try
 		{
@@ -52,7 +50,7 @@ public class Pong implements PandaDataListener
 			{
 				this.messagesReceived++;
 				this.timeLastReceived = System.currentTimeMillis();
-				if (this.shouldPong) this.adapter.send(TOPIC1, IP, PORT, MULTICASTGROUP, this.localIp, arg1.array());
+				if (this.shouldPong) this.adapter.send(TOPIC1, IP, PORT, MULTICASTGROUP, this.localIp, arg1);
 			}
 		}
 		catch (Exception e)
